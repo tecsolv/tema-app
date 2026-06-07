@@ -42,8 +42,13 @@
   .sidebar-logo { padding: 20px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.12); }
   .sidebar-logo h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
   .sidebar-logo p { font-size: 10px; color: rgba(255,255,255,0.55); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
-  .user-badge { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px; margin: 10px 12px 0; font-size: 12px; color: rgba(255,255,255,0.85); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px; }
-  .user-badge #user-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+  .user-badge { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px; margin: 10px 12px 0; font-size: 12px; color: rgba(255,255,255,0.85); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; cursor: pointer; transition: background .2s; }
+  .user-badge:hover, .user-badge.open { background: rgba(255,255,255,0.2); }
+  .user-badge #user-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .user-badge-chevron { font-weight: 800; font-size: 14px; transition: transform .2s; opacity: .7; }
+  .user-badge:hover .user-badge-chevron, .user-badge.open .user-badge-chevron { transform: rotate(90deg); opacity: 1; }
+  .user-badge .logout-btn { display: none; width: 100%; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .user-badge:hover .logout-btn, .user-badge.open .logout-btn { display: flex; align-items: center; gap: 6px; }
   .user-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; flex-shrink: 0; }
   .sidebar-nav { flex: 1; padding: 14px 0; overflow-y: auto; }
   .nav-section { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 10px 20px 5px; letter-spacing: 1.5px; }
@@ -52,8 +57,6 @@
   .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; border-left-color: var(--accent); font-weight: 600; }
   .nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
   .sidebar-footer { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 11px; color: rgba(255,255,255,0.45); }
-  .logout-btn { margin-left: auto; cursor: pointer; font-size: 15px; opacity: 0.85; transition: opacity .2s; }
-  .logout-btn:hover { opacity: 1; }
 
   /* SIDEBAR OVERLAY (mobile) */
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
@@ -245,10 +248,11 @@
     <h1>TeMa</h1>
     <p>Gestion de Boutique</p>
   </div>
-  <div class="user-badge">
+  <div class="user-badge" id="user-badge" onclick="toggleUserMenu(event)">
     <div class="user-dot"></div>
     <span id="user-display">—</span>
-    <span class="logout-btn" onclick="seDeconnecter()" title="Se déconnecter">🚪 Déconnexion</span>
+    <span class="user-badge-chevron">›</span>
+    <span class="logout-btn" onclick="event.stopPropagation();seDeconnecter()">🚪 Se déconnecter</span>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
@@ -875,7 +879,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>🧾 Nouvelle Vente</h3>
-      <button class="modal-close" onclick="closeModal('modal-vente')">×</button>
+      <button class="modal-close" onclick="fermerVenteModal()">×</button>
     </div>
     <form onsubmit="ajouterVenteCaisse(event)">
       <div class="form-row">
@@ -906,7 +910,7 @@
         <div class="form-group"><label>Note (optionnel)</label><input type="text" class="form-control" id="cs-note" placeholder="Remarque..."></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-vente')">Annuler</button>
+        <button type="button" class="btn btn-outline" onclick="fermerVenteModal()">Annuler</button>
         <button type="submit" class="btn btn-primary">✓ Enregistrer la vente</button>
       </div>
     </form>
@@ -1302,6 +1306,15 @@ const pageTitles = {
   comptes:'Comptes Employés (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)'
 };
+
+function toggleUserMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('user-badge').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const badge = document.getElementById('user-badge');
+  if (badge && !badge.contains(e.target)) badge.classList.remove('open');
+});
 
 function toggleSidebar(force) {
   const open = typeof force === 'boolean' ? force : !document.getElementById('sidebar').classList.contains('open');
@@ -2256,7 +2269,44 @@ async function ajouterVenteCaisse(event) {
     document.getElementById('cs-quantite').value = 1;
     document.getElementById('caisse-montant-preview').style.display = 'none';
     closeModal('modal-vente');
+    localStorage.removeItem(DRAFT_VENTE_KEY);
   } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+const DRAFT_VENTE_KEY = 'tema_brouillon_vente';
+const DRAFT_VENTE_FIELDS = ['cs-date','cs-mode','cs-zone','cs-article','cs-quantite','cs-prix','cs-client','cs-note'];
+let draftVenteInterval = null;
+
+function sauvegarderBrouillonVente() {
+  if (!document.getElementById('modal-vente').classList.contains('open')) return;
+  const data = {};
+  let rempli = false;
+  DRAFT_VENTE_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { data[id] = el.value; if (el.value && id !== 'cs-date' && id !== 'cs-mode' && id !== 'cs-zone' && id !== 'cs-quantite') rempli = true; }
+  });
+  if (rempli) { data._savedAt = Date.now(); localStorage.setItem(DRAFT_VENTE_KEY, JSON.stringify(data)); }
+}
+
+function restaurerBrouillonVente() {
+  const raw = localStorage.getItem(DRAFT_VENTE_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    DRAFT_VENTE_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+    if (data['cs-zone']) choisirZoneCaisse(data['cs-zone']);
+    majMontantCaisse();
+    showToast('📝 Brouillon de vente restauré (saisie précédente non terminée)', 'warning');
+  } catch (e) {}
+}
+
+function fermerVenteModal() {
+  sauvegarderBrouillonVente();
+  if (draftVenteInterval) { clearInterval(draftVenteInterval); draftVenteInterval = null; }
+  closeModal('modal-vente');
 }
 
 function ouvrirVenteModal() {
@@ -2268,6 +2318,9 @@ function ouvrirVenteModal() {
     document.getElementById('caisse-zone-label').textContent = `${ZONES_CAISSE.A.emoji} ${ZONES_CAISSE.A.label}`;
   }
   openModal('modal-vente');
+  restaurerBrouillonVente();
+  if (draftVenteInterval) clearInterval(draftVenteInterval);
+  draftVenteInterval = setInterval(sauvegarderBrouillonVente, 60000);
 }
 
 async function supprimerVenteCaisse(id) {
