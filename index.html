@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeMa Boutique — Gestion en Ligne</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --primary: #1a5276; --primary-light: #2e86c1; --accent: #f39c12; --accent-dark: #d68910;
@@ -630,7 +631,12 @@
     <form onsubmit="saveProduit(event)">
       <div class="form-row">
         <div class="form-group"><label>Nom de l'article *</label><input class="form-control" id="p-nom" required placeholder="Ex: Stylo Bic"></div>
-        <div class="form-group"><label>Référence</label><input class="form-control" id="p-ref" placeholder="Ex: REF-001"></div>
+        <div class="form-group"><label>Référence</label>
+          <div style="display:flex;gap:6px">
+            <input class="form-control" id="p-ref" placeholder="Ex: REF-001 ou scannez un code-barres">
+            <button type="button" class="btn btn-outline" title="Scanner un code-barres" onclick="ouvrirScanProduit()" style="white-space:nowrap">📷 Scanner</button>
+          </div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Catégorie *</label>
@@ -659,6 +665,23 @@
         <button type="submit" class="btn btn-primary" id="btn-save-produit">Enregistrer</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL: Scan code-barres -->
+<div class="modal-overlay" id="modal-scan">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>📷 Scanner un code-barres</h3>
+      <button class="modal-close" onclick="fermerScanProduit()">×</button>
+    </div>
+    <div style="padding:0 20px 16px">
+      <div id="scan-reader" style="width:100%;border-radius:10px;overflow:hidden;background:#000;min-height:260px"></div>
+      <div id="scan-statut" style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:10px">Initialisation de la caméra...</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="fermerScanProduit()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -896,7 +919,11 @@
         <div id="caisse-zone-label" style="text-align:center;font-size:12px;color:var(--text-muted)"></div>
         <input type="hidden" id="cs-zone" value="A">
       </div>
-      <div class="form-group"><label>Article / Produit *</label><input type="text" class="form-control" id="cs-article" required placeholder="Ex: Cahier 200p, Riz 25kg, Laptop HP..."></div>
+      <div class="form-group"><label>Article / Produit *</label>
+        <input type="text" class="form-control" id="cs-article" list="cs-article-liste" required placeholder="Ex: Cahier 200p, Riz 25kg, Laptop HP..." oninput="rechercherArticleCaisse()" onchange="rechercherArticleCaisse()">
+        <datalist id="cs-article-liste"></datalist>
+        <div id="cs-article-stock" style="font-size:11px;color:var(--text-muted);margin-top:4px"></div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Quantité</label><input type="number" class="form-control" id="cs-quantite" min="1" value="1" oninput="majMontantCaisse()"></div>
         <div class="form-group"><label>Prix unitaire (FCFA) *</label><input type="number" class="form-control" id="cs-prix" min="0" required placeholder="0" oninput="majMontantCaisse()"></div>
@@ -2206,6 +2233,64 @@ function choisirZoneCaisse(k) {
   document.getElementById('caisse-zone-label').textContent = `${ZONES_CAISSE[k].emoji} ${ZONES_CAISSE[k].label}`;
 }
 
+let scannerCodeBarres = null;
+
+function ouvrirScanProduit() {
+  if (typeof Html5Qrcode === 'undefined') { showToast("Le module de scan n'a pas pu se charger (vérifiez la connexion internet)", 'error'); return; }
+  openModal('modal-scan');
+  document.getElementById('scan-statut').textContent = 'Initialisation de la caméra...';
+  scannerCodeBarres = new Html5Qrcode('scan-reader');
+  scannerCodeBarres.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 150 } },
+    (texteDecode) => {
+      document.getElementById('p-ref').value = texteDecode;
+      showToast(`Code scanné: ${texteDecode}`, 'success');
+      const existant = produits.find(p => (p.ref||'').toLowerCase() === texteDecode.toLowerCase());
+      if (existant) {
+        document.getElementById('p-nom').value = existant.nom || '';
+        showToast(`Article existant trouvé: ${existant.nom}`, 'info');
+      }
+      fermerScanProduit();
+    },
+    () => {}
+  ).then(() => {
+    document.getElementById('scan-statut').textContent = 'Visez le code-barres avec la caméra...';
+  }).catch(err => {
+    document.getElementById('scan-statut').textContent = "Impossible d'accéder à la caméra. Vérifiez les permissions.";
+    showToast('Erreur caméra: ' + err, 'error');
+  });
+}
+
+function fermerScanProduit() {
+  if (scannerCodeBarres) {
+    scannerCodeBarres.stop().then(() => scannerCodeBarres.clear()).catch(() => {});
+    scannerCodeBarres = null;
+  }
+  closeModal('modal-scan');
+}
+
+function peuplerListeArticlesCaisse() {
+  const dl = document.getElementById('cs-article-liste');
+  if (!dl) return;
+  dl.innerHTML = produits.map(p => `<option value="${(p.nom||'').replace(/"/g,'&quot;')}">`).join('');
+}
+
+function rechercherArticleCaisse() {
+  const saisie = document.getElementById('cs-article').value.trim();
+  const infoBox = document.getElementById('cs-article-stock');
+  if (!saisie) { infoBox.textContent = ''; return; }
+  const p = produits.find(x => (x.nom||'').toLowerCase() === saisie.toLowerCase());
+  if (p) {
+    document.getElementById('cs-prix').value = p.pvente || 0;
+    infoBox.textContent = `📦 Stock disponible: ${p.stock||0} ${p.unite||''} — Réf: ${p.ref||'—'}`;
+    infoBox.style.color = (p.stock||0) > 0 ? 'var(--text-muted)' : 'var(--danger,#e74c3c)';
+    majMontantCaisse();
+  } else {
+    infoBox.textContent = '';
+  }
+}
+
 function majMontantCaisse() {
   const qte = Number(document.getElementById('cs-quantite').value || 1);
   const prix = Number(document.getElementById('cs-prix').value || 0);
@@ -2317,6 +2402,7 @@ function ouvrirVenteModal() {
     zoneSel.dataset.built = '1';
     document.getElementById('caisse-zone-label').textContent = `${ZONES_CAISSE.A.emoji} ${ZONES_CAISSE.A.label}`;
   }
+  peuplerListeArticlesCaisse();
   openModal('modal-vente');
   restaurerBrouillonVente();
   if (draftVenteInterval) clearInterval(draftVenteInterval);
