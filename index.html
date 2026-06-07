@@ -271,7 +271,7 @@
     <div class="nav-item" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
-    <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Comptes Employés</div>
+    <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
     <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
   </div>
   <div class="sidebar-footer">
@@ -591,7 +591,7 @@
     <div class="page" id="page-comptes">
       <div class="alert alert-info">🔒 Seul l'administrateur peut créer des comptes, modifier les mots de passe et activer/bloquer les employés. Aucune auto-inscription n'est possible.</div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-        <button class="btn btn-primary" onclick="openModal('modal-compte')">+ Nouveau Compte Employé</button>
+        <button class="btn btn-primary" onclick="ouvrirNouveauCompte()">+ Nouveau Compte</button>
       </div>
       <div class="card">
         <div class="card-header"><h2>👥 Comptes Utilisateurs</h2></div>
@@ -831,6 +831,7 @@
       </div>
       <input type="hidden" id="cpt-edit-id" value="">
       <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-compte" style="display:none;margin-right:auto" onclick="supprimerCompteDepuisModal()">🗑 Supprimer</button>
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-compte')">Annuler</button>
         <button type="submit" class="btn btn-primary" id="btn-save-compte">Créer le compte</button>
       </div>
@@ -1330,7 +1331,7 @@ async function chargerDonneesInitiales() {
 const pageTitles = {
   dashboard:'Tableau de Bord', inventaire:'Inventaire des Articles', categories:'Catégories de Produits',
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
-  comptes:'Comptes Employés (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
+  comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)'
 };
 
@@ -1949,7 +1950,8 @@ function renderComptes() {
       <td style="font-size:12px;color:var(--text-muted)">${fmtDate(u.lastLogin)}</td>
       <td>
         ${u.isAdmin ? '<span style="font-size:11px;color:var(--text-muted)">Compte protégé</span>' : `
-        <button class="btn btn-sm btn-outline" onclick="ouvrirResetPass('${u.id}','${u.nom.replace(/'/g,"")}')">🔑 Mot de passe</button>
+        <button class="btn btn-sm btn-outline" onclick="ouvrirEditCompte('${u.id}')">✏️ Modifier</button>
+        <button class="btn btn-sm btn-outline" onclick="ouvrirResetPass('${u.id}','${u.nom.replace(/'/g,"")}')" style="margin-left:4px">🔑 Mot de passe</button>
         ${u.status === 'active'
           ? `<button class="btn btn-sm" style="background:#fef9e7;color:#7e5109" onclick="changerStatutCompte('${u.id}','inactive')" style="margin-left:4px">⏸ Désactiver</button>`
           : `<button class="btn btn-sm btn-success" onclick="changerStatutCompte('${u.id}','active')" style="margin-left:4px">▶ Activer</button>`}
@@ -1961,9 +1963,42 @@ function renderComptes() {
     </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucun compte</td></tr>';
 }
 
+function ouvrirNouveauCompte() {
+  document.getElementById('modal-compte-title').textContent = 'Nouveau Compte Employé';
+  document.getElementById('cpt-edit-id').value = '';
+  document.getElementById('cpt-nom').value = '';
+  document.getElementById('cpt-user').value = '';
+  document.getElementById('cpt-user').disabled = false;
+  document.getElementById('cpt-role').value = 'Vendeur(se)';
+  document.getElementById('cpt-pass').value = '';
+  document.getElementById('cpt-pass').placeholder = 'Définissez un mot de passe';
+  document.querySelector('#cpt-pass-group label').innerHTML = "Mot de passe initial * <span style=\"text-transform:none;font-weight:400\">(8 caractères min., l'employé ne pourra pas le changer lui-même)</span>";
+  document.getElementById('btn-save-compte').textContent = 'Créer le compte';
+  document.getElementById('btn-delete-compte').style.display = 'none';
+  openModal('modal-compte');
+}
+
+function ouvrirEditCompte(id) {
+  const u = utilisateurs.find(x => x.id === id);
+  if (!u || u.isAdmin) return;
+  document.getElementById('modal-compte-title').textContent = 'Modifier le Compte';
+  document.getElementById('cpt-edit-id').value = u.id;
+  document.getElementById('cpt-nom').value = u.nom || '';
+  document.getElementById('cpt-user').value = u.username || '';
+  document.getElementById('cpt-user').disabled = true;
+  document.getElementById('cpt-role').value = u.role || 'Vendeur(se)';
+  document.getElementById('cpt-pass').value = '';
+  document.getElementById('cpt-pass').placeholder = 'Laisser vide pour conserver le mot de passe actuel';
+  document.querySelector('#cpt-pass-group label').innerHTML = "Nouveau mot de passe <span style=\"text-transform:none;font-weight:400\">(optionnel — 8 caractères min. si renseigné, laisser vide pour ne pas changer)</span>";
+  document.getElementById('btn-save-compte').textContent = 'Enregistrer les modifications';
+  document.getElementById('btn-delete-compte').style.display = '';
+  openModal('modal-compte');
+}
+
 async function saveCompte(e) {
   e.preventDefault();
   if (!currentUser.isAdmin) return;
+  const editId = document.getElementById('cpt-edit-id').value;
   const nom = document.getElementById('cpt-nom').value.trim();
   const username = document.getElementById('cpt-user').value.trim();
   const role = document.getElementById('cpt-role').value;
@@ -1972,23 +2007,48 @@ async function saveCompte(e) {
   if (password && password.length < 8) { showToast('Le mot de passe doit contenir au moins 8 caractères', 'error'); return; }
 
   const btn = document.getElementById('btn-save-compte');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Création...';
+  const labelOriginal = btn.textContent;
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Enregistrement...';
   try {
-    const exists = await db.collection('users').where('username','==',username).limit(1).get();
-    if (!exists.empty) { showToast('Cet identifiant existe déjà', 'error'); btn.disabled=false; btn.textContent='Créer le compte'; return; }
-    if (!password || password.length < 8) { showToast('Veuillez définir un mot de passe d\'au moins 8 caractères', 'error'); btn.disabled=false; btn.textContent='Créer le compte'; return; }
+    if (editId) {
+      const maj = { nom, role, updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (password) maj.passwordHash = await hashPassword(password);
+      await db.collection('users').doc(editId).update(maj);
+      consigner('Modification de compte', `Identifiant "${username}" — modifié par ${currentUser.label}${password ? ' (mot de passe changé)' : ''}`);
+      showToast(`Compte "${username}" mis à jour ✓`);
+      closeModal('modal-compte');
+      e.target.reset();
+    } else {
+      const exists = await db.collection('users').where('username','==',username).limit(1).get();
+      if (!exists.empty) { showToast('Cet identifiant existe déjà', 'error'); btn.disabled=false; btn.textContent=labelOriginal; return; }
+      if (!password || password.length < 8) { showToast('Veuillez définir un mot de passe d\'au moins 8 caractères', 'error'); btn.disabled=false; btn.textContent=labelOriginal; return; }
 
-    const hash = await hashPassword(password);
-    await db.collection('users').add({
-      username, nom, role, passwordHash: hash, isAdmin: false, status: 'active',
-      createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    consigner('Création de compte', `Identifiant "${username}" (${role}) — créé par ${currentUser.label}`);
-    showToast(`Compte "${username}" créé ✓ — Communiquez le mot de passe à l'employé`);
-    closeModal('modal-compte');
-    e.target.reset();
+      const hash = await hashPassword(password);
+      await db.collection('users').add({
+        username, nom, role, passwordHash: hash, isAdmin: false, status: 'active',
+        createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      consigner('Création de compte', `Identifiant "${username}" (${role}) — créé par ${currentUser.label}`);
+      showToast(`Compte "${username}" créé ✓ — Communiquez le mot de passe à l'employé`);
+      closeModal('modal-compte');
+      e.target.reset();
+    }
   } catch(err) { showToast('Erreur: ' + err.message, 'error'); }
-  btn.disabled = false; btn.textContent = 'Créer le compte';
+  btn.disabled = false; btn.textContent = labelOriginal;
+}
+
+async function supprimerCompteDepuisModal() {
+  if (!currentUser.isAdmin) return;
+  const id = document.getElementById('cpt-edit-id').value;
+  const u = utilisateurs.find(x => x.id === id);
+  if (!u || u.isAdmin) return;
+  if (!confirm(`Supprimer définitivement le compte "${u.nom}" (${u.username}) ? Cette action est irréversible.`)) return;
+  try {
+    await db.collection('users').doc(id).delete();
+    consigner('Suppression de compte', `Identifiant "${u.username}" (${u.nom}) — supprimé par ${currentUser.label}`);
+    showToast(`Compte "${u.nom}" supprimé`, 'warning');
+    closeModal('modal-compte');
+  } catch(err) { showToast('Erreur: ' + err.message, 'error'); }
 }
 
 async function changerStatutCompte(id, statut) {
