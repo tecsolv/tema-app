@@ -268,6 +268,8 @@
     <div class="nav-item" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
     <div class="nav-section">Rapports</div>
     <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
+    <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
+    <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
     <div class="nav-item" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
@@ -304,6 +306,8 @@
         <div class="kpi-card accent"><div class="kpi-icon">💰</div><div class="kpi-info"><h3 id="kpi-valeur">—</h3><p>Valeur du stock (FCFA)</p><div class="trend up">Stock total estimé</div></div></div>
         <div class="kpi-card danger"><div class="kpi-icon">⚠️</div><div class="kpi-info"><h3 id="kpi-alertes">—</h3><p>Articles en alerte</p><div class="trend down" id="kpi-critique">— critiques</div></div></div>
         <div class="kpi-card success"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3 id="kpi-commandes">—</h3><p>Commandes en cours</p><div class="trend up">Fournisseurs actifs</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon">💵</div><div class="kpi-info"><h3 id="kpi-caisse-especes">—</h3><p>Caisse espèces (FCFA)</p><div class="trend up">Solde du mois — ventes en espèces</div></div></div>
+        <div class="kpi-card accent"><div class="kpi-icon">📲</div><div class="kpi-info"><h3 id="kpi-mobile-money">—</h3><p>Mobile Money (FCFA)</p><div class="trend up">Orange Money + MTN MoMo + Wave — ce mois</div></div></div>
       </div>
       <div class="grid-2">
         <div class="card"><div class="card-header"><h2>📈 Stock par Catégorie</h2></div><div class="card-body"><canvas id="chartCateg" height="220"></canvas></div></div>
@@ -582,6 +586,202 @@
             💰 Revenu net famille visé (mois 3) : +150 000 FCFA<br>
             🚫 Zéro crédit client les 3 premiers mois<br>
             📓 Enregistrer chaque vente le jour même
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPTABILITÉ OHADA -->
+    <div class="page" id="page-comptabilite">
+      <div class="alert alert-info no-print">📒 Comptabilité simplifiée selon le plan comptable OHADA — saisie d'écritures, journal comptable et balance des comptes mis à jour en temps réel.</div>
+
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="compta-tab-btn-saisie" onclick="comptaNavigate('saisie')" style="flex:1;min-width:130px">✏️ Saisie Écriture</button>
+        <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-journal" onclick="comptaNavigate('journal')" style="flex:1;min-width:130px">📓 Journal Comptable</button>
+        <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-balance" onclick="comptaNavigate('balance')" style="flex:1;min-width:130px">⚖️ Balance des Comptes</button>
+      </div>
+
+      <!-- ONGLET 1 : SAISIE ÉCRITURE -->
+      <div class="caisse-tab active" id="compta-tab-saisie">
+        <div class="card">
+          <div class="card-header"><h2>✏️ Nouvelle Écriture Comptable</h2></div>
+          <div class="card-body">
+            <form onsubmit="enregistrerEcriture(event)">
+              <div class="form-row">
+                <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="ec-date" required></div>
+                <div class="form-group"><label>Référence pièce justificative</label><input type="text" class="form-control" id="ec-reference" placeholder="Ex: Facture n°123, Reçu..."></div>
+              </div>
+              <div class="form-group"><label>Libellé *</label><input type="text" class="form-control" id="ec-libelle" required placeholder="Ex: Achat fournitures de bureau"></div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Compte Débit *</label>
+                  <select class="form-control" id="ec-compte-debit" required></select>
+                </div>
+                <div class="form-group"><label>Montant Débit (FCFA) *</label><input type="number" class="form-control" id="ec-montant-debit" min="0" required placeholder="0" oninput="document.getElementById('ec-montant-credit').value=this.value"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Compte Crédit *</label>
+                  <select class="form-control" id="ec-compte-credit" required></select>
+                </div>
+                <div class="form-group"><label>Montant Crédit (FCFA) *</label><input type="number" class="form-control" id="ec-montant-credit" min="0" required placeholder="0"></div>
+              </div>
+              <div id="ec-erreur-equilibre" style="display:none" class="alert alert-danger">⚠️ Le montant Débit doit être strictement égal au montant Crédit pour pouvoir enregistrer l'écriture.</div>
+              <div class="modal-footer" style="border:none;padding:10px 0 0">
+                <button type="submit" class="btn btn-primary" id="btn-save-ecriture">✓ Enregistrer l'écriture</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET 2 : JOURNAL COMPTABLE -->
+      <div class="caisse-tab" id="compta-tab-journal">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+            <div class="form-group" style="margin:0"><label>Période — du</label><input type="date" class="form-control" id="ej-date-debut" onchange="renderJournalComptable()"></div>
+            <div class="form-group" style="margin:0"><label>au</label><input type="date" class="form-control" id="ej-date-fin" onchange="renderJournalComptable()"></div>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ej-date-debut').value='';document.getElementById('ej-date-fin').value='';renderJournalComptable()">✕ Effacer le filtre</button>
+            <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="exporterJournalComptableCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📓 Journal Comptable <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="ej-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>N° Pièce</th><th>Date</th><th>Libellé</th><th>Compte Débit</th><th style="text-align:right">Montant Débit</th><th>Compte Crédit</th><th style="text-align:right">Montant Crédit</th><th>Référence</th>
+            </tr></thead><tbody id="tbody-journal-comptable"></tbody>
+            <tfoot><tr style="font-weight:800;background:var(--bg-soft,#eef2f6)">
+              <td colspan="4" style="text-align:right;padding:10px">TOTAUX</td>
+              <td style="text-align:right;padding:10px" id="ej-total-debit">0 FCFA</td>
+              <td></td>
+              <td style="text-align:right;padding:10px" id="ej-total-credit">0 FCFA</td>
+              <td></td>
+            </tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET 3 : BALANCE DES COMPTES -->
+      <div class="caisse-tab" id="compta-tab-balance">
+        <div class="card">
+          <div class="card-header"><h2>⚖️ Balance des Comptes <span style="font-weight:400;color:var(--text-muted);font-size:13px">(mise à jour en temps réel)</span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>N°</th><th>Libellé du compte</th><th style="text-align:right">Total Débits</th><th style="text-align:right">Total Crédits</th><th style="text-align:right">Solde</th>
+            </tr></thead><tbody id="tbody-balance-comptes"></tbody>
+            <tfoot><tr style="font-weight:800;background:var(--bg-soft,#eef2f6)">
+              <td colspan="2" style="text-align:right;padding:10px">TOTAL GÉNÉRAL</td>
+              <td style="text-align:right;padding:10px" id="bal-total-debit">0 FCFA</td>
+              <td style="text-align:right;padding:10px" id="bal-total-credit">0 FCFA</td>
+              <td style="text-align:right;padding:10px" id="bal-total-solde">0 FCFA</td>
+            </tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRÉSORERIE — RAPPROCHEMENT -->
+    <div class="page" id="page-rapprochement">
+      <div class="alert alert-info no-print">💰 Rapprochement de Trésorerie — compare les ventes enregistrées dans TeMa avec les relevés réels (Mobile Money / Espèces) pour détecter les écarts.</div>
+
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="rappro-tab-btn-releves" onclick="rapprochementNavigate('releves')" style="flex:1;min-width:130px">📲 Relevés Mobile Money</button>
+        <button class="btn btn-sm caisse-tab-btn" id="rappro-tab-btn-rapprochement" onclick="rapprochementNavigate('rapprochement')" style="flex:1;min-width:130px">🔍 Rapprochement</button>
+        <button class="btn btn-sm caisse-tab-btn" id="rappro-tab-btn-historique" onclick="rapprochementNavigate('historique')" style="flex:1;min-width:130px">🕘 Historique</button>
+      </div>
+
+      <!-- ONGLET 1 : RELEVÉS MOBILE MONEY -->
+      <div class="caisse-tab active" id="rappro-tab-releves">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h2>➕ Saisir un relevé</h2></div>
+          <div class="card-body">
+            <form onsubmit="enregistrerReleve(event)">
+              <div class="form-row">
+                <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="rl-date" required></div>
+                <div class="form-group"><label>Canal *</label>
+                  <select class="form-control" id="rl-canal" required>
+                    <option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Espèces</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Type d'opération *</label>
+                  <select class="form-control" id="rl-type" required>
+                    <option>Encaissement client</option><option>Paiement fournisseur</option><option>Retrait</option><option>Dépôt</option><option>Frais</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Montant (FCFA) *</label><input type="number" class="form-control" id="rl-montant" min="0" required placeholder="0"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Référence transaction <span style="text-transform:none;font-weight:400">(n° SMS reçu)</span></label><input type="text" class="form-control" id="rl-reference" placeholder="Ex: MP240611.1234.A56789"></div>
+                <div class="form-group"><label>Note</label><input type="text" class="form-control" id="rl-note" placeholder="Remarque optionnelle..."></div>
+              </div>
+              <div class="modal-footer" style="border:none;padding:10px 0 0">
+                <button type="submit" class="btn btn-primary">✓ Enregistrer le relevé</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+            <div class="form-group" style="margin:0"><label>Canal</label>
+              <select class="form-control" id="rlf-canal" onchange="renderReleves()">
+                <option value="">Tous les canaux</option><option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Espèces</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0"><label>Du</label><input type="date" class="form-control" id="rlf-debut" onchange="renderReleves()"></div>
+            <div class="form-group" style="margin:0"><label>Au</label><input type="date" class="form-control" id="rlf-fin" onchange="renderReleves()"></div>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('rlf-canal').value='';document.getElementById('rlf-debut').value='';document.getElementById('rlf-fin').value='';renderReleves()">✕ Effacer le filtre</button>
+            <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="exporterRelevesCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h2>📋 Relevés saisis <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rl-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>Date</th><th>Canal</th><th>Type</th><th style="text-align:right">Montant</th><th>Référence</th><th>Note</th><th></th>
+            </tr></thead><tbody id="tbody-releves"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET 2 : RAPPROCHEMENT -->
+      <div class="caisse-tab" id="rappro-tab-rapprochement">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+            <div class="form-group" style="margin:0"><label>Période — du *</label><input type="date" class="form-control" id="rp-debut" onchange="renderRapprochementComparatif()"></div>
+            <div class="form-group" style="margin:0"><label>au *</label><input type="date" class="form-control" id="rp-fin" onchange="renderRapprochementComparatif()"></div>
+            <button class="btn btn-primary btn-sm" onclick="validerRapprochement()">✓ Valider le rapprochement</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>🔍 Comparatif par canal de paiement</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>Canal</th><th style="text-align:right">Enregistré dans TeMa</th><th style="text-align:right">Relevé réel</th><th style="text-align:right">Écart</th><th>Statut</th>
+            </tr></thead><tbody id="tbody-rapprochement"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET 3 : HISTORIQUE -->
+      <div class="caisse-tab" id="rappro-tab-historique">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;justify-content:flex-end">
+            <button class="btn btn-outline btn-sm" onclick="exporterHistoriqueRapprochementsCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>🕘 Historique des Rapprochements Validés</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>Date validation</th><th>Période</th><th>Canal</th><th style="text-align:right">Montant TeMa</th><th style="text-align:right">Montant Réel</th><th style="text-align:right">Écart</th><th>Statut</th>
+            </tr></thead><tbody id="tbody-historique-rapprochements"></tbody></table>
           </div>
         </div>
       </div>
@@ -970,6 +1170,7 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [];
+let ecritures = [], releves = [], rapprochements = [];
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
 function consigner(action, details = '') {
@@ -998,6 +1199,18 @@ let chartCateg = null, chartValeur = null;
 
 // ===== UTILS =====
 const FCFA = n => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
+
+// Génère et télécharge un fichier CSV à partir d'un tableau de lignes (chaque ligne = tableau de cellules)
+function telechargerCSV(lignes, nomFichier) {
+  const csv = lignes.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nomFichier;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export CSV généré ✓');
+}
 const today = () => new Date().toISOString().split('T')[0];
 
 function stockStatut(p) {
@@ -1197,7 +1410,27 @@ function demarrerListeners() {
     checkLoaded();
   }, err => { console.error('ventesCaisse:', err); checkLoaded(); });
 
-  unsubscribers = [u1, u2, u3, u7];
+  // Listener écritures comptables (Comptabilité OHADA, temps réel)
+  const u8 = db.collection('ecritures_comptables').orderBy('date', 'desc').onSnapshot(snap => {
+    ecritures = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+    checkLoaded();
+  }, err => { console.error('ecritures_comptables:', err); checkLoaded(); });
+
+  // Listener relevés de trésorerie (Rapprochement, temps réel)
+  const u9 = db.collection('releves_tresorerie').orderBy('date', 'desc').onSnapshot(snap => {
+    releves = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+    checkLoaded();
+  }, err => { console.error('releves_tresorerie:', err); checkLoaded(); });
+
+  // Listener rapprochements validés
+  const u10 = db.collection('rapprochements').orderBy('dateValidation', 'desc').onSnapshot(snap => {
+    rapprochements = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rapprochements:', err));
+
+  unsubscribers = [u1, u2, u3, u7, u8, u9, u10];
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -1251,6 +1484,14 @@ function afficherApp() {
     document.getElementById('nav-comptes').style.display = 'flex';
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
+  }
+  // Comptabilité OHADA : visible au Propriétaire/Admin et au Gérant uniquement (saisie + modification des écritures)
+  if (peutGererCompta()) {
+    document.getElementById('nav-comptabilite').style.display = 'flex';
+  }
+  // Rapprochement de Trésorerie : Propriétaire/Admin, Gérant et Caissier (saisie des relevés + rapprochement)
+  if (peutGererCompta() || (currentUser.role||'').toLowerCase().includes('caissier')) {
+    document.getElementById('nav-rapprochement').style.display = 'flex';
   }
 
   // Initialiser données si Firestore est vide
@@ -1332,6 +1573,7 @@ const pageTitles = {
   dashboard:'Tableau de Bord', inventaire:'Inventaire des Articles', categories:'Catégories de Produits',
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
+  comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)'
 };
 
@@ -1378,6 +1620,8 @@ function rafraichirPage(page) {
   else if (page === 'journal') renderJournal();
   else if (page === 'caisse') renderCaissePage();
   else if (page === 'suivicaisse') renderSuiviCaisse();
+  else if (page === 'comptabilite') renderComptabilite();
+  else if (page === 'rapprochement') renderRapprochement();
 }
 
 // ===== DASHBOARD =====
@@ -1395,6 +1639,17 @@ function renderDashboard() {
   document.getElementById('kpi-alertes').textContent = al.length;
   document.getElementById('kpi-critique').textContent = crit.length + ' critiques';
   document.getElementById('kpi-commandes').textContent = cmdsEnCours;
+
+  // KPI Trésorerie : ventes du mois en cours, regroupées par mode de paiement
+  const moisActuel = today().slice(0,7);
+  const ventesMoisActuel = ventesCaisse.filter(v => (v.date||'').startsWith(moisActuel));
+  const sommeCanal = canal => ventesMoisActuel.filter(v=>v.modePaiement===canal).reduce((s,v)=>s+(v.montant||0),0);
+  const especes = sommeCanal('Espèces');
+  const mobileMoney = sommeCanal('Orange Money') + sommeCanal('MTN MoMo') + sommeCanal('Wave');
+  const elEsp = document.getElementById('kpi-caisse-especes');
+  const elMM = document.getElementById('kpi-mobile-money');
+  if (elEsp) elEsp.textContent = new Intl.NumberFormat('fr-FR').format(especes);
+  if (elMM) elMM.textContent = new Intl.NumberFormat('fr-FR').format(mobileMoney);
 
   const cats = ['Accessoires Informatiques','Habits Enfants','Fournitures Scolaires','Épicerie'];
   const catsShort = ['Informatique','Habits','Fournitures','Épicerie'];
@@ -1743,6 +1998,7 @@ async function changerStatutCmd(id, statut) {
       statut, updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     if (statut === 'received' && c.lignes) {
+      const fournNom = (fournisseurs.find(f => f.id === c.fournId) || {}).nom || 'Fournisseur';
       for (const l of c.lignes) {
         const p = produits.find(x => x.nom === l.nom);
         if (p) {
@@ -1751,6 +2007,8 @@ async function changerStatutCmd(id, statut) {
             updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
+        // Liaison automatique Comptabilité OHADA : Débit 601 Achats / Crédit 401 Fournisseurs
+        genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom);
       }
       consigner('Commande reçue', `${c.num||id} — stock mis à jour`);
       showToast('Commande reçue — stock mis à jour ✓');
@@ -2258,6 +2516,424 @@ const ZONES_CAISSE = {
   D: { label: 'Épicerie', emoji: '🛒', color: '#1E8449' },
   E: { label: 'Services B2B', emoji: '🏢', color: '#7D3C98' }
 };
+// ===================================================================
+// MODULE COMPTABILITÉ OHADA — plan comptable simplifié (liste fixe)
+// ===================================================================
+const PLAN_COMPTABLE = [
+  { classe: '1', titre: 'RESSOURCES DURABLES', comptes: [
+    { num: '101', lib: 'Capital' }, { num: '161', lib: 'Emprunts' }
+  ]},
+  { classe: '2', titre: 'ACTIF IMMOBILISÉ', comptes: [
+    { num: '221', lib: 'Bâtiments commerciaux' }, { num: '241', lib: 'Matériel informatique' }, { num: '244', lib: 'Mobilier' }
+  ]},
+  { classe: '3', titre: 'STOCKS', comptes: [
+    { num: '31', lib: 'Marchandises Zone A — Informatique' },
+    { num: '32', lib: 'Marchandises Zone B — Vêtements Enfants' },
+    { num: '33', lib: 'Marchandises Zone C — Fournitures Scolaires' },
+    { num: '34', lib: 'Marchandises Zone D — Épicerie' }
+  ]},
+  { classe: '4', titre: 'TIERS', comptes: [
+    { num: '401', lib: 'Fournisseurs' }, { num: '411', lib: 'Clients' },
+    { num: '421', lib: 'Personnel — salaires à payer' }, { num: '447', lib: 'État — taxes à payer' }
+  ]},
+  { classe: '5', titre: 'TRÉSORERIE', comptes: [
+    { num: '521', lib: 'Caisse espèces' }, { num: '522', lib: 'Orange Money' },
+    { num: '523', lib: 'MTN MoMo' }, { num: '524', lib: 'Wave' }
+  ]},
+  { classe: '6', titre: 'CHARGES', comptes: [
+    { num: '601', lib: 'Achats de marchandises' }, { num: '621', lib: 'Loyer (300 000 FCFA / mois)' },
+    { num: '641', lib: 'Salaires' }, { num: '645', lib: 'Charges sociales' }, { num: '651', lib: 'Charges diverses' }
+  ]},
+  { classe: '7', titre: 'PRODUITS', comptes: [
+    { num: '701', lib: 'Ventes Zone A — Informatique' }, { num: '702', lib: 'Ventes Zone B — Vêtements Enfants' },
+    { num: '703', lib: 'Ventes Zone C — Fournitures Scolaires' }, { num: '704', lib: 'Ventes Zone D — Épicerie' },
+    { num: '705', lib: 'Ventes Zone E — Services B2B' }
+  ]}
+];
+
+// Recherche d'un compte du plan comptable par son numéro
+function compteParNumero(numero) {
+  for (const classe of PLAN_COMPTABLE) {
+    const c = classe.comptes.find(x => x.num === numero);
+    if (c) return c;
+  }
+  return null;
+}
+// Libellé complet "numéro — libellé" d'un compte
+function libelleCompte(numero) {
+  const c = compteParNumero(numero);
+  return c ? `${c.num} — ${c.lib}` : (numero || '—');
+}
+// Un Gérant ou le Propriétaire/Admin peut créer/modifier des écritures comptables
+function peutGererCompta() {
+  if (!currentUser) return false;
+  return currentUser.isAdmin || (currentUser.role || '').toLowerCase().includes('gérant') || (currentUser.role || '').toLowerCase().includes('gerant');
+}
+
+// Correspondance Mode de paiement (vente) → Compte de trésorerie OHADA
+const COMPTE_TRESORERIE_PAR_MODE = { 'Espèces': '521', 'Orange Money': '522', 'MTN MoMo': '523', 'Wave': '524', 'Autre': '521' };
+// Correspondance Zone de vente → Compte de produits OHADA (classe 7)
+const COMPTE_PRODUIT_PAR_ZONE = { A: '701', B: '702', C: '703', D: '704', E: '705' };
+
+// Génère un numéro de pièce auto incrémental pour les écritures comptables
+function genererNumPiece() {
+  const annee = new Date().getFullYear();
+  const n = ecritures.filter(e => (e.numPiece || '').includes(`EC-${annee}-`)).length + 1;
+  return `EC-${annee}-${String(n).padStart(4, '0')}`;
+}
+
+// Crée une écriture automatique liée à une vente (Débit Trésorerie / Crédit Produits)
+async function genererEcritureVente(vente) {
+  try {
+    const compteDebit = COMPTE_TRESORERIE_PAR_MODE[vente.modePaiement] || '521';
+    const compteCredit = COMPTE_PRODUIT_PAR_ZONE[vente.zone] || '701';
+    await db.collection('ecritures_comptables').add({
+      numPiece: genererNumPiece(),
+      date: vente.date,
+      libelle: `Vente ${vente.article} — ${ZONES_CAISSE[vente.zone]?.label || vente.zone}`,
+      compteDebit, montantDebit: vente.montant,
+      compteCredit, montantCredit: vente.montant,
+      reference: '',
+      auto: true, source: 'vente',
+      createdBy: 'Système (écriture automatique)',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.error('Erreur génération écriture vente:', err); }
+}
+
+// Crée une écriture automatique liée à un approvisionnement reçu (Débit Achats / Crédit Fournisseurs)
+async function genererEcritureAchat(article, montant, fournisseurNom) {
+  try {
+    await db.collection('ecritures_comptables').add({
+      numPiece: genererNumPiece(),
+      date: today(),
+      libelle: `Achat ${article} — ${fournisseurNom}`,
+      compteDebit: '601', montantDebit: montant,
+      compteCredit: '401', montantCredit: montant,
+      reference: '',
+      auto: true, source: 'achat',
+      createdBy: 'Système (écriture automatique)',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.error('Erreur génération écriture achat:', err); }
+}
+
+let comptaOnglet = 'saisie';
+function comptaNavigate(tab) {
+  comptaOnglet = tab;
+  document.querySelectorAll('#page-comptabilite .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-comptabilite .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('compta-tab-' + tab).classList.add('active');
+  document.getElementById('compta-tab-btn-' + tab).classList.add('active');
+  renderComptabilite();
+}
+
+// Remplit les sélecteurs de comptes (Débit / Crédit) à partir du plan comptable OHADA
+function peuplerSelecteursComptes() {
+  const options = PLAN_COMPTABLE.map(classe => `<optgroup label="CLASSE ${classe.classe} — ${classe.titre}">
+    ${classe.comptes.map(c => `<option value="${c.num}">${c.num} — ${c.lib}</option>`).join('')}
+  </optgroup>`).join('');
+  ['ec-compte-debit', 'ec-compte-credit'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && !sel.dataset.built) { sel.innerHTML = '<option value="">-- Choisir un compte --</option>' + options; sel.dataset.built = '1'; }
+  });
+}
+
+function renderComptabilite() {
+  if (!document.getElementById('page-comptabilite').classList.contains('active')) return;
+  peuplerSelecteursComptes();
+  if (!document.getElementById('ec-date').value) document.getElementById('ec-date').value = today();
+  if (comptaOnglet === 'journal') renderJournalComptable();
+  else if (comptaOnglet === 'balance') renderBalanceComptes();
+}
+
+// Enregistre une nouvelle écriture comptable manuelle (avec contrôle d'équilibre Débit = Crédit)
+async function enregistrerEcriture(event) {
+  event.preventDefault();
+  if (!peutGererCompta()) { showToast("Vous n'avez pas l'autorisation de créer des écritures comptables", 'error'); return; }
+  const date = document.getElementById('ec-date').value;
+  const libelle = document.getElementById('ec-libelle').value.trim();
+  const compteDebit = document.getElementById('ec-compte-debit').value;
+  const compteCredit = document.getElementById('ec-compte-credit').value;
+  const montantDebit = Number(document.getElementById('ec-montant-debit').value || 0);
+  const montantCredit = Number(document.getElementById('ec-montant-credit').value || 0);
+  const reference = document.getElementById('ec-reference').value.trim();
+  const erreurBox = document.getElementById('ec-erreur-equilibre');
+
+  // RÈGLE ABSOLUE : le montant Débit doit être strictement égal au montant Crédit
+  if (montantDebit !== montantCredit || montantDebit <= 0) {
+    erreurBox.style.display = 'block';
+    showToast('Écriture refusée : le montant Débit doit être égal au montant Crédit', 'error');
+    return;
+  }
+  erreurBox.style.display = 'none';
+  if (!compteDebit || !compteCredit) { showToast('Veuillez sélectionner les comptes Débit et Crédit', 'error'); return; }
+  if (compteDebit === compteCredit) { showToast('Les comptes Débit et Crédit doivent être différents', 'error'); return; }
+
+  const btn = document.getElementById('btn-save-ecriture');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Enregistrement...';
+  try {
+    await db.collection('ecritures_comptables').add({
+      numPiece: genererNumPiece(), date, libelle,
+      compteDebit, montantDebit, compteCredit, montantCredit, reference,
+      auto: false, source: 'manuel',
+      createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Écriture comptable enregistrée', `${libelle} — ${FCFA(montantDebit)} (${libelleCompte(compteDebit)} / ${libelleCompte(compteCredit)})`);
+    showToast('✓ Écriture enregistrée');
+    event.target.reset();
+    document.getElementById('ec-date').value = today();
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = "✓ Enregistrer l'écriture";
+}
+
+// Affiche le journal comptable, avec filtre de période et calcul des totaux (toujours égaux)
+function renderJournalComptable() {
+  const debut = document.getElementById('ej-date-debut')?.value || '';
+  const fin = document.getElementById('ej-date-fin')?.value || '';
+  let liste = [...ecritures];
+  if (debut) liste = liste.filter(e => (e.date || '') >= debut);
+  if (fin) liste = liste.filter(e => (e.date || '') <= fin);
+  liste.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const tbody = document.getElementById('tbody-journal-comptable');
+  if (!tbody) return;
+  document.getElementById('ej-count').textContent = `(${liste.length})`;
+  tbody.innerHTML = liste.length ? liste.map(e => `
+    <tr>
+      <td style="font-size:12px">${e.numPiece || '—'}${e.auto ? ' <span class="cat-tag cat-info" title="Écriture générée automatiquement">auto</span>' : ''}</td>
+      <td style="font-size:12px">${e.date || '—'}</td>
+      <td>${e.libelle || ''}</td>
+      <td style="font-size:12px">${libelleCompte(e.compteDebit)}</td>
+      <td style="text-align:right">${FCFA(e.montantDebit||0)}</td>
+      <td style="font-size:12px">${libelleCompte(e.compteCredit)}</td>
+      <td style="text-align:right">${FCFA(e.montantCredit||0)}</td>
+      <td style="font-size:12px">${e.reference || '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture pour cette période</td></tr>';
+
+  const totalDebit = liste.reduce((s,e)=>s+(e.montantDebit||0),0);
+  const totalCredit = liste.reduce((s,e)=>s+(e.montantCredit||0),0);
+  document.getElementById('ej-total-debit').textContent = FCFA(totalDebit);
+  document.getElementById('ej-total-credit').textContent = FCFA(totalCredit);
+}
+
+// Exporte le journal comptable affiché (avec filtre actif) au format CSV
+function exporterJournalComptableCSV() {
+  const debut = document.getElementById('ej-date-debut')?.value || '';
+  const fin = document.getElementById('ej-date-fin')?.value || '';
+  let liste = [...ecritures];
+  if (debut) liste = liste.filter(e => (e.date || '') >= debut);
+  if (fin) liste = liste.filter(e => (e.date || '') <= fin);
+  liste.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  const lignes = [['N° Pièce','Date','Libellé','Compte Débit','Montant Débit','Compte Crédit','Montant Crédit','Référence']];
+  liste.forEach(e => lignes.push([e.numPiece||'', e.date||'', e.libelle||'', libelleCompte(e.compteDebit), e.montantDebit||0, libelleCompte(e.compteCredit), e.montantCredit||0, e.reference||'']));
+  telechargerCSV(lignes, `journal_comptable_${today()}.csv`);
+}
+
+// Calcule et affiche la balance des comptes (regroupée par classe OHADA), mise à jour en temps réel
+function renderBalanceComptes() {
+  const tbody = document.getElementById('tbody-balance-comptes');
+  if (!tbody) return;
+  let html = '';
+  let totalDebitGeneral = 0, totalCreditGeneral = 0;
+  PLAN_COMPTABLE.forEach(classe => {
+    const lignesClasse = classe.comptes.map(c => {
+      const totalDebit = ecritures.filter(e=>e.compteDebit===c.num).reduce((s,e)=>s+(e.montantDebit||0),0);
+      const totalCredit = ecritures.filter(e=>e.compteCredit===c.num).reduce((s,e)=>s+(e.montantCredit||0),0);
+      return { ...c, totalDebit, totalCredit, solde: totalDebit - totalCredit };
+    }).filter(c => c.totalDebit > 0 || c.totalCredit > 0);
+    if (!lignesClasse.length) return;
+    html += `<tr style="background:var(--bg-soft,#eef2f6)"><td colspan="5" style="font-weight:700;padding:8px 10px">CLASSE ${classe.classe} — ${classe.titre}</td></tr>`;
+    lignesClasse.forEach(c => {
+      totalDebitGeneral += c.totalDebit; totalCreditGeneral += c.totalCredit;
+      html += `<tr>
+        <td style="font-size:12px">${c.num}</td>
+        <td>${c.lib}</td>
+        <td style="text-align:right">${FCFA(c.totalDebit)}</td>
+        <td style="text-align:right">${FCFA(c.totalCredit)}</td>
+        <td style="text-align:right;font-weight:700;color:${c.solde>=0?'#1E8449':'#C0392B'}">${FCFA(c.solde)}</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture enregistrée pour le moment</td></tr>';
+  document.getElementById('bal-total-debit').textContent = FCFA(totalDebitGeneral);
+  document.getElementById('bal-total-credit').textContent = FCFA(totalCreditGeneral);
+  document.getElementById('bal-total-solde').textContent = FCFA(totalDebitGeneral - totalCreditGeneral);
+}
+
+// ===================================================================
+// MODULE RAPPROCHEMENT DE TRÉSORERIE
+// ===================================================================
+let rapprochementOnglet = 'releves';
+function rapprochementNavigate(tab) {
+  rapprochementOnglet = tab;
+  document.querySelectorAll('#page-rapprochement .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-rapprochement .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('rappro-tab-' + tab).classList.add('active');
+  document.getElementById('rappro-tab-btn-' + tab).classList.add('active');
+  renderRapprochement();
+}
+
+function renderRapprochement() {
+  if (!document.getElementById('page-rapprochement').classList.contains('active')) return;
+  if (!document.getElementById('rl-date').value) document.getElementById('rl-date').value = today();
+  if (rapprochementOnglet === 'releves') renderReleves();
+  else if (rapprochementOnglet === 'rapprochement') renderRapprochementComparatif();
+  else if (rapprochementOnglet === 'historique') renderHistoriqueRapprochements();
+}
+
+// Enregistre un relevé Mobile Money / Espèces saisi manuellement
+async function enregistrerReleve(event) {
+  event.preventDefault();
+  const date = document.getElementById('rl-date').value;
+  const canal = document.getElementById('rl-canal').value;
+  const type = document.getElementById('rl-type').value;
+  const montant = Number(document.getElementById('rl-montant').value || 0);
+  const reference = document.getElementById('rl-reference').value.trim();
+  const note = document.getElementById('rl-note').value.trim();
+  if (!montant || montant <= 0) { showToast('Le montant doit être supérieur à zéro', 'error'); return; }
+  try {
+    await db.collection('releves_tresorerie').add({
+      date, canal, type, montant, reference, note,
+      createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Relevé de trésorerie enregistré', `${canal} — ${type} — ${FCFA(montant)}`);
+    showToast('✓ Relevé enregistré');
+    event.target.reset();
+    document.getElementById('rl-date').value = today();
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderReleves() {
+  const canal = document.getElementById('rlf-canal')?.value || '';
+  const debut = document.getElementById('rlf-debut')?.value || '';
+  const fin = document.getElementById('rlf-fin')?.value || '';
+  let liste = [...releves];
+  if (canal) liste = liste.filter(r => r.canal === canal);
+  if (debut) liste = liste.filter(r => (r.date||'') >= debut);
+  if (fin) liste = liste.filter(r => (r.date||'') <= fin);
+  liste.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const tbody = document.getElementById('tbody-releves');
+  if (!tbody) return;
+  document.getElementById('rl-count').textContent = `(${liste.length})`;
+  tbody.innerHTML = liste.length ? liste.map(r => `
+    <tr>
+      <td style="font-size:12px">${r.date||'—'}</td>
+      <td>${r.canal||''}</td>
+      <td style="font-size:12px">${r.type||''}</td>
+      <td style="text-align:right;font-weight:700">${FCFA(r.montant||0)}</td>
+      <td style="font-size:12px">${r.reference||'—'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.note||'—'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="supprimerReleve('${r.id}')">🗑</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Aucun relevé enregistré</td></tr>';
+}
+
+async function supprimerReleve(id) {
+  const r = releves.find(x=>x.id===id); if (!r) return;
+  if (!confirm(`Supprimer ce relevé "${r.canal} — ${FCFA(r.montant)}" ?`)) return;
+  try {
+    await db.collection('releves_tresorerie').doc(id).delete();
+    consigner('Relevé de trésorerie supprimé', `${r.canal} — ${FCFA(r.montant)}`);
+    showToast('Relevé supprimé', 'warning');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function exporterRelevesCSV() {
+  const lignes = [['Date','Canal','Type','Montant','Référence','Note']];
+  releves.forEach(r => lignes.push([r.date||'', r.canal||'', r.type||'', r.montant||0, r.reference||'', r.note||'']));
+  telechargerCSV(lignes, `releves_tresorerie_${today()}.csv`);
+}
+
+const CANAUX_RAPPROCHEMENT = ['Espèces', 'Orange Money', 'MTN MoMo', 'Wave'];
+
+// Calcule le comparatif Enregistré dans TeMa (ventes) vs Relevé réel (relevés saisis), par canal, pour la période choisie
+function calculerComparatifRapprochement(debut, fin) {
+  return CANAUX_RAPPROCHEMENT.map(canal => {
+    let ventesPeriode = ventesCaisse.filter(v => v.modePaiement === canal);
+    let relevesPeriode = releves.filter(r => r.canal === canal);
+    if (debut) { ventesPeriode = ventesPeriode.filter(v => (v.date||'') >= debut); relevesPeriode = relevesPeriode.filter(r => (r.date||'') >= debut); }
+    if (fin) { ventesPeriode = ventesPeriode.filter(v => (v.date||'') <= fin); relevesPeriode = relevesPeriode.filter(r => (r.date||'') <= fin); }
+    const montantTeMa = ventesPeriode.reduce((s,v)=>s+(v.montant||0),0);
+    const montantReel = relevesPeriode.filter(r=>r.type==='Encaissement client').reduce((s,r)=>s+(r.montant||0),0);
+    const ecart = montantTeMa - montantReel;
+    return { canal, montantTeMa, montantReel, ecart };
+  });
+}
+
+// Détermine le statut/couleur d'un écart : vert (=0), orange (<5000), rouge (>=5000)
+function statutEcart(ecart) {
+  const abs = Math.abs(ecart);
+  if (abs === 0) return { statut: 'Équilibré', couleur: '#1E8449', fond: 'rgba(30,132,73,.12)' };
+  if (abs < 5000) return { statut: 'Écart mineur', couleur: '#C8981A', fond: 'rgba(200,152,26,.14)' };
+  return { statut: 'Écart critique', couleur: '#C0392B', fond: 'rgba(192,57,43,.12)' };
+}
+
+function renderRapprochementComparatif() {
+  const debut = document.getElementById('rp-debut')?.value || '';
+  const fin = document.getElementById('rp-fin')?.value || '';
+  const comparatif = calculerComparatifRapprochement(debut, fin);
+  const tbody = document.getElementById('tbody-rapprochement');
+  if (!tbody) return;
+  tbody.innerHTML = comparatif.map(c => {
+    const s = statutEcart(c.ecart);
+    return `<tr style="background:${s.fond}">
+      <td><strong>${c.canal}</strong></td>
+      <td style="text-align:right">${FCFA(c.montantTeMa)}</td>
+      <td style="text-align:right">${FCFA(c.montantReel)}</td>
+      <td style="text-align:right;font-weight:700;color:${s.couleur}">${FCFA(c.ecart)}</td>
+      <td><span class="stock-tag" style="background:${s.fond};color:${s.couleur}">${s.statut}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Valide et enregistre l'état du rapprochement pour la période choisie (un enregistrement par canal)
+async function validerRapprochement() {
+  if (!peutGererCompta() && !(currentUser.role||'').toLowerCase().includes('caissier')) { showToast("Vous n'avez pas l'autorisation de valider un rapprochement", 'error'); return; }
+  const debut = document.getElementById('rp-debut')?.value || '';
+  const fin = document.getElementById('rp-fin')?.value || '';
+  if (!debut || !fin) { showToast('Veuillez choisir une période (du / au) avant de valider', 'error'); return; }
+  const comparatif = calculerComparatifRapprochement(debut, fin);
+  try {
+    const dateValidation = today();
+    const periode = `${debut} → ${fin}`;
+    for (const c of comparatif) {
+      const s = statutEcart(c.ecart);
+      await db.collection('rapprochements').add({
+        dateValidation, periode, debut, fin,
+        canal: c.canal, montantTeMa: c.montantTeMa, montantReel: c.montantReel, ecart: c.ecart, statut: s.statut,
+        validePar: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    consigner('Rapprochement de trésorerie validé', `Période ${periode} — validé par ${currentUser.label}`);
+    showToast('✓ Rapprochement validé et enregistré dans l\'historique');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderHistoriqueRapprochements() {
+  const tbody = document.getElementById('tbody-historique-rapprochements');
+  if (!tbody) return;
+  const liste = [...rapprochements].sort((a,b) => (b.dateValidation||'').localeCompare(a.dateValidation||''));
+  tbody.innerHTML = liste.length ? liste.map(r => {
+    const s = statutEcart(r.ecart||0);
+    return `<tr>
+      <td style="font-size:12px">${r.dateValidation||'—'}</td>
+      <td style="font-size:12px">${r.periode||'—'}</td>
+      <td>${r.canal||''}</td>
+      <td style="text-align:right">${FCFA(r.montantTeMa||0)}</td>
+      <td style="text-align:right">${FCFA(r.montantReel||0)}</td>
+      <td style="text-align:right;font-weight:700;color:${s.couleur}">${FCFA(r.ecart||0)}</td>
+      <td><span class="stock-tag" style="background:${s.fond};color:${s.couleur}">${r.statut||s.statut}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Aucun rapprochement validé pour le moment</td></tr>';
+}
+
+function exporterHistoriqueRapprochementsCSV() {
+  const lignes = [['Date validation','Période','Canal','Montant TeMa','Montant Réel','Écart','Statut']];
+  rapprochements.forEach(r => lignes.push([r.dateValidation||'', r.periode||'', r.canal||'', r.montantTeMa||0, r.montantReel||0, r.ecart||0, r.statut||'']));
+  telechargerCSV(lignes, `historique_rapprochements_${today()}.csv`);
+}
+
 const OBJECTIF_JOUR = 10000;
 const LOYER_MOIS = 300000;
 let suiviCaisseOnglet = 'journal';
@@ -2424,6 +3100,7 @@ async function ajouterVenteCaisse(event) {
   };
   try {
     await db.collection('ventesCaisse').add(data);
+    genererEcritureVente(data); // Liaison automatique Comptabilité OHADA : Débit Trésorerie / Crédit Produits
     consigner('Vente enregistrée (caisse)', `${ZONES_CAISSE[data.zone]?.label} — ${article} — ${FCFA(data.montant)}`);
     showToast(`✓ Vente enregistrée — ${FCFA(data.montant)}`);
     ['cs-article','cs-prix','cs-client','cs-note'].forEach(id => document.getElementById(id).value = '');
