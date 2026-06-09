@@ -1781,7 +1781,7 @@
           <button class="btn-cart btn-cart-clear" onclick="viderPanier()">🗑 Vider</button>
           <button class="btn-cart btn-cart-hold" onclick="mettreEnAttente()">⏸ En attente</button>
         </div>
-        <button class="btn-pay" id="btn-pay" onclick="ouvrirPaiement()" disabled>💳 RÉGLER</button>
+        <button class="btn-pay" id="btn-pay" onclick="posOuvrirPaiement()" disabled>💳 RÉGLER</button>
       </div>
     </div>
 
@@ -2550,11 +2550,14 @@ function renderGrilleProduits() {
 
   grid.innerHTML = liste.map(p => {
     const stock = p.stock||0; const outOfStock = stock <= 0;
-    const sClass = stock<=0?'out':stock<=(p.stockMin||5)?'low':'';
-    const sTxt   = stock<=0?'Rupture':stock<=(p.stockMin||5)?`⚠️ ${stock} restant`:`${stock} en stock`;
+    const seuil = p.stockMin||5;
+    const sClass = stock<=0?'out':stock<=seuil?'low':'';
+    const sTxt   = stock<=0?'🚫 Rupture':stock<=seuil?`⚠️ ${stock} restant`:`✅ ${stock} en stock`;
     const emoji  = CAT_EMOJI[p.cat] || '📦';
     const prixAff = p.pvente||p.prix||0;
-    return `<div class="product-card${outOfStock?' out-of-stock':''}" onclick="${outOfStock?`showToast('Rupture de stock','error')`:`ajouterAuPanier('${p.id}')`}">
+    return `<div class="product-card${outOfStock?' out-of-stock':''}"
+      onclick="${outOfStock?`showToast('🚫 Rupture de stock — article non disponible','error')`:`ajouterAuPanier('${p.id}')`}"
+      title="${p.nom} — Stock: ${stock} | Prix achat: ${posF0(p.pachat||0)} F | Prix vente: ${posF0(prixAff)} F">
       <div class="product-emoji">${emoji}</div>
       <div class="product-name">${p.nom||'—'}</div>
       <div class="product-price">${posF0(prixAff)} FCFA</div>
@@ -2695,7 +2698,7 @@ function renderPanier() {
   document.getElementById('btn-pay').disabled=!posPanier.length;
 }
 
-function ouvrirPaiement() {
+function posOuvrirPaiement() {
   if (!posPanier.length) return;
   const {total}=calculerTotaux(); posModePayActuel='Espèces';
   document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('selected'));
@@ -3090,6 +3093,11 @@ function navigate(page) {
 }
 
 function rafraichirPageActive() {
+  // Re-render POS grid if POS is active (inventory sync en temps réel)
+  if (document.getElementById('screen-pos')?.classList.contains('active')) {
+    renderGrilleProduits();
+    return;
+  }
   const active = document.querySelector('.page.active');
   if (!active) return;
   const id = active.id.replace('page-', '');
