@@ -271,6 +271,10 @@
     <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
     <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
     <div class="nav-item" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
+    <div class="nav-section">Services & Finance</div>
+    <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
+    <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
+    <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
@@ -306,8 +310,10 @@
         <div class="kpi-card accent"><div class="kpi-icon">💰</div><div class="kpi-info"><h3 id="kpi-valeur">—</h3><p>Valeur du stock (FCFA)</p><div class="trend up">Stock total estimé</div></div></div>
         <div class="kpi-card danger"><div class="kpi-icon">⚠️</div><div class="kpi-info"><h3 id="kpi-alertes">—</h3><p>Articles en alerte</p><div class="trend down" id="kpi-critique">— critiques</div></div></div>
         <div class="kpi-card success"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3 id="kpi-commandes">—</h3><p>Commandes en cours</p><div class="trend up">Fournisseurs actifs</div></div></div>
-        <div class="kpi-card success"><div class="kpi-icon">💵</div><div class="kpi-info"><h3 id="kpi-caisse-especes">—</h3><p>Caisse espèces (FCFA)</p><div class="trend up">Solde du mois — ventes en espèces</div></div></div>
-        <div class="kpi-card accent"><div class="kpi-icon">📲</div><div class="kpi-info"><h3 id="kpi-mobile-money">—</h3><p>Mobile Money (FCFA)</p><div class="trend up">Orange Money + MTN MoMo + Wave — ce mois</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon">💵</div><div class="kpi-info"><h3 id="kpi-caisse-especes">—</h3><p>Caisse espèces (FCFA)</p><div class="trend up">Recettes espèces du mois</div></div></div>
+        <div class="kpi-card accent"><div class="kpi-icon">📲</div><div class="kpi-info"><h3 id="kpi-mobile-money">—</h3><p>Ventes Mobile Money (FCFA)</p><div class="trend up">Orange Money + MTN MoMo + Wave + Moov — mois</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3 id="kpi-comm-mm">—</h3><p>Commissions MM (FCFA)</p><div class="trend up">Revenus d'agent Mobile Money — mois</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3 id="kpi-services">—</h3><p>Services Numériques (FCFA)</p><div class="trend up">Photocopie, impression, CV... — mois</div></div></div>
       </div>
       <div class="grid-2">
         <div class="card"><div class="card-header"><h2>📈 Stock par Catégorie</h2></div><div class="card-body"><canvas id="chartCateg" height="220"></canvas></div></div>
@@ -358,7 +364,7 @@
       <div class="card">
         <div class="card-header"><h2>🏭 Liste des Fournisseurs <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="fourn-count"></span></h2></div>
         <div class="card-body table-wrap">
-          <table><thead><tr><th>#</th><th>Nom</th><th>Contact</th><th>Téléphone</th><th>Catégorie</th><th>Email</th><th>Délai</th><th>Actions</th></tr></thead>
+          <table><thead><tr><th>#</th><th>Nom</th><th>Contact</th><th>Téléphone</th><th>Catégorie</th><th>Email</th><th>Délai</th><th>Crédit Accordé</th><th>Solde Dû</th><th>Actions</th></tr></thead>
           <tbody id="tbody-fourn"></tbody></table>
         </div>
       </div>
@@ -457,7 +463,7 @@
       <div class="alert alert-info no-print">💵 Analyse des ventes du jour par zone et mode de paiement. Objectif : 10 000 FCFA/jour — Loyer mensuel à couvrir : 300 000 FCFA.</div>
 
       <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
-        <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-tresorerie" onclick="suiviCaisseNavigate('tresorerie')" style="flex:1;min-width:110px">💰 Trésorerie</button>
+        <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-tresorerie" onclick="suiviCaisseNavigate('tresorerie')" style="flex:1;min-width:110px">🏭 Comptes Fournisseurs</button>
         <button class="btn btn-sm caisse-tab-btn active" id="suivi-tab-btn-journal" onclick="suiviCaisseNavigate('journal')" style="flex:1;min-width:110px">📋 Journal</button>
         <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-tableau" onclick="suiviCaisseNavigate('tableau')" style="flex:1;min-width:110px">📊 Tableau de Bord</button>
         <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-ia" onclick="suiviCaisseNavigate('ia')" style="flex:1;min-width:110px">🤖 Analyse IA</button>
@@ -465,7 +471,7 @@
 
       <!-- ONGLET TRÉSORERIE -->
       <div class="caisse-tab" id="suivi-tab-tresorerie">
-        <div class="alert alert-info">💰 Comptabilité interne : suivi des sommes dues aux fournisseurs, des dépenses prévisionnelles (commandes en cours non reçues) et des versements / règlements effectués. Visible par l'administrateur uniquement.</div>
+        <div class="alert alert-info">🏭 Comptes Fournisseurs : suivi des sommes dues aux fournisseurs, des dépenses prévisionnelles (commandes en cours non reçues) et des versements / règlements effectués. À ne pas confondre avec le menu « 💰 Trésorerie » (rapprochement Caisse / Mobile Money) — ici il s'agit uniquement des dettes envers les fournisseurs. Visible par l'administrateur uniquement.</div>
         <div class="kpi-grid">
           <div class="kpi-card danger"><div class="kpi-icon">📤</div><div class="kpi-info"><h3 id="tres-total-du">—</h3><p>Total dû aux fournisseurs</p><div class="trend down" id="tres-nb-fournisseurs-du">—</div></div></div>
           <div class="kpi-card accent"><div class="kpi-icon">📋</div><div class="kpi-info"><h3 id="tres-prevision">—</h3><p>Dépenses prévisionnelles</p><div class="trend up">Commandes en attente / envoyées</div></div></div>
@@ -514,6 +520,7 @@
 
       <!-- ONGLET JOURNAL -->
       <div class="caisse-tab active" id="suivi-tab-journal">
+        <div class="alert alert-info no-print" style="margin-bottom:14px">📋 Journal des ventes au comptoir (détail, filtres, export et récapitulatif). Pour le journal comptable en partie double (débit/crédit selon le plan OHADA), voir le menu « 📒 Comptabilité ».</div>
         <div class="card no-print">
           <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
             <button class="btn btn-sm btn-outline" id="caisse-filtre-jour" onclick="caisseFiltrerJournal('jour')">Aujourd'hui</button>
@@ -787,6 +794,201 @@
       </div>
     </div>
 
+    <!-- MODULE MOBILE MONEY COMPLET -->
+    <div class="page" id="page-mobilemoney">
+      <div class="alert alert-info no-print">📱 Transactions Mobile Money (dépôts, retraits, transferts) — commissions calculées automatiquement et synchronisation avec la caisse et la rentabilité.</div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="mm-tab-btn-saisie" onclick="mmNavigate('saisie')" style="flex:1;min-width:130px">✏️ Nouvelle Transaction</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mm-tab-btn-historique" onclick="mmNavigate('historique')" style="flex:1;min-width:130px">📊 Soldes & Historique</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mm-tab-btn-commissions" onclick="mmNavigate('commissions')" style="flex:1;min-width:130px">💰 Commissions</button>
+      </div>
+      <!-- ONGLET SAISIE -->
+      <div class="caisse-tab active" id="mm-tab-saisie">
+        <div class="card">
+          <div class="card-header"><h2>✏️ Enregistrer une Transaction Mobile Money</h2></div>
+          <div class="card-body">
+            <form onsubmit="enregistrerTransactionMM(event)">
+              <div class="form-row">
+                <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="mm-date" required></div>
+                <div class="form-group">
+                  <label>Réseau *</label>
+                  <select class="form-control" id="mm-reseau" required onchange="majCommissionPreview()">
+                    <option value="">-- Réseau --</option>
+                    <option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Moov Money</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Type de transaction *</label>
+                  <select class="form-control" id="mm-type" required onchange="majCommissionPreview()">
+                    <option value="">-- Type --</option>
+                    <option value="depot">📥 Dépôt client</option>
+                    <option value="retrait">📤 Retrait client</option>
+                    <option value="transfert">↔️ Transfert / envoi</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Montant de la transaction (FCFA) *</label>
+                  <input type="number" class="form-control" id="mm-montant" min="1" required oninput="majCommissionPreview()" placeholder="Ex : 10 000">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Client (nom ou téléphone)</label><input type="text" class="form-control" id="mm-client" placeholder="Facultatif"></div>
+                <div class="form-group"><label>Référence / N° transaction</label><input type="text" class="form-control" id="mm-reference" placeholder="Ex : ORA-2026060900X"></div>
+              </div>
+              <div id="mm-commission-preview" style="display:none;background:rgba(26,122,110,.08);border:1px solid rgba(26,122,110,.3);border-radius:8px;padding:12px;margin-bottom:14px">
+                <span style="font-weight:600">Commission boutique :</span>
+                <span id="mm-commission-val" style="color:var(--success);font-weight:700;margin:0 8px"></span>
+                <span id="mm-commission-taux" style="font-size:11px;color:var(--text-muted)"></span>
+              </div>
+              <div style="margin-top:8px"><button type="submit" class="btn btn-primary">📱 Enregistrer la Transaction</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- ONGLET HISTORIQUE -->
+      <div class="caisse-tab" id="mm-tab-historique">
+        <div class="kpi-grid" id="mm-kpi-soldes"></div>
+        <div class="card">
+          <div class="card-header no-print" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+            <h2>📋 Historique</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+              <select class="form-control" id="mmh-reseau" style="max-width:160px" onchange="renderMMHistorique()"><option value="">Tous les réseaux</option><option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Moov Money</option></select>
+              <select class="form-control" id="mmh-type" style="max-width:140px" onchange="renderMMHistorique()"><option value="">Tous les types</option><option value="depot">Dépôts</option><option value="retrait">Retraits</option><option value="transfert">Transferts</option></select>
+              <input type="date" id="mmh-debut" class="form-control" style="max-width:150px" onchange="renderMMHistorique()">
+              <input type="date" id="mmh-fin" class="form-control" style="max-width:150px" onchange="renderMMHistorique()">
+              <button class="btn btn-outline btn-sm" onclick="exporterMMCSV()">⬇ CSV</button>
+            </div>
+          </div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Date</th><th>Heure</th><th>Réseau</th><th>Type</th><th>Montant</th><th>Commission</th><th>Client</th><th>Référence</th><th>Par</th><th></th></tr></thead>
+            <tbody id="tbody-mm-historique"></tbody></table>
+          </div>
+        </div>
+      </div>
+      <!-- ONGLET COMMISSIONS -->
+      <div class="caisse-tab" id="mm-tab-commissions">
+        <div class="kpi-grid" id="mm-kpi-commissions"></div>
+        <div class="card">
+          <div class="card-header" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <h2>💰 Commissions par Réseau</h2>
+            <select class="form-control" id="mmc-periode" style="max-width:170px" onchange="renderMMCommissions()">
+              <option value="jour">Aujourd'hui</option>
+              <option value="mois" selected>Ce mois-ci</option>
+              <option value="tout">Tout l'historique</option>
+            </select>
+          </div>
+          <div class="card-body" id="mm-commissions-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE SERVICES NUMÉRIQUES -->
+    <div class="page" id="page-services">
+      <div class="alert alert-info no-print">🖨️ Photocopie, impression, scan, reliure, création de CV, saisie, inscription en ligne — chaque service vendu est lié à la caisse et à la rentabilité.</div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="svc-tab-btn-vendre" onclick="svcNavigate('vendre')" style="flex:1;min-width:130px">🛒 Vendre un Service</button>
+        <button class="btn btn-sm caisse-tab-btn" id="svc-tab-btn-historique" onclick="svcNavigate('historique')" style="flex:1;min-width:130px">📋 Historique</button>
+      </div>
+      <!-- ONGLET VENDRE -->
+      <div class="caisse-tab active" id="svc-tab-vendre">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h2>📦 Catalogue des Services</h2><span style="font-size:12px;color:var(--text-muted)">Cliquer sur une carte pour sélectionner le service</span></div>
+          <div class="card-body"><div id="svc-catalogue" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px"></div></div>
+        </div>
+        <div class="card" id="svc-form-card" style="display:none">
+          <div class="card-header"><h2 id="svc-form-titre">✏️ Détails de la vente</h2></div>
+          <div class="card-body">
+            <form onsubmit="enregistrerVenteService(event)">
+              <div class="form-row">
+                <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="svc-date" required></div>
+                <div class="form-group"><label>Service sélectionné</label><input type="text" class="form-control" id="svc-service-label" readonly style="background:var(--bg-soft)"><input type="hidden" id="svc-service-id"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Quantité *</label><input type="number" class="form-control" id="svc-qte" min="1" value="1" required oninput="majTotalService()"></div>
+                <div class="form-group"><label>Prix unitaire (FCFA) *</label><input type="number" class="form-control" id="svc-prix" min="0" required oninput="majTotalService()"></div>
+              </div>
+              <div class="form-group"><label>Mode de paiement</label><select class="form-control" id="svc-mode"><option>Espèces</option><option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Moov Money</option></select></div>
+              <div class="form-group"><label>Client (facultatif)</label><input type="text" class="form-control" id="svc-client" placeholder="Nom du client ou de l'école..."></div>
+              <div id="svc-total-preview" style="font-size:22px;font-weight:700;color:var(--primary);text-align:center;padding:10px;background:var(--bg-soft);border-radius:8px;margin-bottom:14px">Total : —</div>
+              <div style="display:flex;gap:10px">
+                <button type="button" class="btn btn-outline" onclick="annulerVenteService()">Annuler</button>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- ONGLET HISTORIQUE -->
+      <div class="caisse-tab" id="svc-tab-historique">
+        <div class="kpi-grid" id="svc-kpis"></div>
+        <div class="card">
+          <div class="card-header no-print" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+            <h2>📋 Historique des Services</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+              <select class="form-control" id="svch-service" style="max-width:200px" onchange="renderSvcHistorique()"><option value="">Tous les services</option></select>
+              <input type="date" id="svch-debut" class="form-control" style="max-width:150px" onchange="renderSvcHistorique()">
+              <input type="date" id="svch-fin" class="form-control" style="max-width:150px" onchange="renderSvcHistorique()">
+              <button class="btn btn-outline btn-sm" onclick="exporterSvcCSV()">⬇ CSV</button>
+            </div>
+          </div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Date</th><th>Heure</th><th>Service</th><th>Qté</th><th>P.U.</th><th>Total</th><th>Mode</th><th>Client</th><th>Par</th><th></th></tr></thead>
+            <tbody id="tbody-svc-historique"></tbody></table>
+          </div>
+          <div class="card-body" style="border-top:1px solid var(--border);display:flex;gap:20px;font-weight:700;font-size:14px">
+            Total filtré : <span id="svc-total-filtre" style="color:var(--primary)">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RENTABILITÉ AVANCÉE -->
+    <div class="page" id="page-rentabilite">
+      <div class="alert alert-info no-print">📈 Vision complète de la performance — CA journalier/mensuel par catégorie (boutique + services + Mobile Money), flux de trésorerie et top performances. Données en temps réel.</div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="rent-tab-btn-jour" onclick="rentNavigate('jour')" style="flex:1;min-width:130px">📅 Vue Journalière</button>
+        <button class="btn btn-sm caisse-tab-btn" id="rent-tab-btn-mois" onclick="rentNavigate('mois')" style="flex:1;min-width:130px">📆 Vue Mensuelle</button>
+        <button class="btn btn-sm caisse-tab-btn" id="rent-tab-btn-top" onclick="rentNavigate('top')" style="flex:1;min-width:130px">🏆 Top Performances</button>
+      </div>
+      <!-- ONGLET JOURNALIER -->
+      <div class="caisse-tab active" id="rent-tab-jour">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <label style="font-weight:600;margin:0">Date analysée :</label>
+          <input type="date" id="rent-date-jour" class="form-control" style="max-width:180px" onchange="renderRentJour()">
+        </div>
+        <div class="kpi-grid" id="rent-kpi-jour"></div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><h2>📊 CA par Catégorie</h2></div><div class="card-body" id="rent-jour-categories"></div></div>
+          <div class="card"><div class="card-header"><h2>💳 CA par Mode de Paiement</h2></div><div class="card-body" id="rent-jour-paiements"></div></div>
+        </div>
+        <div class="card"><div class="card-header"><h2>🧾 Détail des Revenus du Jour</h2></div><div class="card-body table-wrap" id="rent-jour-detail"></div></div>
+      </div>
+      <!-- ONGLET MENSUEL -->
+      <div class="caisse-tab" id="rent-tab-mois">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <label style="font-weight:600;margin:0">Mois analysé :</label>
+          <input type="month" id="rent-date-mois" class="form-control" style="max-width:180px" onchange="renderRentMois()">
+          <button class="btn btn-outline btn-sm" onclick="exporterRentMoisCSV()">⬇ Exporter CSV</button>
+        </div>
+        <div class="kpi-grid" id="rent-kpi-mois"></div>
+        <div class="card"><div class="card-header"><h2>📊 CA Mensuel par Catégorie</h2></div><div class="card-body" id="rent-mois-categories"></div></div>
+        <div class="card"><div class="card-header"><h2>📅 Évolution Journalière du CA</h2></div><div class="card-body" id="rent-mois-evolution"></div></div>
+      </div>
+      <!-- ONGLET TOP PERFORMANCES -->
+      <div class="caisse-tab" id="rent-tab-top">
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><h2>🥇 Top 10 Articles les plus vendus</h2></div><div class="card-body" id="rent-top-articles"></div></div>
+          <div class="card"><div class="card-header"><h2>🖨️ Top Services les plus demandés</h2></div><div class="card-body" id="rent-top-services"></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><h2>📱 Top Réseau MM (Commissions)</h2></div><div class="card-body" id="rent-top-mm"></div></div>
+          <div class="card"><div class="card-header"><h2>📈 Croissance des 6 derniers mois</h2></div><div class="card-body" id="rent-top-croissance"></div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- COMPTES (ADMIN) -->
     <div class="page" id="page-comptes">
       <div class="alert alert-info">🔒 Seul l'administrateur peut créer des comptes, modifier les mots de passe et activer/bloquer les employés. Aucune auto-inscription n'est possible.</div>
@@ -912,6 +1114,10 @@
         <div class="form-group"><label>Délai livraison (jours)</label><input class="form-control" id="f-delai" type="number" min="1" placeholder="3"></div>
       </div>
       <div class="form-group"><label>Adresse / Localisation</label><input class="form-control" id="f-adresse" placeholder="Ville, Quartier"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Plafond de crédit accordé (FCFA)</label><input class="form-control" id="f-credit-accorde" type="number" min="0" placeholder="0 = pas de crédit" value="0"></div>
+        <div class="form-group"><label>Date limite de paiement</label><input class="form-control" id="f-credit-date" type="date"></div>
+      </div>
       <div class="form-group"><label>Notes</label><textarea class="form-control" id="f-notes" rows="2" placeholder="Conditions, modalités..."></textarea></div>
       <input type="hidden" id="f-edit-id" value="">
       <div class="modal-footer">
@@ -1171,6 +1377,7 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [];
 let ecritures = [], releves = [], rapprochements = [];
+let transactionsMM = [], ventesServices = [];
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
 function consigner(action, details = '') {
@@ -1430,7 +1637,19 @@ function demarrerListeners() {
     rafraichirPageActive();
   }, err => console.error('rapprochements:', err));
 
-  unsubscribers = [u1, u2, u3, u7, u8, u9, u10];
+  // Listener transactions Mobile Money
+  const u11 = db.collection('transactions_mobile_money').orderBy('date','desc').onSnapshot(snap => {
+    transactionsMM = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('transactions_mobile_money:', err));
+
+  // Listener ventes de services numériques
+  const u12 = db.collection('ventes_services').orderBy('date','desc').onSnapshot(snap => {
+    ventesServices = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('ventes_services:', err));
+
+  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12];
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -1492,6 +1711,13 @@ function afficherApp() {
   // Rapprochement de Trésorerie : Propriétaire/Admin, Gérant et Caissier (saisie des relevés + rapprochement)
   if (peutGererCompta() || (currentUser.role||'').toLowerCase().includes('caissier')) {
     document.getElementById('nav-rapprochement').style.display = 'flex';
+  }
+  // Mobile Money et Services Numériques : visibles pour tous (caissier peut encaisser)
+  document.getElementById('nav-mobilemoney').style.display = 'flex';
+  document.getElementById('nav-services').style.display = 'flex';
+  // Rentabilité : Gérant/Admin uniquement
+  if (peutGererCompta()) {
+    document.getElementById('nav-rentabilite').style.display = 'flex';
   }
 
   // Initialiser données si Firestore est vide
@@ -1574,6 +1800,8 @@ const pageTitles = {
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
+  mobilemoney:'Mobile Money — Transactions & Commissions',
+  services:'Services Numériques', rentabilite:'Rentabilité Avancée',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)'
 };
 
@@ -1622,6 +1850,9 @@ function rafraichirPage(page) {
   else if (page === 'suivicaisse') renderSuiviCaisse();
   else if (page === 'comptabilite') renderComptabilite();
   else if (page === 'rapprochement') renderRapprochement();
+  else if (page === 'mobilemoney') renderMobileMoney();
+  else if (page === 'services') renderServices();
+  else if (page === 'rentabilite') renderRentabilite();
 }
 
 // ===== DASHBOARD =====
@@ -1645,11 +1876,19 @@ function renderDashboard() {
   const ventesMoisActuel = ventesCaisse.filter(v => (v.date||'').startsWith(moisActuel));
   const sommeCanal = canal => ventesMoisActuel.filter(v=>v.modePaiement===canal).reduce((s,v)=>s+(v.montant||0),0);
   const especes = sommeCanal('Espèces');
-  const mobileMoney = sommeCanal('Orange Money') + sommeCanal('MTN MoMo') + sommeCanal('Wave');
-  const elEsp = document.getElementById('kpi-caisse-especes');
-  const elMM = document.getElementById('kpi-mobile-money');
-  if (elEsp) elEsp.textContent = new Intl.NumberFormat('fr-FR').format(especes);
-  if (elMM) elMM.textContent = new Intl.NumberFormat('fr-FR').format(mobileMoney);
+  const mobileMoney = sommeCanal('Orange Money') + sommeCanal('MTN MoMo') + sommeCanal('Wave') + sommeCanal('Moov Money');
+  // Commissions MM du mois (revenus réels)
+  const commMM = transactionsMM.filter(t=>(t.date||'').startsWith(moisActuel)).reduce((s,t)=>s+(t.commission||0),0);
+  // Services du mois
+  const caSvc  = ventesServices.filter(v=>(v.date||'').startsWith(moisActuel)).reduce((s,v)=>s+(v.montant||0),0);
+  const elEsp  = document.getElementById('kpi-caisse-especes');
+  const elMM   = document.getElementById('kpi-mobile-money');
+  const elComm = document.getElementById('kpi-comm-mm');
+  const elSvc  = document.getElementById('kpi-services');
+  if (elEsp)  elEsp.textContent  = new Intl.NumberFormat('fr-FR').format(especes);
+  if (elMM)   elMM.textContent   = new Intl.NumberFormat('fr-FR').format(mobileMoney);
+  if (elComm) elComm.textContent = new Intl.NumberFormat('fr-FR').format(commMM);
+  if (elSvc)  elSvc.textContent  = new Intl.NumberFormat('fr-FR').format(caSvc);
 
   const cats = ['Accessoires Informatiques','Habits Enfants','Fournitures Scolaires','Épicerie'];
   const catsShort = ['Informatique','Habits','Fournitures','Épicerie'];
@@ -1887,18 +2126,32 @@ function renderFournisseurs() {
     f.cat?.toLowerCase().includes(q) || f.tel?.toLowerCase().includes(q) || f.email?.toLowerCase().includes(q));
   const cnt = document.getElementById('fourn-count');
   if (cnt) cnt.textContent = `(${filtered.length} fournisseur(s))`;
-  tbody.innerHTML = filtered.map(f => `<tr>
-    <td style="font-size:11px;color:var(--text-muted)">F-${f.id?.slice(-4)||'?'}</td>
-    <td><strong>${f.nom}</strong>${f.adresse?`<br><span style="font-size:11px;color:var(--text-muted)">${f.adresse}</span>`:''}</td>
-    <td>${f.contact||'—'}</td><td>${f.tel||'—'}</td>
-    <td>${catTag(f.cat==='Toutes catégories'?'Épicerie':f.cat)}</td>
-    <td style="font-size:12px">${f.email||'—'}</td>
-    <td style="text-align:center">${f.delai||'?'} j</td>
-    <td>
-      <button class="btn btn-sm btn-outline" onclick="editFournisseur('${f.id}')">✏</button>
-      <button class="btn btn-sm btn-primary" onclick="commanderFourn('${f.id}')" style="margin-left:4px">🛒 Commander</button>
-    </td>
-  </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px">${q ? 'Aucun fournisseur trouvé' : 'Aucun fournisseur'}</td></tr>`;
+  tbody.innerHTML = filtered.map(f => {
+    // Calculer le solde dû pour ce fournisseur (commandes reçues − versements)
+    const cmdsRecues = commandes.filter(c => c.fournId === f.id && c.statut === 'received');
+    const totalCmds = cmdsRecues.reduce((s,c) => s+(c.total||0), 0);
+    const totalVerse = paiements.filter(p => p.fournId === f.id).reduce((s,p) => s+(p.montant||0), 0);
+    const solde = totalCmds - totalVerse;
+    const credit = f.creditAccorde || 0;
+    // Couleur du solde selon rapport crédit accordé
+    const couleurSolde = solde <= 0 ? 'var(--success)' : (credit > 0 && solde > credit ? '#c0392b' : (solde > 0 ? '#C8981A' : 'var(--text-muted)'));
+    const soldeTxt = solde > 0 ? FCFA(solde) : (solde < 0 ? `<span style="color:var(--success)">${FCFA(-solde)} d'avance</span>` : '<span style="color:var(--text-muted)">Soldé</span>');
+    const creditTxt = credit > 0 ? `<span style="font-weight:600">${FCFA(credit)}</span>${f.creditDateLimite?`<br><span style="font-size:10px;color:var(--text-muted)">Échéance: ${f.creditDateLimite}</span>`:''}` : '<span style="color:var(--text-muted)">—</span>';
+    return `<tr>
+      <td style="font-size:11px;color:var(--text-muted)">F-${f.id?.slice(-4)||'?'}</td>
+      <td><strong>${f.nom}</strong>${f.adresse?`<br><span style="font-size:11px;color:var(--text-muted)">${f.adresse}</span>`:''}</td>
+      <td>${f.contact||'—'}</td><td>${f.tel||'—'}</td>
+      <td>${catTag(f.cat==='Toutes catégories'?'Épicerie':f.cat)}</td>
+      <td style="font-size:12px">${f.email||'—'}</td>
+      <td style="text-align:center">${f.delai||'?'} j</td>
+      <td style="font-size:12px">${creditTxt}</td>
+      <td style="font-weight:700;color:${couleurSolde};font-size:13px">${soldeTxt}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editFournisseur('${f.id}')">✏</button>
+        <button class="btn btn-sm btn-primary" onclick="commanderFourn('${f.id}')" style="margin-left:4px">🛒 Commander</button>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:30px">${q ? 'Aucun fournisseur trouvé' : 'Aucun fournisseur'}</td></tr>`;
 }
 
 async function supprimerFournisseurDepuisModal() {
@@ -1933,6 +2186,8 @@ function editFournisseur(id) {
     const el = document.getElementById('f-'+k); if (el) el.value = f[k]||'';
   });
   document.getElementById('f-delai').value = f.delai||'';
+  document.getElementById('f-credit-accorde').value = f.creditAccorde||0;
+  document.getElementById('f-credit-date').value = f.creditDateLimite||'';
   document.getElementById('f-edit-id').value = id;
   document.getElementById('btn-delete-fournisseur').style.display = '';
   openModal('modal-fournisseur');
@@ -1949,6 +2204,8 @@ async function saveFournisseur(e) {
     cat: document.getElementById('f-cat').value,
     delai: parseInt(document.getElementById('f-delai').value)||3,
     adresse: document.getElementById('f-adresse').value.trim(),
+    creditAccorde: parseFloat(document.getElementById('f-credit-accorde').value)||0,
+    creditDateLimite: document.getElementById('f-credit-date').value||'',
     notes: document.getElementById('f-notes').value.trim(),
     updatedBy: currentUser.label,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2935,6 +3192,602 @@ function exporterHistoriqueRapprochementsCSV() {
 }
 
 const OBJECTIF_JOUR = 10000;
+
+// ===================================================================
+// MODULE MOBILE MONEY — taux de commission par réseau et par type
+// ===================================================================
+const MM_TAUX = {
+  'Orange Money': { depot: 1.0, retrait: 1.5, transfert: 0.5 },
+  'MTN MoMo':    { depot: 1.0, retrait: 1.5, transfert: 0.5 },
+  'Wave':         { depot: 0.3, retrait: 0.5, transfert: 0.3 },
+  'Moov Money':  { depot: 1.0, retrait: 1.5, transfert: 0.5 }
+};
+const MM_EMOJIS = { 'Orange Money':'🟠', 'MTN MoMo':'🟡', 'Wave':'🔵', 'Moov Money':'🟣' };
+const MM_TYPE_LABELS = { depot:'📥 Dépôt', retrait:'📤 Retrait', transfert:'↔️ Transfert' };
+
+let mmOnglet = 'saisie';
+function mmNavigate(tab) {
+  mmOnglet = tab;
+  document.querySelectorAll('#page-mobilemoney .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-mobilemoney .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mm-tab-' + tab).classList.add('active');
+  document.getElementById('mm-tab-btn-' + tab).classList.add('active');
+  renderMobileMoney();
+}
+
+function renderMobileMoney() {
+  if (!document.getElementById('page-mobilemoney')?.classList.contains('active')) return;
+  const el = document.getElementById('mm-date');
+  if (el && !el.value) el.value = today();
+  if (mmOnglet === 'historique') renderMMHistorique();
+  else if (mmOnglet === 'commissions') renderMMCommissions();
+}
+
+// Calcule la commission en FCFA
+function calculerCommissionMM(reseau, type, montant) {
+  const taux = (MM_TAUX[reseau] || {})[type] || 0;
+  return { commission: Math.round(montant * taux / 100), taux };
+}
+
+// Met à jour l'aperçu de commission dans le formulaire
+function majCommissionPreview() {
+  const reseau = document.getElementById('mm-reseau').value;
+  const type   = document.getElementById('mm-type').value;
+  const montant = parseFloat(document.getElementById('mm-montant').value) || 0;
+  const preview = document.getElementById('mm-commission-preview');
+  if (!reseau || !type || !montant) { preview.style.display = 'none'; return; }
+  const { commission, taux } = calculerCommissionMM(reseau, type, montant);
+  document.getElementById('mm-commission-val').textContent = FCFA(commission);
+  document.getElementById('mm-commission-taux').textContent = `(${taux}% de ${FCFA(montant)})`;
+  preview.style.display = '';
+}
+
+async function enregistrerTransactionMM(event) {
+  event.preventDefault();
+  const reseau   = document.getElementById('mm-reseau').value;
+  const type     = document.getElementById('mm-type').value;
+  const montant  = parseFloat(document.getElementById('mm-montant').value);
+  const { commission, taux } = calculerCommissionMM(reseau, type, montant);
+  const heure = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const data = {
+    date: document.getElementById('mm-date').value,
+    heure, reseau, type, montant, commission, commissionPct: taux,
+    client:    document.getElementById('mm-client').value.trim(),
+    reference: document.getElementById('mm-reference').value.trim(),
+    createdBy: currentUser.label,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('transactions_mobile_money').add(data);
+    // Synchronisation caisse : la commission est un revenu de la boutique
+    await db.collection('ventesCaisse').add({
+      date: data.date, heure, zone: 'MM',
+      article: `Commission ${MM_TYPE_LABELS[type]||type} — ${reseau}`,
+      quantite: 1, prixUnitaire: commission, montant: commission,
+      modePaiement: reseau, client: data.client,
+      note: `Réf: ${data.reference || '—'} | Montant opérat.: ${FCFA(montant)}`,
+      source: 'mobile_money',
+      createdBy: currentUser.label,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Transaction Mobile Money', `${reseau} — ${MM_TYPE_LABELS[type]||type} — ${FCFA(montant)} — Commission: ${FCFA(commission)}`);
+    showToast(`Transaction enregistrée ✓ — Commission : ${FCFA(commission)}`);
+    event.target.reset();
+    document.getElementById('mm-commission-preview').style.display = 'none';
+    document.getElementById('mm-date').value = today();
+  } catch(err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function renderMMHistorique() {
+  if (!document.getElementById('mm-tab-historique')?.classList.contains('active')) return;
+  const filtreReseau = document.getElementById('mmh-reseau')?.value || '';
+  const filtreType   = document.getElementById('mmh-type')?.value || '';
+  const debut  = document.getElementById('mmh-debut')?.value || '';
+  const fin    = document.getElementById('mmh-fin')?.value || '';
+
+  let liste = [...transactionsMM];
+  if (filtreReseau) liste = liste.filter(t => t.reseau === filtreReseau);
+  if (filtreType)   liste = liste.filter(t => t.type === filtreType);
+  if (debut) liste = liste.filter(t => t.date >= debut);
+  if (fin)   liste = liste.filter(t => t.date <= fin);
+
+  // KPI soldes par réseau (total des transactions, tout historique)
+  const kpiGrid = document.getElementById('mm-kpi-soldes');
+  if (kpiGrid) {
+    const reseaux = ['Orange Money','MTN MoMo','Wave','Moov Money'];
+    kpiGrid.innerHTML = reseaux.map(r => {
+      const txR = transactionsMM.filter(t => t.reseau === r);
+      const totalDepot    = txR.filter(t=>t.type==='depot').reduce((s,t)=>s+(t.montant||0),0);
+      const totalRetrait  = txR.filter(t=>t.type==='retrait').reduce((s,t)=>s+(t.montant||0),0);
+      const totalComm     = txR.reduce((s,t)=>s+(t.commission||0),0);
+      return `<div class="kpi-card">
+        <div class="kpi-icon">${MM_EMOJIS[r]||'📱'}</div>
+        <div class="kpi-info">
+          <h3>${FCFA(totalComm)}</h3>
+          <p>${r}</p>
+          <div class="trend up" style="font-size:10px">📥 ${FCFA(totalDepot)} dépôts | 📤 ${FCFA(totalRetrait)} retraits</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const tbody = document.getElementById('tbody-mm-historique');
+  if (!tbody) return;
+  tbody.innerHTML = liste.length ? liste.map(t => `<tr>
+    <td style="font-size:12px;white-space:nowrap">${t.date||''}</td>
+    <td style="font-size:11px;color:var(--text-muted)">${t.heure||''}</td>
+    <td>${MM_EMOJIS[t.reseau]||''} ${t.reseau||''}</td>
+    <td><span style="font-size:11px;background:#e8f5e9;color:#1e8449;padding:2px 7px;border-radius:10px;font-weight:600">${MM_TYPE_LABELS[t.type]||t.type}</span></td>
+    <td style="font-weight:600">${FCFA(t.montant||0)}</td>
+    <td style="font-weight:700;color:var(--success)">${FCFA(t.commission||0)}</td>
+    <td style="font-size:12px">${t.client||'—'}</td>
+    <td style="font-size:11px;color:var(--text-muted)">${t.reference||'—'}</td>
+    <td style="font-size:11px">${t.createdBy||''}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="supprimerTransactionMM('${t.id}')">🗑</button></td>
+  </tr>`).join('') : `<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:24px">Aucune transaction trouvée</td></tr>`;
+}
+
+async function supprimerTransactionMM(id) {
+  if (!confirm('Supprimer cette transaction Mobile Money ?')) return;
+  try {
+    await db.collection('transactions_mobile_money').doc(id).delete();
+    consigner('Transaction MM supprimée', id);
+    showToast('Transaction supprimée ✓');
+  } catch(err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function exporterMMCSV() {
+  const entete = ['Date','Heure','Réseau','Type','Montant','Commission','Client','Référence','Par'];
+  const lignes = transactionsMM.map(t => [t.date||'',t.heure||'',t.reseau||'',MM_TYPE_LABELS[t.type]||t.type,t.montant||0,t.commission||0,t.client||'',t.reference||'',t.createdBy||'']);
+  telechargerCSV([entete,...lignes], `mobile_money_${today()}.csv`);
+}
+
+function renderMMCommissions() {
+  if (!document.getElementById('mm-tab-commissions')?.classList.contains('active')) return;
+  const periode = document.getElementById('mmc-periode')?.value || 'mois';
+  const moisActuel = today().slice(0,7);
+  const dateJour = today();
+
+  let txFiltrees = [...transactionsMM];
+  if (periode === 'jour') txFiltrees = txFiltrees.filter(t => t.date === dateJour);
+  else if (periode === 'mois') txFiltrees = txFiltrees.filter(t => (t.date||'').startsWith(moisActuel));
+
+  const totalComm = txFiltrees.reduce((s,t)=>s+(t.commission||0),0);
+  const totalTx   = txFiltrees.length;
+  const totalMontant = txFiltrees.reduce((s,t)=>s+(t.montant||0),0);
+
+  const kpiEl = document.getElementById('mm-kpi-commissions');
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${FCFA(totalComm)}</h3><p>Commissions totales</p><div class="trend up">${periode === 'jour' ? "Aujourd'hui" : periode === 'mois' ? 'Ce mois-ci' : 'Tout l\'historique'}</div></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${totalTx}</h3><p>Transactions</p><div class="trend up">Volume : ${FCFA(totalMontant)}</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📊</div><div class="kpi-info"><h3>${totalTx ? FCFA(Math.round(totalComm/totalTx)) : '—'}</h3><p>Commission moy./transaction</p><div class="trend up">Taux moyen pondéré</div></div></div>`;
+
+  const detail = document.getElementById('mm-commissions-detail');
+  if (!detail) return;
+  const reseaux = ['Orange Money','MTN MoMo','Wave','Moov Money'];
+  detail.innerHTML = `<div style="display:grid;gap:16px">` + reseaux.map(r => {
+    const txR = txFiltrees.filter(t => t.reseau === r);
+    if (!txR.length) return '';
+    const commR = txR.reduce((s,t)=>s+(t.commission||0),0);
+    const types = ['depot','retrait','transfert'].map(tp => {
+      const txT = txR.filter(t=>t.type===tp);
+      if (!txT.length) return '';
+      const commT = txT.reduce((s,t)=>s+(t.commission||0),0);
+      return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>${MM_TYPE_LABELS[tp]} (${txT.length} op.)</span><span style="font-weight:600;color:var(--success)">${FCFA(commT)}</span></div>`;
+    }).join('');
+    const pct = totalComm ? Math.round(commR/totalComm*100) : 0;
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong style="font-size:15px">${MM_EMOJIS[r]} ${r}</strong>
+        <span style="font-size:18px;font-weight:700;color:var(--success)">${FCFA(commR)}</span>
+      </div>
+      <div style="height:6px;background:#e3e8ee;border-radius:3px;margin-bottom:10px;overflow:hidden"><div style="height:100%;background:var(--success);border-radius:3px;width:${pct}%"></div></div>
+      ${types}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+// ===================================================================
+// MODULE SERVICES NUMÉRIQUES — catalogue fixe et gestion des ventes
+// ===================================================================
+const CATALOGUE_SERVICES = [
+  { id:'photocopie',   label:'Photocopie',           prix:50,   unite:'page',     emoji:'📄' },
+  { id:'imp_nb',       label:'Impression N&B',        prix:75,   unite:'page',     emoji:'🖨️' },
+  { id:'imp_couleur',  label:'Impression Couleur',    prix:150,  unite:'page',     emoji:'🎨' },
+  { id:'scan',         label:'Scan de document',      prix:100,  unite:'page',     emoji:'📷' },
+  { id:'reliure',      label:'Reliure',               prix:500,  unite:'document', emoji:'📚' },
+  { id:'cv',           label:'Création de CV',        prix:2000, unite:'document', emoji:'📋' },
+  { id:'saisie',       label:'Saisie de documents',   prix:200,  unite:'page',     emoji:'⌨️' },
+  { id:'inscription',  label:'Inscription en ligne',  prix:1000, unite:'dossier',  emoji:'🌐' },
+  { id:'autre',        label:'Autre service',         prix:0,    unite:'service',  emoji:'⚡' }
+];
+
+let svcOnglet = 'vendre';
+function svcNavigate(tab) {
+  svcOnglet = tab;
+  document.querySelectorAll('#page-services .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-services .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('svc-tab-' + tab).classList.add('active');
+  document.getElementById('svc-tab-btn-' + tab).classList.add('active');
+  renderServices();
+}
+
+function renderServices() {
+  if (!document.getElementById('page-services')?.classList.contains('active')) return;
+  renderCatalogue();
+  if (svcOnglet === 'historique') renderSvcHistorique();
+}
+
+function renderCatalogue() {
+  const el = document.getElementById('svc-catalogue'); if (!el) return;
+  el.innerHTML = CATALOGUE_SERVICES.map(s => `
+    <div onclick="selectionnerService('${s.id}')" style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .2s;background:#fff" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:30px;margin-bottom:8px">${s.emoji}</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${s.label}</div>
+      <div style="color:var(--success);font-weight:600;font-size:13px">${s.prix ? FCFA(s.prix)+'/'+s.unite : 'Prix libre'}</div>
+    </div>`).join('');
+}
+
+function selectionnerService(id) {
+  const s = CATALOGUE_SERVICES.find(x=>x.id===id); if (!s) return;
+  document.getElementById('svc-service-id').value = s.id;
+  document.getElementById('svc-service-label').value = `${s.emoji} ${s.label}`;
+  document.getElementById('svc-prix').value = s.prix || '';
+  document.getElementById('svc-qte').value = 1;
+  document.getElementById('svc-form-titre').textContent = `✏️ ${s.emoji} ${s.label}`;
+  if (!document.getElementById('svc-date').value) document.getElementById('svc-date').value = today();
+  majTotalService();
+  document.getElementById('svc-form-card').style.display = '';
+  document.getElementById('svc-form-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function majTotalService() {
+  const qte  = parseFloat(document.getElementById('svc-qte')?.value) || 0;
+  const prix = parseFloat(document.getElementById('svc-prix')?.value) || 0;
+  const el   = document.getElementById('svc-total-preview');
+  if (el) el.textContent = `Total : ${FCFA(qte * prix)}`;
+}
+
+function annulerVenteService() {
+  document.getElementById('svc-form-card').style.display = 'none';
+}
+
+async function enregistrerVenteService(event) {
+  event.preventDefault();
+  const serviceId = document.getElementById('svc-service-id').value;
+  const s = CATALOGUE_SERVICES.find(x=>x.id===serviceId) || { label:'Service', emoji:'⚡' };
+  const qte   = parseInt(document.getElementById('svc-qte').value) || 1;
+  const prix  = parseFloat(document.getElementById('svc-prix').value) || 0;
+  const montant = qte * prix;
+  const heure = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const mode  = document.getElementById('svc-mode').value;
+  const data = {
+    date: document.getElementById('svc-date').value,
+    heure, service: s.label, serviceId, emoji: s.emoji,
+    quantite: qte, prixUnitaire: prix, montant,
+    modePaiement: mode,
+    client: document.getElementById('svc-client').value.trim(),
+    createdBy: currentUser.label,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('ventes_services').add(data);
+    // Synchronisation caisse : le service s'enregistre aussi comme revenu
+    await db.collection('ventesCaisse').add({
+      date: data.date, heure, zone: 'SVC',
+      article: `${s.emoji} ${s.label}`,
+      quantite: qte, prixUnitaire: prix, montant,
+      modePaiement: mode, client: data.client,
+      note: `Service numérique`, source: 'service',
+      createdBy: currentUser.label,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Service vendu', `${s.label} × ${qte} — ${FCFA(montant)}`);
+    showToast(`${s.emoji} Service enregistré ✓ — ${FCFA(montant)}`);
+    event.target.reset();
+    document.getElementById('svc-form-card').style.display = 'none';
+  } catch(err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function renderSvcHistorique() {
+  if (!document.getElementById('svc-tab-historique')?.classList.contains('active')) return;
+  const filtreService = document.getElementById('svch-service')?.value || '';
+  const debut = document.getElementById('svch-debut')?.value || '';
+  const fin   = document.getElementById('svch-fin')?.value || '';
+
+  // Alimenter le filtre service si vide
+  const selectSvc = document.getElementById('svch-service');
+  if (selectSvc && selectSvc.options.length <= 1) {
+    CATALOGUE_SERVICES.forEach(s => {
+      const opt = document.createElement('option'); opt.value = s.label; opt.textContent = `${s.emoji} ${s.label}`;
+      selectSvc.appendChild(opt);
+    });
+  }
+
+  let liste = [...ventesServices];
+  if (filtreService) liste = liste.filter(v => v.service === filtreService);
+  if (debut) liste = liste.filter(v => v.date >= debut);
+  if (fin)   liste = liste.filter(v => v.date <= fin);
+
+  const totalFiltre = liste.reduce((s,v)=>s+(v.montant||0),0);
+  const moisActuel = today().slice(0,7);
+  const totalMois  = ventesServices.filter(v=>(v.date||'').startsWith(moisActuel)).reduce((s,v)=>s+(v.montant||0),0);
+  const totalJour  = ventesServices.filter(v=>v.date===today()).reduce((s,v)=>s+(v.montant||0),0);
+
+  const kpiEl = document.getElementById('svc-kpis');
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card success"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3>${FCFA(totalJour)}</h3><p>Recettes services (aujourd'hui)</p><div class="trend up">${ventesServices.filter(v=>v.date===today()).length} service(s)</div></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">📅</div><div class="kpi-info"><h3>${FCFA(totalMois)}</h3><p>Recettes services (ce mois)</p><div class="trend up">${ventesServices.filter(v=>(v.date||'').startsWith(moisActuel)).length} service(s)</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📊</div><div class="kpi-info"><h3>${ventesServices.length}</h3><p>Total services vendus</p><div class="trend up">${FCFA(ventesServices.reduce((s,v)=>s+(v.montant||0),0))} cumulés</div></div></div>`;
+
+  const tbody = document.getElementById('tbody-svc-historique');
+  if (tbody) tbody.innerHTML = liste.length ? liste.map(v => `<tr>
+    <td style="font-size:12px;white-space:nowrap">${v.date||''}</td>
+    <td style="font-size:11px;color:var(--text-muted)">${v.heure||''}</td>
+    <td><strong>${v.emoji||''} ${v.service||''}</strong></td>
+    <td style="text-align:center">${v.quantite||1}</td>
+    <td>${FCFA(v.prixUnitaire||0)}</td>
+    <td style="font-weight:700;color:var(--primary)">${FCFA(v.montant||0)}</td>
+    <td style="font-size:12px">${v.modePaiement||'—'}</td>
+    <td style="font-size:12px">${v.client||'—'}</td>
+    <td style="font-size:11px">${v.createdBy||''}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="supprimerVenteService('${v.id}')">🗑</button></td>
+  </tr>`).join('') : `<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:24px">Aucun service trouvé</td></tr>`;
+
+  const totalEl = document.getElementById('svc-total-filtre');
+  if (totalEl) totalEl.textContent = FCFA(totalFiltre);
+}
+
+async function supprimerVenteService(id) {
+  if (!confirm('Supprimer cette vente de service ?')) return;
+  try {
+    await db.collection('ventes_services').doc(id).delete();
+    consigner('Vente service supprimée', id);
+    showToast('Service supprimé ✓');
+  } catch(err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function exporterSvcCSV() {
+  const entete = ['Date','Heure','Service','Quantité','Prix unitaire','Total','Mode paiement','Client','Par'];
+  const lignes = ventesServices.map(v => [v.date||'',v.heure||'',v.service||'',v.quantite||1,v.prixUnitaire||0,v.montant||0,v.modePaiement||'',v.client||'',v.createdBy||'']);
+  telechargerCSV([entete,...lignes], `services_numeriques_${today()}.csv`);
+}
+
+// ===================================================================
+// MODULE RENTABILITÉ AVANCÉE — agrégation multi-sources temps réel
+// ===================================================================
+// Catégories de revenus consolidées
+function rentCategories(date, mode) {
+  // date = string 'YYYY-MM-DD' ou préfixe 'YYYY-MM' pour le mode mois
+  const filtrePeriode = v => mode === 'mois' ? (v.date||'').startsWith(date) : v.date === date;
+  // Ventes boutique par zone
+  const ventesZones = Object.entries(ZONES_CAISSE).map(([k, z]) => {
+    const total = ventesCaisse.filter(v => filtrePeriode(v) && v.zone === k && v.source !== 'mobile_money' && v.source !== 'service').reduce((s,v)=>s+(v.montant||0),0);
+    return { label: z.label, emoji: z.emoji, total, couleur: z.color, type: 'boutique' };
+  }).filter(c => c.total > 0);
+  // Services numériques
+  const totalSvc = ventesServices.filter(filtrePeriode).reduce((s,v)=>s+(v.montant||0),0);
+  if (totalSvc > 0) ventesZones.push({ label:'Services Numériques', emoji:'🖨️', total: totalSvc, couleur:'#7D3C98', type:'service' });
+  // Commissions Mobile Money
+  const totalMM = transactionsMM.filter(filtrePeriode).reduce((s,t)=>s+(t.commission||0),0);
+  if (totalMM > 0) ventesZones.push({ label:'Mobile Money (commissions)', emoji:'📱', total: totalMM, couleur:'#117a65', type:'mm' });
+  return ventesZones;
+}
+
+function totalRevenu(date, mode) {
+  const cats = rentCategories(date, mode);
+  return cats.reduce((s,c)=>s+c.total,0);
+}
+
+let rentOnglet = 'jour';
+function rentNavigate(tab) {
+  rentOnglet = tab;
+  document.querySelectorAll('#page-rentabilite .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-rentabilite .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('rent-tab-' + tab).classList.add('active');
+  document.getElementById('rent-tab-btn-' + tab).classList.add('active');
+  renderRentabilite();
+}
+
+function renderRentabilite() {
+  if (!document.getElementById('page-rentabilite')?.classList.contains('active')) return;
+  if (rentOnglet === 'jour') renderRentJour();
+  else if (rentOnglet === 'mois') renderRentMois();
+  else renderRentTop();
+}
+
+function barChart(cats, maxTotal) {
+  if (!cats.length) return '<p style="color:var(--text-muted);text-align:center;padding:20px">Aucune donnée pour cette période</p>';
+  const max = maxTotal || Math.max(...cats.map(c=>c.total)) || 1;
+  return cats.sort((a,b)=>b.total-a.total).map(c => {
+    const pct = Math.round(c.total/max*100);
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px"><span>${c.emoji} ${c.label}</span><strong>${FCFA(c.total)}</strong></div>
+      <div style="height:8px;background:#e3e8ee;border-radius:4px;overflow:hidden"><div style="height:100%;background:${c.couleur||'var(--primary)'};border-radius:4px;width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderRentJour() {
+  const inputDate = document.getElementById('rent-date-jour');
+  if (!inputDate) return;
+  if (!inputDate.value) inputDate.value = today();
+  const date = inputDate.value;
+
+  const cats = rentCategories(date, 'jour');
+  const totalCA = cats.reduce((s,c)=>s+c.total,0);
+  const ventesJ = ventesCaisse.filter(v => v.date === date && v.source !== 'mobile_money' && v.source !== 'service');
+  const svcJ    = ventesServices.filter(v => v.date === date);
+  const mmJ     = transactionsMM.filter(v => v.date === date);
+
+  const kpiEl = document.getElementById('rent-kpi-jour');
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${FCFA(totalCA)}</h3><p>CA Total du jour</p><div class="trend up">${ventesJ.length} ventes · ${svcJ.length} services · ${mmJ.length} MM</div></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3>${FCFA(ventesJ.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Ventes boutique</p><div class="trend up">${ventesJ.length} transaction(s)</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3>${FCFA(svcJ.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Services numériques</p><div class="trend up">${svcJ.length} service(s)</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmJ.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions Mobile Money</p><div class="trend up">${mmJ.length} transaction(s)</div></div></div>`;
+
+  const catEl = document.getElementById('rent-jour-categories');
+  if (catEl) catEl.innerHTML = barChart(cats);
+
+  // CA par mode de paiement (toutes sources)
+  const modes = {};
+  ventesCaisse.filter(v=>v.date===date).forEach(v => { modes[v.modePaiement||'Espèces'] = (modes[v.modePaiement||'Espèces']||0)+(v.montant||0); });
+  const modeEl = document.getElementById('rent-jour-paiements');
+  if (modeEl) modeEl.innerHTML = barChart(Object.entries(modes).map(([label, total])=>({label,total,emoji:'💳',couleur:'#2471A3'})));
+
+  // Tableau détail
+  const detailEl = document.getElementById('rent-jour-detail');
+  if (detailEl) {
+    const lignes = [
+      ...ventesJ.map(v=>({heure:v.heure||'',source:'🛒 Vente boutique',desc:v.article||'',montant:v.montant||0,mode:v.modePaiement||''})),
+      ...svcJ.map(v=>({heure:v.heure||'',source:'🖨️ Service',desc:v.service||'',montant:v.montant||0,mode:v.modePaiement||''})),
+      ...mmJ.map(t=>({heure:t.heure||'',source:`${MM_EMOJIS[t.reseau]||'📱'} Mobile Money`,desc:`${MM_TYPE_LABELS[t.type]||t.type} — ${FCFA(t.montant||0)}`,montant:t.commission||0,mode:t.reseau||''}))
+    ].sort((a,b)=>(b.heure||'').localeCompare(a.heure||''));
+    detailEl.innerHTML = lignes.length ? `<table><thead><tr><th>Heure</th><th>Source</th><th>Détail</th><th>Mode</th><th style="text-align:right">Revenu</th></tr></thead><tbody>${
+      lignes.map(l=>`<tr><td style="font-size:12px;white-space:nowrap">${l.heure}</td><td style="font-size:12px">${l.source}</td><td>${l.desc}</td><td style="font-size:12px">${l.mode}</td><td style="text-align:right;font-weight:700;color:var(--success)">${FCFA(l.montant)}</td></tr>`).join('')
+    }</tbody></table>` : '<p style="text-align:center;color:var(--text-muted);padding:24px">Aucun revenu enregistré ce jour</p>';
+  }
+}
+
+function renderRentMois() {
+  const inputMois = document.getElementById('rent-date-mois');
+  if (!inputMois) return;
+  if (!inputMois.value) inputMois.value = today().slice(0,7);
+  const mois = inputMois.value; // 'YYYY-MM'
+
+  const cats = rentCategories(mois, 'mois');
+  const totalCA = cats.reduce((s,c)=>s+c.total,0);
+  const ventesM = ventesCaisse.filter(v=>(v.date||'').startsWith(mois) && v.source !== 'mobile_money' && v.source !== 'service');
+  const svcM    = ventesServices.filter(v=>(v.date||'').startsWith(mois));
+  const mmM     = transactionsMM.filter(v=>(v.date||'').startsWith(mois));
+  const joursVente = [...new Set(ventesCaisse.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date))];
+  const moyCA = joursVente.length ? Math.round(totalCA/joursVente.length) : 0;
+
+  const kpiEl = document.getElementById('rent-kpi-mois');
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card success"><div class="kpi-icon">📆</div><div class="kpi-info"><h3>${FCFA(totalCA)}</h3><p>CA Total du mois</p><div class="trend up">Moy. ${FCFA(moyCA)}/jour · ${joursVente.length} jour(s) actif(s)</div></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3>${FCFA(ventesM.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Ventes boutique</p><div class="trend up">${ventesM.length} transaction(s)</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3>${FCFA(svcM.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Services numériques</p><div class="trend up">${svcM.length} service(s)</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmM.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions MM</p><div class="trend up">${mmM.length} transaction(s)</div></div></div>`;
+
+  const catEl = document.getElementById('rent-mois-categories');
+  if (catEl) catEl.innerHTML = barChart(cats);
+
+  // Évolution journalière
+  const joursUniques = [...new Set([
+    ...ventesCaisse.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date),
+    ...ventesServices.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date),
+    ...transactionsMM.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date)
+  ])].sort();
+  const evoEl = document.getElementById('rent-mois-evolution');
+  if (evoEl && joursUniques.length) {
+    const maxJour = Math.max(...joursUniques.map(j => totalRevenu(j,'jour'))) || 1;
+    evoEl.innerHTML = `<div style="display:grid;gap:6px">` + joursUniques.map(j => {
+      const ca = totalRevenu(j,'jour');
+      return `<div style="display:flex;align-items:center;gap:10px;font-size:13px">
+        <span style="min-width:90px;color:var(--text-muted)">${j}</span>
+        <div style="flex:1;height:16px;background:#e3e8ee;border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:var(--primary);border-radius:4px;width:${Math.round(ca/maxJour*100)}%"></div>
+        </div>
+        <strong style="min-width:100px;text-align:right">${FCFA(ca)}</strong>
+      </div>`;
+    }).join('') + `</div>`;
+  } else if (evoEl) evoEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px">Aucune donnée pour ce mois</p>';
+}
+
+function exporterRentMoisCSV() {
+  const mois = document.getElementById('rent-date-mois')?.value || today().slice(0,7);
+  const joursUniques = [...new Set([
+    ...ventesCaisse.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date),
+    ...ventesServices.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date),
+    ...transactionsMM.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date)
+  ])].sort();
+  const entete = ['Date','CA Ventes','CA Services','Commissions MM','Total Jour'];
+  const lignes = joursUniques.map(j => {
+    const caVentes = ventesCaisse.filter(v=>v.date===j&&v.source!=='mobile_money'&&v.source!=='service').reduce((s,v)=>s+(v.montant||0),0);
+    const caSvc    = ventesServices.filter(v=>v.date===j).reduce((s,v)=>s+(v.montant||0),0);
+    const caMM     = transactionsMM.filter(v=>v.date===j).reduce((s,t)=>s+(t.commission||0),0);
+    return [j, caVentes, caSvc, caMM, caVentes+caSvc+caMM];
+  });
+  telechargerCSV([entete,...lignes], `rentabilite_${mois}.csv`);
+}
+
+function renderRentTop() {
+  // Top articles
+  const compteurArticles = {};
+  ventesCaisse.filter(v=>v.source!=='mobile_money'&&v.source!=='service').forEach(v => {
+    const k = v.article||'?';
+    if (!compteurArticles[k]) compteurArticles[k] = { qte:0, ca:0 };
+    compteurArticles[k].qte += (v.quantite||1);
+    compteurArticles[k].ca  += (v.montant||0);
+  });
+  const topArticles = Object.entries(compteurArticles).sort((a,b)=>b[1].ca-a[1].ca).slice(0,10);
+  const artEl = document.getElementById('rent-top-articles');
+  if (artEl) artEl.innerHTML = topArticles.length ? `<div style="display:grid;gap:8px">` + topArticles.map(([art,d],i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px;background:${i<3?'rgba(26,122,110,.08)':'transparent'};border-radius:8px">
+      <span style="font-size:18px;min-width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`${i+1}.`}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${art}</div><div style="font-size:11px;color:var(--text-muted)">${d.qte} unité(s) vendue(s)</div></div>
+      <strong style="color:var(--primary)">${FCFA(d.ca)}</strong>
+    </div>`).join('') + `</div>` : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune vente enregistrée</p>';
+
+  // Top services
+  const compteurSvc = {};
+  ventesServices.forEach(v => {
+    const k = `${v.emoji||''} ${v.service||'?'}`;
+    if (!compteurSvc[k]) compteurSvc[k] = { qte:0, ca:0 };
+    compteurSvc[k].qte += (v.quantite||1);
+    compteurSvc[k].ca  += (v.montant||0);
+  });
+  const topSvc = Object.entries(compteurSvc).sort((a,b)=>b[1].ca-a[1].ca).slice(0,10);
+  const svcEl = document.getElementById('rent-top-services');
+  if (svcEl) svcEl.innerHTML = topSvc.length ? `<div style="display:grid;gap:8px">` + topSvc.map(([svc,d],i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px;background:${i<3?'rgba(125,60,152,.07)':'transparent'};border-radius:8px">
+      <span style="font-size:18px;min-width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`${i+1}.`}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${svc}</div><div style="font-size:11px;color:var(--text-muted)">${d.qte} unité(s)</div></div>
+      <strong style="color:#7D3C98">${FCFA(d.ca)}</strong>
+    </div>`).join('') + `</div>` : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucun service vendu pour le moment</p>';
+
+  // Top réseaux Mobile Money (commissions)
+  const compteurMM = {};
+  transactionsMM.forEach(t => {
+    const k = `${MM_EMOJIS[t.reseau]||'📱'} ${t.reseau||'?'}`;
+    if (!compteurMM[k]) compteurMM[k] = { nb:0, comm:0 };
+    compteurMM[k].nb++;
+    compteurMM[k].comm += (t.commission||0);
+  });
+  const topMM = Object.entries(compteurMM).sort((a,b)=>b[1].comm-a[1].comm);
+  const mmEl = document.getElementById('rent-top-mm');
+  if (mmEl) mmEl.innerHTML = topMM.length ? `<div style="display:grid;gap:8px">` + topMM.map(([net,d],i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px;background:${i===0?'rgba(17,122,101,.08)':'transparent'};border-radius:8px">
+      <span style="font-size:18px;min-width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`${i+1}.`}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${net}</div><div style="font-size:11px;color:var(--text-muted)">${d.nb} transaction(s)</div></div>
+      <strong style="color:var(--success)">${FCFA(d.comm)}</strong>
+    </div>`).join('') + `</div>` : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune transaction Mobile Money</p>';
+
+  // Croissance des 6 derniers mois
+  const croiEl = document.getElementById('rent-top-croissance');
+  if (croiEl) {
+    const moisListe = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(); d.setMonth(d.getMonth() - i);
+      moisListe.push(d.toISOString().slice(0,7));
+    }
+    const donneesMois = moisListe.map(m => ({ mois: m, ca: totalRevenu(m,'mois') }));
+    const maxCa = Math.max(...donneesMois.map(d=>d.ca)) || 1;
+    croiEl.innerHTML = `<div style="display:grid;gap:8px">` + donneesMois.map((d,i) => {
+      const prev = i > 0 ? donneesMois[i-1].ca : null;
+      const delta = prev !== null && prev > 0 ? Math.round((d.ca - prev)/prev*100) : null;
+      const deltaStr = delta !== null ? `<span style="font-size:11px;color:${delta>=0?'var(--success)':'var(--danger)'}">${delta>=0?'▲':'▼'} ${Math.abs(delta)}%</span>` : '';
+      return `<div style="display:flex;align-items:center;gap:10px;font-size:13px">
+        <span style="min-width:70px;color:var(--text-muted)">${d.mois}</span>
+        <div style="flex:1;height:16px;background:#e3e8ee;border-radius:4px;overflow:hidden"><div style="height:100%;background:var(--primary);border-radius:4px;width:${Math.round(d.ca/maxCa*100)}%"></div></div>
+        <strong style="min-width:100px;text-align:right">${FCFA(d.ca)}</strong>
+        ${deltaStr}
+      </div>`;
+    }).join('') + `</div>`;
+  }
+}
 const LOYER_MOIS = 300000;
 let suiviCaisseOnglet = 'journal';
 let caisseFiltre = 'jour';
