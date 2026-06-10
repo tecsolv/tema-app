@@ -199,6 +199,196 @@
 
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+  /* ══════════════════════════════════════════════════
+     🖥️  DIGITAL WORKSPACE — Zone A & B
+  ══════════════════════════════════════════════════ */
+  :root {
+    --dig-bg:      #0f172a;
+    --dig-card:    #1e293b;
+    --dig-border:  rgba(6,182,212,.18);
+    --dig-accent:  #06b6d4;
+    --dig-accent2: #0ea5e9;
+    --dig-green:   #10b981;
+    --dig-orange:  #f59e0b;
+    --dig-red:     #ef4444;
+    --dig-muted:   #64748b;
+    --dig-text:    #e2e8f0;
+    --dig-sidebar: 220px;
+  }
+
+  #screen-digital { background: var(--dig-bg); }
+
+  /* Sidebar */
+  .dig-sidebar {
+    width: var(--dig-sidebar); background: #0c1220; flex-shrink: 0;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0;
+    height: 100vh; z-index: 100; border-right: 1px solid var(--dig-border);
+  }
+  .dig-logo {
+    padding: 20px 18px; border-bottom: 1px solid var(--dig-border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .dig-logo-icon {
+    width: 36px; height: 36px; background: linear-gradient(135deg,#06b6d4,#0ea5e9);
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; box-shadow: 0 0 16px rgba(6,182,212,.4);
+  }
+  .dig-logo h2 { color: var(--dig-accent); font-size: 15px; font-weight: 800; letter-spacing: 1px; }
+  .dig-logo p  { color: var(--dig-muted); font-size: 10px; letter-spacing: .5px; }
+
+  .dig-user-badge {
+    margin: 10px 12px; padding: 10px 12px;
+    background: rgba(6,182,212,.08); border: 1px solid var(--dig-border);
+    border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dig-user-badge:hover { background: rgba(6,182,212,.15); }
+  .dig-user-dot { width: 8px; height: 8px; background: var(--dig-green); border-radius: 50%; flex-shrink: 0; animation: pulse 2s infinite; }
+  .dig-user-name { color: var(--dig-text); font-size: 12px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dig-user-role { color: var(--dig-accent); font-size: 10px; font-weight: 700; letter-spacing: .5px; }
+
+  .dig-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .dig-nav-section { font-size: 9px; text-transform: uppercase; color: var(--dig-muted); padding: 10px 18px 4px; letter-spacing: 1.5px; }
+  .dig-nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+    cursor: pointer; color: rgba(255,255,255,.55); font-size: 13px;
+    border-left: 3px solid transparent; transition: all .15s;
+  }
+  .dig-nav-item:hover { background: rgba(6,182,212,.08); color: var(--dig-text); }
+  .dig-nav-item.active { background: rgba(6,182,212,.12); color: var(--dig-accent); border-left-color: var(--dig-accent); font-weight: 700; }
+  .dig-nav-item .dig-icon { font-size: 16px; width: 20px; text-align: center; }
+  .dig-nav-badge { background: var(--dig-red); color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; margin-left: auto; }
+
+  .dig-sidebar-footer {
+    padding: 12px 16px; border-top: 1px solid var(--dig-border);
+    font-size: 10px; color: var(--dig-muted);
+  }
+
+  /* Main content */
+  .dig-main { margin-left: var(--dig-sidebar); flex: 1; display: flex; flex-direction: column; min-height: 100vh; background: var(--dig-bg); }
+  .dig-topbar {
+    background: #0c1220; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--dig-border); position: sticky; top: 0; z-index: 50;
+  }
+  .dig-topbar-title { color: var(--dig-text); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .dig-topbar-title span { color: var(--dig-accent); }
+  .dig-topbar-right { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--dig-muted); }
+
+  /* Pages */
+  .dig-page { display: none; padding: 22px; flex: 1; }
+  .dig-page.active { display: block; }
+
+  /* KPI cards */
+  .dig-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+  .dig-kpi-grid-2 { grid-template-columns: repeat(2,1fr); }
+  @media (max-width: 900px) { .dig-kpi-grid { grid-template-columns: repeat(2,1fr); } }
+  .dig-kpi {
+    background: var(--dig-card); border: 1px solid var(--dig-border);
+    border-radius: 14px; padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    border-left: 3px solid var(--dig-accent); transition: box-shadow .2s;
+  }
+  .dig-kpi:hover { box-shadow: 0 0 0 1px var(--dig-accent), 0 4px 20px rgba(6,182,212,.15); }
+  .dig-kpi.green { border-left-color: var(--dig-green); }
+  .dig-kpi.orange { border-left-color: var(--dig-orange); }
+  .dig-kpi.red { border-left-color: var(--dig-red); }
+  .dig-kpi-icon { font-size: 28px; }
+  .dig-kpi-val { font-size: 20px; font-weight: 800; color: var(--dig-text); }
+  .dig-kpi-label { font-size: 11px; color: var(--dig-muted); margin-top: 2px; }
+  .dig-kpi-trend { font-size: 11px; font-weight: 600; margin-top: 3px; }
+  .dig-kpi-trend.up { color: var(--dig-green); }
+  .dig-kpi-trend.neutral { color: var(--dig-muted); }
+
+  /* Cards */
+  .dig-card { background: var(--dig-card); border: 1px solid var(--dig-border); border-radius: 14px; margin-bottom: 18px; }
+  .dig-card-header { padding: 14px 18px; border-bottom: 1px solid var(--dig-border); display: flex; align-items: center; justify-content: space-between; }
+  .dig-card-header h3 { color: var(--dig-accent); font-size: 13px; font-weight: 700; letter-spacing: .3px; }
+  .dig-card-body { padding: 16px 18px; }
+
+  /* Grid helpers */
+  .dig-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 700px) { .dig-grid-2 { grid-template-columns: 1fr; } }
+
+  /* Tabs */
+  .dig-tabs { display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,.3); border-radius: 10px; margin-bottom: 16px; }
+  .dig-tab {
+    flex: 1; padding: 8px 12px; border: none; background: transparent;
+    color: var(--dig-muted); font-size: 12px; font-weight: 700; cursor: pointer;
+    border-radius: 8px; transition: all .15s; text-align: center;
+  }
+  .dig-tab.active { background: var(--dig-accent); color: #fff; }
+  .dig-tab:hover:not(.active) { background: rgba(6,182,212,.1); color: var(--dig-text); }
+
+  /* MM network cards */
+  .dig-mm-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 800px) { .dig-mm-grid { grid-template-columns: repeat(2,1fr); } }
+  .dig-mm-card {
+    background: var(--dig-card); border: 2px solid var(--dig-border);
+    border-radius: 14px; padding: 16px; cursor: pointer; text-align: center;
+    transition: all .2s;
+  }
+  .dig-mm-card.selected { border-color: var(--dig-accent); box-shadow: 0 0 0 3px rgba(6,182,212,.2); }
+  .dig-mm-card:hover { border-color: var(--dig-accent); }
+  .dig-mm-logo { font-size: 32px; margin-bottom: 6px; }
+  .dig-mm-name { color: var(--dig-text); font-weight: 700; font-size: 13px; }
+  .dig-mm-solde { color: var(--dig-accent); font-weight: 800; font-size: 16px; margin-top: 4px; }
+  .dig-mm-comm { color: var(--dig-green); font-size: 11px; margin-top: 2px; }
+
+  /* Service cards */
+  .dig-svc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; }
+  .dig-svc-card {
+    background: linear-gradient(135deg, rgba(6,182,212,.1), rgba(14,165,233,.06));
+    border: 1px solid var(--dig-border); border-radius: 12px;
+    padding: 16px 10px; cursor: pointer; text-align: center; transition: all .15s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .dig-svc-card:hover { border-color: var(--dig-accent); transform: scale(1.03); box-shadow: 0 4px 16px rgba(6,182,212,.2); }
+  .dig-svc-icon { font-size: 28px; }
+  .dig-svc-name { color: var(--dig-text); font-size: 11px; font-weight: 700; line-height: 1.3; }
+  .dig-svc-prix { color: var(--dig-accent); font-size: 13px; font-weight: 800; }
+
+  /* Table */
+  .dig-table { width: 100%; border-collapse: collapse; }
+  .dig-table th { background: rgba(6,182,212,.12); color: var(--dig-accent); padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+  .dig-table td { padding: 10px 12px; border-bottom: 1px solid var(--dig-border); color: var(--dig-text); font-size: 13px; }
+  .dig-table tr:hover td { background: rgba(6,182,212,.04); }
+  .dig-table tr:last-child td { border-bottom: none; }
+
+  /* Badge */
+  .dig-badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .dig-badge-blue   { background: rgba(6,182,212,.15); color: var(--dig-accent); }
+  .dig-badge-green  { background: rgba(16,185,129,.15); color: var(--dig-green); }
+  .dig-badge-orange { background: rgba(245,158,11,.15); color: var(--dig-orange); }
+  .dig-badge-red    { background: rgba(239,68,68,.15);  color: var(--dig-red); }
+
+  /* Input styled */
+  .dig-input {
+    width: 100%; padding: 10px 14px; background: rgba(255,255,255,.06);
+    border: 1px solid var(--dig-border); border-radius: 9px; color: var(--dig-text);
+    font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .dig-input:focus { border-color: var(--dig-accent); }
+  .dig-input::placeholder { color: var(--dig-muted); }
+  .dig-select { width: 100%; padding: 10px 14px; background: var(--dig-card); border: 1px solid var(--dig-border); border-radius: 9px; color: var(--dig-text); font-size: 14px; outline: none; }
+  .dig-label { color: var(--dig-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 5px; }
+  .dig-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .dig-form-group { margin-bottom: 14px; }
+
+  /* Buttons */
+  .dig-btn { padding: 9px 18px; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s; }
+  .dig-btn-primary { background: var(--dig-accent); color: #fff; }
+  .dig-btn-primary:hover { background: var(--dig-accent2); }
+  .dig-btn-success { background: var(--dig-green); color: #fff; }
+  .dig-btn-danger  { background: var(--dig-red); color: #fff; }
+  .dig-btn-outline { background: transparent; border: 1px solid var(--dig-border); color: var(--dig-text); }
+  .dig-btn-outline:hover { border-color: var(--dig-accent); color: var(--dig-accent); }
+  .dig-btn-sm { padding: 5px 12px; font-size: 11px; }
+  .dig-btn-lg { padding: 14px; width: 100%; font-size: 15px; }
+
+  /* Rapport print */
+  @media print { #receipt-print-area { display: block !important; } }
+
   @media print {
     body > *:not(#receipt-print-area) { display: none !important; }
     #receipt-print-area { display: block !important; font-family: 'Courier New', monospace; }
@@ -237,11 +427,43 @@
 
   .welcome-body {
     flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 40px 20px; gap: 36px;
+    justify-content: center; padding: 40px 20px; gap: 36px; position: relative; overflow: hidden;
   }
   .welcome-subtitle { color: rgba(255,255,255,.6); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
 
-  .welcome-tiles { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 900px; width: 100%; }
+  /* ── Hero illustration ── */
+  .welcome-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; max-width: 680px; z-index: 1; }
+  .hero-illustration { position: relative; width: 220px; height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+  .hero-center {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex; align-items: center; justify-content: center; font-size: 52px;
+    box-shadow: 0 0 0 8px rgba(243,156,18,.12), 0 12px 40px rgba(243,156,18,.4);
+    animation: heroPulse 4s ease-in-out infinite;
+    z-index: 2;
+  }
+  .hero-orb {
+    position: absolute; width: 52px; height: 52px; border-radius: 16px;
+    background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    backdrop-filter: blur(6px); box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    animation: heroFloat 5s ease-in-out infinite;
+  }
+  .hero-orb-1 { top: 4px; left: 6px; animation-delay: 0s; }
+  .hero-orb-2 { top: 4px; right: 6px; animation-delay: 1.2s; }
+  .hero-orb-3 { bottom: 4px; left: 22px; animation-delay: 2.4s; }
+  .hero-orb-4 { bottom: 4px; right: 22px; animation-delay: 3.6s; }
+  @keyframes heroFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  @keyframes heroPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+  .hero-title {
+    color: #fff; font-size: 34px; font-weight: 900; letter-spacing: .5px;
+    background: linear-gradient(90deg, #fff, #ffd9a0, #fff);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-subtitle { color: rgba(255,255,255,.65); font-size: 14px; line-height: 1.6; max-width: 540px; }
+
+  .welcome-tiles { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 900px; width: 100%; z-index: 1; }
   @media (max-width: 700px) { .welcome-tiles { grid-template-columns: repeat(2,1fr); } }
 
   .wtile {
@@ -257,13 +479,36 @@
   .wtile-label { color: #fff; font-weight: 800; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; }
   .wtile-sub { color: rgba(255,255,255,.55); font-size: 11px; margin-top: -4px; }
 
-  .welcome-login-area { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-  .welcome-login-box {
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 16px; padding: 28px 32px; width: 380px; backdrop-filter: blur(8px);
+  /* ── Floating login modal ── */
+  .login-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5,12,24,.65); backdrop-filter: blur(6px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .25s;
   }
-  .welcome-login-box h2 { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; text-align: center; }
-  .welcome-login-box p  { color: rgba(255,255,255,.5); font-size: 12px; text-align: center; margin-bottom: 20px; }
+  .login-modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .login-modal {
+    background: rgba(20,40,65,.85); border: 1px solid rgba(255,255,255,.15);
+    border-radius: 20px; padding: 32px 32px 26px; width: 380px; max-width: 90vw;
+    backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    position: relative; transform: translateY(24px) scale(.96); opacity: 0; transition: all .3s ease;
+  }
+  .login-modal-overlay.open .login-modal { transform: translateY(0) scale(1); opacity: 1; }
+  .login-modal-close {
+    position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: #fff;
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .login-modal-close:hover { background: rgba(255,255,255,.18); }
+  .login-modal-icon {
+    width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+    box-shadow: 0 8px 24px rgba(243,156,18,.4);
+  }
+  .login-modal h2 { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; text-align: center; }
+  .login-modal p  { color: rgba(255,255,255,.5); font-size: 12px; text-align: center; margin-bottom: 20px; }
+  .login-modal-note { color: rgba(255,255,255,.35); font-size: 11px; z-index: 1000; }
   .wlogin-input {
     width: 100%; padding: 12px 16px; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2);
     border-radius: 10px; color: #fff; font-size: 14px; outline: none; margin-bottom: 12px;
@@ -556,41 +801,41 @@
   </div>
 
   <div class="welcome-body">
-    <div class="welcome-subtitle">Bienvenue — Choisissez votre espace de travail</div>
+    <div class="welcome-hero">
+      <div class="hero-illustration">
+        <div class="hero-orb hero-orb-1">🛒</div>
+        <div class="hero-orb hero-orb-2">📊</div>
+        <div class="hero-orb hero-orb-3">💰</div>
+        <div class="hero-orb hero-orb-4">📦</div>
+        <div class="hero-center">🏪</div>
+      </div>
+      <div class="hero-title">Bienvenue chez TeMa</div>
+      <p class="hero-subtitle">Votre application de gestion intégrée : caisse, stock, comptabilité et administration réunis dans un seul espace, simple et chaleureux.</p>
+    </div>
+
+    <div class="welcome-subtitle">Choisissez votre espace de travail</div>
 
     <div class="welcome-tiles">
-      <div class="wtile primary" onclick="focusLogin()">
+      <div class="wtile primary" onclick="ouvrirConnexion('Caisse','🖥️')">
         <div class="wtile-icon">🖥️</div>
         <div class="wtile-label">Caisse</div>
         <div class="wtile-sub">Encaissement · POS</div>
       </div>
-      <div class="wtile" onclick="focusLogin()">
+      <div class="wtile" onclick="ouvrirConnexion('Gestion Stock','📦')">
         <div class="wtile-icon">📦</div>
         <div class="wtile-label">Gestion Stock</div>
         <div class="wtile-sub">Inventaire · Achats</div>
       </div>
-      <div class="wtile" onclick="focusLogin()">
+      <div class="wtile" onclick="ouvrirConnexion('Comptabilité','📒')">
         <div class="wtile-icon">📒</div>
         <div class="wtile-label">Comptabilité</div>
         <div class="wtile-sub">OHADA · Trésorerie</div>
       </div>
-      <div class="wtile" onclick="focusLogin()">
+      <div class="wtile" onclick="ouvrirConnexion('Administration','⚙️')">
         <div class="wtile-icon">⚙️</div>
         <div class="wtile-label">Administration</div>
         <div class="wtile-sub">Comptes · Rapports</div>
       </div>
-    </div>
-
-    <div class="welcome-login-area">
-      <div class="welcome-login-box">
-        <h2>🔐 Connexion</h2>
-        <p>Entrez vos identifiants pour accéder à votre espace</p>
-        <div class="wlogin-error" id="login-error"></div>
-        <input type="text" id="login-user" class="wlogin-input" placeholder="Identifiant" maxlength="30" autocomplete="username">
-        <input type="password" id="login-pass" class="wlogin-input" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')seConnecter()">
-        <button class="wlogin-btn" id="login-btn" onclick="seConnecter()">Se connecter →</button>
-      </div>
-      <p style="font-size:11px;color:rgba(255,255,255,.3)">🔒 Accès restreint — Comptes gérés par l'administrateur</p>
     </div>
   </div>
 
@@ -601,6 +846,21 @@
       <span style="color:rgba(255,255,255,.35);font-size:11px" id="wconn-label">Synchronisation temps réel</span>
     </div>
   </div>
+</div>
+
+<!-- Fenêtre de connexion flottante -->
+<div class="login-modal-overlay" id="login-modal-overlay" onclick="if(event.target===this) fermerConnexion()">
+  <div class="login-modal">
+    <button class="login-modal-close" onclick="fermerConnexion()" title="Fermer">✕</button>
+    <div class="login-modal-icon" id="login-modal-icon">🔐</div>
+    <h2 id="login-modal-title">Connexion</h2>
+    <p>Entrez vos identifiants pour accéder à cet espace</p>
+    <div class="wlogin-error" id="login-error"></div>
+    <input type="text" id="login-user" class="wlogin-input" placeholder="Identifiant" maxlength="30" autocomplete="username">
+    <input type="password" id="login-pass" class="wlogin-input" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')seConnecter()">
+    <button class="wlogin-btn" id="login-btn" onclick="seConnecter()">Se connecter →</button>
+  </div>
+  <p class="login-modal-note">🔒 Accès restreint — Comptes gérés par l'administrateur</p>
 </div>
 
 <!-- LOADING -->
@@ -1601,6 +1861,7 @@
             <option value="Caissier(ère)">Caissier(ère)</option>
             <option value="Magasinier(ère)">Magasinier(ère)</option>
             <option value="Gérant(e)">Gérant(e)</option>
+            <option value="Digital">🖥️ Digital — Zone Informatique & Services</option>
           </select>
         </div>
       </div>
@@ -1984,6 +2245,343 @@
   <div class="secondary-body" id="journal-body"></div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     🖥️  DIGITAL WORKSPACE — Zone A & B
+══════════════════════════════════════════════════════ -->
+<div class="app-screen" id="screen-digital">
+
+  <!-- Sidebar Digital -->
+  <nav class="dig-sidebar">
+    <div class="dig-logo">
+      <div class="dig-logo-icon">🖥️</div>
+      <div><h2>DIGITAL</h2><p>Zone A · Informatique & Services</p></div>
+    </div>
+    <div class="dig-user-badge" onclick="seDeconnecter()">
+      <span class="dig-user-dot"></span>
+      <div style="flex:1;min-width:0">
+        <div class="dig-user-name" id="dig-user-name">—</div>
+        <div class="dig-user-role">DIGITAL</div>
+      </div>
+      <span style="font-size:11px;color:var(--dig-muted)">🚪</span>
+    </div>
+    <nav class="dig-nav">
+      <div class="dig-nav-section">Principal</div>
+      <div class="dig-nav-item active" id="dnav-dashboard" onclick="navigateDigital('dashboard')">
+        <span class="dig-icon">📊</span> Tableau de Bord
+      </div>
+      <div class="dig-nav-section">Caisse</div>
+      <div class="dig-nav-item" id="dnav-caisse" onclick="ouvrirPOSDigital()">
+        <span class="dig-icon">🖥️</span> Caisse POS
+        <span class="dig-nav-badge" id="dig-session-ind">OFF</span>
+      </div>
+      <div class="dig-nav-section">Opérations</div>
+      <div class="dig-nav-item" id="dnav-mm" onclick="navigateDigital('mm')">
+        <span class="dig-icon">📱</span> Mobile Money
+      </div>
+      <div class="dig-nav-item" id="dnav-services" onclick="navigateDigital('services')">
+        <span class="dig-icon">🖨️</span> Services Numériques
+      </div>
+      <div class="dig-nav-section">Analyse</div>
+      <div class="dig-nav-item" id="dnav-rapports" onclick="navigateDigital('rapports')">
+        <span class="dig-icon">📈</span> Rapports
+      </div>
+      <div class="dig-nav-item" id="dnav-clients" onclick="navigateDigital('clients')">
+        <span class="dig-icon">👥</span> Clients
+      </div>
+      <div class="dig-nav-item" id="dnav-stock" onclick="navigateDigital('stock')">
+        <span class="dig-icon">📦</span> Mon Stock
+        <span class="dig-nav-badge" id="dig-alerte-stock-badge" style="display:none">!</span>
+      </div>
+      <div class="dig-nav-item" id="dnav-historique" onclick="navigateDigital('historique')">
+        <span class="dig-icon">📜</span> Historique
+      </div>
+    </nav>
+    <div class="dig-sidebar-footer">
+      <span style="animation:pulse 2s infinite;display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:5px"></span>
+      Sync temps réel<br>
+      <span id="dig-clock" style="color:#94a3b8">--:--</span>
+      · TeMa Digital v1.0
+    </div>
+  </nav>
+
+  <!-- Main area -->
+  <div class="dig-main">
+    <div class="dig-topbar">
+      <div class="dig-topbar-title" id="dig-page-title">📊 <span>Tableau de Bord Digital</span></div>
+      <div class="dig-topbar-right">
+        <span id="dig-topbar-date">—</span>
+        <span id="dig-session-status" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#ef4444">⚫ Hors session</span>
+      </div>
+    </div>
+
+    <!-- ─── PAGE: DASHBOARD ─── -->
+    <div class="dig-page active" id="dpage-dashboard">
+      <div class="dig-kpi-grid" id="dig-kpi-grid">
+        <!-- Rempli par renderDigitalDashboard() -->
+      </div>
+      <div class="dig-grid-2">
+        <div class="dig-card">
+          <div class="dig-card-header"><h3>📈 Services du Jour</h3><span id="dig-services-badge" class="dig-badge dig-badge-blue">0 opérations</span></div>
+          <div class="dig-card-body" id="dig-services-summary"></div>
+        </div>
+        <div class="dig-card">
+          <div class="dig-card-header"><h3>📱 Mobile Money du Jour</h3><span id="dig-mm-badge" class="dig-badge dig-badge-green">0 transactions</span></div>
+          <div class="dig-card-body" id="dig-mm-summary"></div>
+        </div>
+      </div>
+      <div class="dig-card">
+        <div class="dig-card-header"><h3>🏆 Dernières Ventes</h3></div>
+        <div class="dig-card-body" id="dig-recent-sales"></div>
+      </div>
+    </div>
+
+    <!-- ─── PAGE: MOBILE MONEY ─── -->
+    <div class="dig-page" id="dpage-mm">
+      <!-- Sélection réseau -->
+      <div class="dig-mm-grid">
+        <div class="dig-mm-card selected" id="mm-card-orange" onclick="selectMMNetwork('Orange Money',this)">
+          <div class="dig-mm-logo">🟠</div>
+          <div class="dig-mm-name">Orange Money</div>
+          <div class="dig-mm-solde" id="mm-solde-orange">—</div>
+          <div class="dig-mm-comm" id="mm-comm-orange">Comm: —</div>
+        </div>
+        <div class="dig-mm-card" id="mm-card-mtn" onclick="selectMMNetwork('MTN MoMo',this)">
+          <div class="dig-mm-logo">💛</div>
+          <div class="dig-mm-name">MTN MoMo</div>
+          <div class="dig-mm-solde" id="mm-solde-mtn">—</div>
+          <div class="dig-mm-comm" id="mm-comm-mtn">Comm: —</div>
+        </div>
+        <div class="dig-mm-card" id="mm-card-wave" onclick="selectMMNetwork('Wave',this)">
+          <div class="dig-mm-logo">🌊</div>
+          <div class="dig-mm-name">Wave</div>
+          <div class="dig-mm-solde" id="mm-solde-wave">—</div>
+          <div class="dig-mm-comm" id="mm-comm-wave">Comm: —</div>
+        </div>
+        <div class="dig-mm-card" id="mm-card-moov" onclick="selectMMNetwork('Moov Money',this)">
+          <div class="dig-mm-logo">🔵</div>
+          <div class="dig-mm-name">Moov Money</div>
+          <div class="dig-mm-solde" id="mm-solde-moov">—</div>
+          <div class="dig-mm-comm" id="mm-comm-moov">Comm: —</div>
+        </div>
+      </div>
+
+      <!-- Formulaire transaction -->
+      <div class="dig-grid-2" style="margin-bottom:18px">
+        <div class="dig-card">
+          <div class="dig-card-header"><h3 id="mm-form-title">📱 Nouvelle transaction — Orange Money</h3></div>
+          <div class="dig-card-body">
+            <div class="dig-form-row">
+              <div class="dig-form-group">
+                <label class="dig-label">Type d'opération</label>
+                <select class="dig-select" id="mm-type" onchange="majCommissionMM()">
+                  <option value="depot">Dépôt</option>
+                  <option value="retrait">Retrait</option>
+                  <option value="transfert">Transfert</option>
+                </select>
+              </div>
+              <div class="dig-form-group">
+                <label class="dig-label">Montant (FCFA)</label>
+                <input type="number" class="dig-input" id="mm-montant" min="0" placeholder="Ex: 50 000" oninput="majCommissionMM()">
+              </div>
+            </div>
+            <div class="dig-form-row">
+              <div class="dig-form-group">
+                <label class="dig-label">Numéro client</label>
+                <input type="text" class="dig-input" id="mm-numero" placeholder="Ex: 07 00 00 00 00">
+              </div>
+              <div class="dig-form-group">
+                <label class="dig-label">Nom client (optionnel)</label>
+                <input type="text" class="dig-input" id="mm-client" placeholder="Nom ou surnom">
+              </div>
+            </div>
+            <div style="background:rgba(6,182,212,.08);border:1px solid var(--dig-border);border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
+              <div style="font-size:11px;color:var(--dig-muted);margin-bottom:4px">Commission estimée</div>
+              <div style="font-size:24px;font-weight:800;color:var(--dig-accent)" id="mm-comm-preview">—</div>
+            </div>
+            <button class="dig-btn dig-btn-primary dig-btn-lg" onclick="enregistrerTransactionDigital()">✅ Enregistrer la transaction</button>
+          </div>
+        </div>
+        <div class="dig-card">
+          <div class="dig-card-header"><h3>📊 Récapitulatif MM — <span id="mm-resume-reseau">Orange Money</span></h3></div>
+          <div class="dig-card-body" id="mm-recap-body"></div>
+        </div>
+      </div>
+
+      <!-- Historique MM -->
+      <div class="dig-card">
+        <div class="dig-card-header">
+          <h3>🕒 Historique Mobile Money</h3>
+          <div style="display:flex;gap:8px">
+            <select class="dig-select" id="mm-filtre-reseau" style="width:150px" onchange="renderDigitalMM()">
+              <option value="">Tous réseaux</option>
+              <option value="Orange Money">Orange Money</option>
+              <option value="MTN MoMo">MTN MoMo</option>
+              <option value="Wave">Wave</option>
+              <option value="Moov Money">Moov Money</option>
+            </select>
+            <select class="dig-select" id="mm-filtre-periode" style="width:130px" onchange="renderDigitalMM()">
+              <option value="jour">Aujourd'hui</option>
+              <option value="mois" selected>Ce mois</option>
+              <option value="tout">Tout</option>
+            </select>
+          </div>
+        </div>
+        <div class="dig-card-body" style="overflow-x:auto">
+          <table class="dig-table"><thead><tr><th>Date</th><th>Réseau</th><th>Type</th><th>Montant</th><th>Commission</th><th>Client</th><th>Numéro</th></tr></thead>
+          <tbody id="mm-histo-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PAGE: SERVICES NUMÉRIQUES ─── -->
+    <div class="dig-page" id="dpage-services">
+      <div class="dig-grid-2" style="margin-bottom:18px">
+        <div>
+          <h3 style="color:var(--dig-accent);margin-bottom:14px;font-size:14px">📋 Catalogue Services</h3>
+          <div class="dig-svc-grid" id="dig-svc-catalogue"></div>
+        </div>
+        <div class="dig-card">
+          <div class="dig-card-header"><h3>🖨️ Enregistrer un Service</h3></div>
+          <div class="dig-card-body">
+            <div class="dig-form-group">
+              <label class="dig-label">Service sélectionné</label>
+              <select class="dig-select" id="svc-type" onchange="majSvcPrix()">
+                <option value="">-- Choisir --</option>
+                <option value="Photocopie NB|50">📄 Photocopie N&B (50 F/page)</option>
+                <option value="Photocopie Couleur|150">🎨 Photocopie Couleur (150 F/page)</option>
+                <option value="Impression NB|75">🖨️ Impression N&B (75 F/page)</option>
+                <option value="Impression Couleur|150">🌈 Impression Couleur (150 F/page)</option>
+                <option value="Scan|100">📷 Scan (100 F/page)</option>
+                <option value="Reliure|500">📚 Reliure (500 F/doc)</option>
+                <option value="Création CV|2000">📋 Création CV (2 000 F)</option>
+                <option value="Saisie|200">⌨️ Saisie (200 F/page)</option>
+                <option value="Inscription en ligne|1000">🌐 Inscription en ligne (1 000 F)</option>
+                <option value="Autre|0">⚡ Autre service</option>
+              </select>
+            </div>
+            <div class="dig-form-row">
+              <div class="dig-form-group">
+                <label class="dig-label">Quantité</label>
+                <input type="number" class="dig-input" id="svc-qte" min="1" value="1" oninput="majSvcTotal()">
+              </div>
+              <div class="dig-form-group">
+                <label class="dig-label">Prix unitaire (FCFA)</label>
+                <input type="number" class="dig-input" id="svc-prix" min="0" placeholder="0" oninput="majSvcTotal()">
+              </div>
+            </div>
+            <div class="dig-form-group">
+              <label class="dig-label">Client (optionnel)</label>
+              <input type="text" class="dig-input" id="svc-client" placeholder="Nom du client">
+            </div>
+            <div style="background:rgba(6,182,212,.08);border:1px solid var(--dig-border);border-radius:10px;padding:12px;text-align:center;margin-bottom:14px">
+              <div style="font-size:10px;color:var(--dig-muted)">TOTAL</div>
+              <div style="font-size:28px;font-weight:800;color:var(--dig-accent)" id="svc-total-preview">—</div>
+            </div>
+            <button class="dig-btn dig-btn-primary dig-btn-lg" onclick="enregistrerServiceDigital()">💾 Enregistrer le service</button>
+          </div>
+        </div>
+      </div>
+      <!-- Historique services -->
+      <div class="dig-card">
+        <div class="dig-card-header">
+          <h3>📋 Historique Services</h3>
+          <select class="dig-select" id="svc-filtre" style="width:140px" onchange="renderDigitalServices()">
+            <option value="jour">Aujourd'hui</option>
+            <option value="mois" selected>Ce mois</option>
+            <option value="tout">Tout</option>
+          </select>
+        </div>
+        <div class="dig-card-body" style="overflow-x:auto">
+          <table class="dig-table"><thead><tr><th>Date</th><th>Service</th><th>Qté</th><th>Prix unit.</th><th>Total</th><th>Client</th><th>Mode paiement</th></tr></thead>
+          <tbody id="svc-histo-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PAGE: RAPPORTS ─── -->
+    <div class="dig-page" id="dpage-rapports">
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center">
+        <div class="dig-tabs" style="flex:none">
+          <button class="dig-tab active" onclick="switchRapportDigital('jour',this)">Journalier</button>
+          <button class="dig-tab" onclick="switchRapportDigital('mois',this)">Mensuel</button>
+        </div>
+        <input type="date" class="dig-input" id="rpt-date" style="width:160px" onchange="renderDigitalRapports()">
+        <input type="month" class="dig-input" id="rpt-mois" style="width:160px;display:none" onchange="renderDigitalRapports()">
+        <button class="dig-btn dig-btn-outline dig-btn-sm" onclick="imprimerRapportDigital()">🖨️ Imprimer</button>
+      </div>
+      <div id="dig-rapport-content"></div>
+    </div>
+
+    <!-- ─── PAGE: CLIENTS ─── -->
+    <div class="dig-page" id="dpage-clients">
+      <div class="dig-card" style="margin-bottom:14px">
+        <div class="dig-card-body" style="display:flex;gap:10px">
+          <input type="text" class="dig-input" id="dig-clients-search" placeholder="🔍 Rechercher un client..." oninput="renderDigitalClients()" style="flex:1">
+          <button class="dig-btn dig-btn-primary" onclick="document.getElementById('dig-modal-client').style.display='flex'">+ Nouveau client</button>
+        </div>
+      </div>
+      <div id="dig-clients-list"></div>
+    </div>
+
+    <!-- ─── PAGE: STOCK ─── -->
+    <div class="dig-page" id="dpage-stock">
+      <div class="dig-card">
+        <div class="dig-card-header"><h3>📦 Mon Stock — Zone A & B</h3>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="dig-input" id="dig-stock-search" placeholder="🔍 Rechercher..." oninput="renderDigitalStock()" style="width:180px">
+            <select class="dig-select" id="dig-stock-filtre" style="width:130px" onchange="renderDigitalStock()">
+              <option value="">Tous</option><option value="low">Stock faible</option><option value="out">Rupture</option>
+            </select>
+          </div>
+        </div>
+        <div class="dig-card-body" style="overflow-x:auto">
+          <table class="dig-table">
+            <thead><tr><th>Produit</th><th>Catégorie</th><th>Référence</th><th>Prix vente</th><th style="text-align:center">Stock</th><th>Statut</th></tr></thead>
+            <tbody id="dig-stock-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PAGE: HISTORIQUE ─── -->
+    <div class="dig-page" id="dpage-historique">
+      <div class="dig-card">
+        <div class="dig-card-header"><h3>📜 Historique de mes Activités</h3>
+          <select class="dig-select" id="histo-filtre" style="width:140px" onchange="renderDigitalHistorique()">
+            <option value="jour">Aujourd'hui</option>
+            <option value="mois" selected>Ce mois</option>
+            <option value="tout">Tout</option>
+          </select>
+        </div>
+        <div class="dig-card-body" style="overflow-x:auto">
+          <table class="dig-table">
+            <thead><tr><th>Date/Heure</th><th>Action</th><th>Détail</th><th>Montant</th></tr></thead>
+            <tbody id="histo-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.dig-main -->
+</div><!-- /#screen-digital -->
+
+<!-- Modal client Digital -->
+<div id="dig-modal-client" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid rgba(6,182,212,.3);border-radius:18px;padding:28px;width:400px;max-width:95vw">
+    <h3 style="color:#06b6d4;margin-bottom:16px">👤 Nouveau Client</h3>
+    <form onsubmit="sauvegarderClientDigital(event)">
+      <div class="dig-form-group"><label class="dig-label">Nom complet *</label><input class="dig-input" id="dc-nom" required></div>
+      <div class="dig-form-row">
+        <div class="dig-form-group"><label class="dig-label">Téléphone</label><input class="dig-input" id="dc-tel" placeholder="+241 07..."></div>
+        <div class="dig-form-group"><label class="dig-label">Email</label><input class="dig-input" id="dc-email" type="email"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="dig-btn dig-btn-outline" style="flex:1" onclick="document.getElementById('dig-modal-client').style.display='none'">Annuler</button>
+        <button type="submit" class="dig-btn dig-btn-primary" style="flex:1">💾 Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Firebase SDK v9 compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -2173,6 +2771,7 @@ async function seConnecter() {
     db.collection('users').doc(userDoc.id).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
     consigner('Connexion', `${currentUser.label} s'est connecté(e)`);
 
+    fermerConnexion();
     document.getElementById('screen-welcome').classList.remove('active');
     document.getElementById('loading-overlay').classList.add('show');
     document.getElementById('loading-msg').textContent = 'Connexion à la base de données...';
@@ -2206,6 +2805,650 @@ async function assurerCompteAdmin() {
   });
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   🖥️  DIGITAL WORKSPACE — Fonctions JS
+════════════════════════════════════════════════════════════════════════ */
+
+// ── Constantes Digital ──────────────────────────────────────────────────
+const DIG_ZONES = ['Informatique','Accessoires Informatiques','Services Numériques','Mobile Money','Fournitures Scolaires','Fournitures Bureau'];
+const MM_NETWORKS = ['Orange Money','MTN MoMo','Wave','Moov Money'];
+const MM_RATES = {
+  'Orange Money': {depot:0.01, retrait:0.02, transfert:0.005},
+  'MTN MoMo':     {depot:0.01, retrait:0.02, transfert:0.005},
+  'Wave':          {depot:0.005,retrait:0.01, transfert:0.003},
+  'Moov Money':   {depot:0.01, retrait:0.02, transfert:0.005}
+};
+
+let digMMReseau = 'Orange Money';
+let digRapportMode = 'jour';
+
+// ── Ouverture écran Digital ─────────────────────────────────────────────
+function ouvrirEcranDigital() {
+  document.querySelectorAll('.app-screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
+  const sc = document.getElementById('screen-digital');
+  sc.style.display = 'flex'; sc.classList.add('active');
+  document.getElementById('dig-user-name').textContent = currentUser.label;
+  // Horloge
+  function tickDig() {
+    const n = new Date();
+    const el = document.getElementById('dig-clock');
+    if (el) el.textContent = n.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const el2 = document.getElementById('dig-topbar-date');
+    if (el2) el2.textContent = n.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+  tickDig(); clearInterval(window._digClock);
+  window._digClock = setInterval(tickDig, 1000);
+  // Listeners spécifiques Digital
+  demarrerListenersDigital();
+  // Init dates rapports
+  const today = new Date().toISOString().split('T')[0];
+  const elD = document.getElementById('rpt-date'); if (elD) elD.value = today;
+  const elM = document.getElementById('rpt-mois'); if (elM) elM.value = today.slice(0,7);
+  navigateDigital('dashboard');
+  auditDigital('Connexion', 'Ouverture espace Digital');
+}
+
+// ── Listeners Firestore Digital ─────────────────────────────────────────
+function demarrerListenersDigital() {
+  if (window._digUnsub1) window._digUnsub1();
+  if (window._digUnsub2) window._digUnsub2();
+  if (window._digUnsub3) window._digUnsub3();
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  const now = new Date(); const debut = new Date(now.getFullYear(), now.getMonth(), 1);
+  window._digUnsub1 = db.collection('transactions_mm')
+    .where('createdBy','==', uid)
+    .orderBy('date','desc').limit(500)
+    .onSnapshot(snap => {
+      transactionsMM = snap.docs.map(d => ({id:d.id,...d.data()}));
+      rafraichirDigital();
+    }, () => {
+      // fallback sans filtre par user
+      window._digUnsub1 = db.collection('transactions_mm')
+        .orderBy('date','desc').limit(500)
+        .onSnapshot(snap => {
+          transactionsMM = snap.docs.map(d => ({id:d.id,...d.data()}));
+          rafraichirDigital();
+        });
+    });
+  window._digUnsub2 = db.collection('ventes_services')
+    .where('agent','==', uid)
+    .orderBy('date','desc').limit(500)
+    .onSnapshot(snap => {
+      ventesServices = snap.docs.map(d => ({id:d.id,...d.data()}));
+      rafraichirDigital();
+    }, () => {
+      window._digUnsub2 = db.collection('ventes_services')
+        .orderBy('date','desc').limit(500)
+        .onSnapshot(snap => {
+          ventesServices = snap.docs.map(d => ({id:d.id,...d.data()}));
+          rafraichirDigital();
+        });
+    });
+  window._digUnsub3 = db.collection('sessions_caisse')
+    .where('statut','==','ouverte').limit(1)
+    .onSnapshot(snap => {
+      posSessionActive = snap.empty ? null : {id:snap.docs[0].id,...snap.docs[0].data()};
+      const ind = document.getElementById('dig-session-ind');
+      const st = document.getElementById('dig-session-status');
+      if (ind) ind.textContent = posSessionActive ? 'ON' : 'OFF';
+      if (ind) ind.style.background = posSessionActive ? '#10b981' : '#ef4444';
+      if (st) { st.textContent = posSessionActive ? '🟢 Session active' : '⚫ Hors session'; st.style.background = posSessionActive ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)'; st.style.color = posSessionActive ? '#10b981' : '#ef4444'; }
+    });
+}
+
+// ── Navigation Digital ──────────────────────────────────────────────────
+function navigateDigital(page) {
+  document.querySelectorAll('.dig-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dig-nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('dpage-' + page);
+  if (el) el.classList.add('active');
+  const nav = document.getElementById('dnav-' + page);
+  if (nav) nav.classList.add('active');
+  const titles = {dashboard:'📊 Tableau de Bord Digital', mm:'📱 Mobile Money', services:'🖨️ Services Numériques', rapports:'📈 Rapports', clients:'👥 Clients', stock:'📦 Mon Stock — Zone A & B', historique:'📜 Historique'};
+  const t = document.getElementById('dig-page-title');
+  if (t) t.innerHTML = titles[page] || page;
+  switch(page) {
+    case 'dashboard':  renderDigitalDashboard(); break;
+    case 'mm':         renderDigitalMM(); break;
+    case 'services':   renderDigitalServices(); break;
+    case 'rapports':   renderDigitalRapports(); break;
+    case 'clients':    renderDigitalClients(); break;
+    case 'stock':      renderDigitalStock(); break;
+    case 'historique': renderDigitalHistorique(); break;
+  }
+}
+
+function rafraichirDigital() {
+  const active = document.querySelector('.dig-page.active');
+  if (!active) return;
+  const id = active.id.replace('dpage-','');
+  navigateDigital(id);
+}
+
+// ── Ouvrir POS depuis Digital ───────────────────────────────────────────
+function ouvrirPOSDigital() {
+  document.querySelectorAll('.app-screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
+  document.getElementById('pos-cashier-name').textContent = currentUser.label + ' · Digital';
+  ouvrirEcranPOS();
+  // Override retour pour revenir au Digital
+  window._posRetourDigital = true;
+}
+
+// ── Helper dates ────────────────────────────────────────────────────────
+function digFilterDate(item, periode) {
+  const d = item.date?.toDate ? item.date.toDate() : new Date(item.date || item.createdAt || 0);
+  const now = new Date();
+  if (periode === 'jour') return d.toDateString() === now.toDateString();
+  if (periode === 'mois') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  return true;
+}
+
+// ── Dashboard ───────────────────────────────────────────────────────────
+function renderDigitalDashboard() {
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  // Ventes caisse du jour (produits Zone A/B)
+  const ventesJour = ventesCaisse.filter(v => {
+    const d = v.date?.toDate ? v.date.toDate() : new Date(v.date || 0);
+    return d.toDateString() === new Date().toDateString();
+  });
+  const caJour = ventesJour.reduce((s,v) => s + (v.montant||0), 0);
+  // Services du jour
+  const svcJour = ventesServices.filter(v => digFilterDate(v,'jour'));
+  const caSvcJour = svcJour.reduce((s,v) => s + (v.total||0), 0);
+  // MM du jour
+  const mmJour = transactionsMM.filter(v => digFilterDate(v,'jour'));
+  const commMM = mmJour.reduce((s,v) => s + (v.commission||0), 0);
+  // Mois
+  const ventesMois = ventesCaisse.filter(v => { const d = v.date?.toDate ? v.date.toDate() : new Date(v.date||0); const n = new Date(); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); });
+  const caMois = ventesMois.reduce((s,v) => s + (v.montant||0), 0);
+  // Produits stock faible Zone A/B
+  const stockFaible = produits.filter(p => DIG_ZONES.some(z => (p.categorie||'').includes(z)) && (p.stock||0) < 5 && p.type !== 'service').length;
+
+  const kpis = [
+    {label:'CA Aujourd\'hui', val: posF(caJour + caSvcJour), icon:'💰', color:'var(--dig-accent)', sub: `POS: ${posF(caJour)} · Services: ${posF(caSvcJour)}`},
+    {label:'CA du Mois', val: posF(caMois), icon:'📅', color:'var(--dig-green)', sub: `${ventesMois.length} transactions`},
+    {label:'Services Numériques', val: svcJour.length + ' ops', icon:'🖨️', color:'#8b5cf6', sub: `Total: ${posF(caSvcJour)}`},
+    {label:'Mobile Money', val: mmJour.length + ' trans.', icon:'📱', color:'var(--dig-orange)', sub: `Commissions: ${posF(commMM)}`},
+    {label:'Commissions MM', val: posF(commMM), icon:'🏆', color:'#f59e0b', sub: 'Aujourd\'hui'},
+    {label:'Stock faible', val: stockFaible + ' articles', icon:'⚠️', color: stockFaible > 0 ? 'var(--dig-red)' : 'var(--dig-green)', sub: 'Zone A & B'},
+  ];
+  const grid = document.getElementById('dig-kpi-grid');
+  if (grid) grid.innerHTML = kpis.map(k => `
+    <div class="dig-kpi">
+      <div class="dig-kpi-icon">${k.icon}</div>
+      <div class="dig-kpi-val" style="color:${k.color}">${k.val}</div>
+      <div class="dig-kpi-label">${k.label}</div>
+      <div class="dig-kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+  // Services summary
+  const svcMap = {};
+  svcJour.forEach(s => { svcMap[s.service] = (svcMap[s.service]||0) + (s.total||0); });
+  const svcSumEl = document.getElementById('dig-services-summary');
+  if (svcSumEl) svcSumEl.innerHTML = Object.keys(svcMap).length
+    ? Object.entries(svcMap).map(([k,v]) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>${k}</span><span style="color:var(--dig-accent)">${posF(v)}</span></div>`).join('')
+    : '<div style="text-align:center;color:var(--dig-muted);padding:20px">Aucun service aujourd\'hui</div>';
+  const svcBadge = document.getElementById('dig-services-badge');
+  if (svcBadge) svcBadge.textContent = svcJour.length + ' opérations';
+
+  // MM summary
+  const mmMap = {};
+  mmJour.forEach(m => { mmMap[m.reseau] = (mmMap[m.reseau]||0) + (m.commission||0); });
+  const mmSumEl = document.getElementById('dig-mm-summary');
+  if (mmSumEl) mmSumEl.innerHTML = mmJour.length
+    ? MM_NETWORKS.map(r => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>${r}</span><span style="color:var(--dig-green)">Comm: ${posF(mmMap[r]||0)}</span></div>`).join('')
+    : '<div style="text-align:center;color:var(--dig-muted);padding:20px">Aucune opération MM aujourd\'hui</div>';
+  const mmBadge = document.getElementById('dig-mm-badge');
+  if (mmBadge) mmBadge.textContent = mmJour.length + ' transactions';
+
+  // Dernières ventes
+  const sales = [...ventesCaisse].sort((a,b) => (b.date?.seconds||0)-(a.date?.seconds||0)).slice(0,8);
+  const recentEl = document.getElementById('dig-recent-sales');
+  if (recentEl) recentEl.innerHTML = sales.length
+    ? `<table class="dig-table"><thead><tr><th>Heure</th><th>Article</th><th>Qté</th><th>Montant</th></tr></thead><tbody>`
+      + sales.map(v => { const d = v.date?.toDate ? v.date.toDate() : new Date(v.date||0); return `<tr><td>${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${v.produit||v.article||'—'}</td><td>${v.quantite||1}</td><td style="color:var(--dig-accent)">${posF(v.montant)}</td></tr>`; }).join('')
+      + '</tbody></table>'
+    : '<div style="text-align:center;color:var(--dig-muted);padding:20px">Aucune vente enregistrée</div>';
+}
+
+// ── Mobile Money ────────────────────────────────────────────────────────
+function selectMMNetwork(reseau, card) {
+  digMMReseau = reseau;
+  document.querySelectorAll('.dig-mm-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  const t = document.getElementById('mm-form-title');
+  if (t) t.textContent = '📱 Nouvelle transaction — ' + reseau;
+  const r = document.getElementById('mm-resume-reseau');
+  if (r) r.textContent = reseau;
+  majCommissionMM();
+  renderMMRecap();
+}
+
+function majCommissionMM() {
+  const type = document.getElementById('mm-type')?.value || 'depot';
+  const montant = parseFloat(document.getElementById('mm-montant')?.value) || 0;
+  const rates = MM_RATES[digMMReseau] || {depot:0.01,retrait:0.02,transfert:0.005};
+  const comm = montant * (rates[type] || 0.01);
+  const el = document.getElementById('mm-comm-preview');
+  if (el) el.textContent = posF(comm);
+}
+
+function renderMMSoldes() {
+  MM_NETWORKS.forEach(r => {
+    const txReseau = transactionsMM.filter(t => t.reseau === r);
+    const solde = txReseau.reduce((s,t) => s + (t.type==='depot' ? t.montant : t.type==='retrait' ? -t.montant : 0), 0);
+    const comm = txReseau.filter(t => digFilterDate(t,'mois')).reduce((s,t) => s + (t.commission||0), 0);
+    const key = r.split(' ')[0].toLowerCase();
+    const se = document.getElementById('mm-solde-'+key);
+    const ce = document.getElementById('mm-comm-'+key);
+    if (se) se.textContent = posF(solde);
+    if (ce) ce.textContent = 'Comm mois: ' + posF(comm);
+  });
+}
+
+function renderMMRecap() {
+  const txReseau = transactionsMM.filter(t => t.reseau === digMMReseau && digFilterDate(t,'mois'));
+  const depots = txReseau.filter(t => t.type==='depot');
+  const retraits = txReseau.filter(t => t.type==='retrait');
+  const comms = txReseau.reduce((s,t) => s + (t.commission||0), 0);
+  const el = document.getElementById('mm-recap-body');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="background:rgba(16,185,129,.1);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--dig-muted)">Dépôts (mois)</div>
+        <div style="font-size:20px;font-weight:800;color:#10b981">${depots.length}</div>
+        <div style="font-size:11px;color:#10b981">${posF(depots.reduce((s,t)=>s+t.montant,0))}</div>
+      </div>
+      <div style="background:rgba(239,68,68,.1);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--dig-muted)">Retraits (mois)</div>
+        <div style="font-size:20px;font-weight:800;color:#ef4444">${retraits.length}</div>
+        <div style="font-size:11px;color:#ef4444">${posF(retraits.reduce((s,t)=>s+t.montant,0))}</div>
+      </div>
+    </div>
+    <div style="background:rgba(6,182,212,.1);border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:10px;color:var(--dig-muted)">Commissions ce mois</div>
+      <div style="font-size:26px;font-weight:800;color:var(--dig-accent)">${posF(comms)}</div>
+    </div>`;
+}
+
+function renderDigitalMM() {
+  renderMMSoldes();
+  renderMMRecap();
+  const filtre = document.getElementById('mm-filtre-reseau')?.value || '';
+  const periode = document.getElementById('mm-filtre-periode')?.value || 'mois';
+  let txs = transactionsMM.filter(t => digFilterDate(t, periode));
+  if (filtre) txs = txs.filter(t => t.reseau === filtre);
+  const tbody = document.getElementById('mm-histo-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = txs.length ? txs.map(t => {
+    const d = t.date?.toDate ? t.date.toDate() : new Date(t.date||0);
+    const typeLabel = {depot:'🟢 Dépôt', retrait:'🔴 Retrait', transfert:'🔵 Transfert'}[t.type] || t.type;
+    return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${t.reseau}</td><td>${typeLabel}</td>
+      <td style="color:var(--dig-accent)">${posF(t.montant)}</td>
+      <td style="color:var(--dig-green)">${posF(t.commission)}</td>
+      <td>${t.client||'—'}</td><td>${t.numero||'—'}</td></tr>`;
+  }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--dig-muted);padding:20px">Aucune transaction</td></tr>`;
+}
+
+async function enregistrerTransactionDigital() {
+  const type = document.getElementById('mm-type')?.value;
+  const montant = parseFloat(document.getElementById('mm-montant')?.value);
+  const numero = document.getElementById('mm-numero')?.value || '';
+  const client = document.getElementById('mm-client')?.value || '';
+  if (!montant || montant <= 0) { alert('Montant invalide'); return; }
+  const rates = MM_RATES[digMMReseau] || {depot:0.01,retrait:0.02,transfert:0.005};
+  const commission = montant * (rates[type] || 0.01);
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  try {
+    const batch = db.batch();
+    const mmRef = db.collection('transactions_mm').doc();
+    batch.set(mmRef, {
+      reseau: digMMReseau, type, montant, commission, numero, client,
+      agent: uid, agentNom: currentUser.label,
+      date: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: uid
+    });
+    // Écriture ventesCaisse pour intégration comptable
+    const vcRef = db.collection('ventesCaisse').doc();
+    batch.set(vcRef, {
+      produit: `MM ${digMMReseau} — ${type}`,
+      montant: commission, quantite: 1,
+      modePaiement: 'Mobile Money', source: 'mobile_money',
+      agent: uid, agentNom: currentUser.label,
+      date: firebase.firestore.FieldValue.serverTimestamp(),
+      sessionId: posSessionActive?.id || null
+    });
+    await batch.commit();
+    document.getElementById('mm-montant').value = '';
+    document.getElementById('mm-numero').value = '';
+    document.getElementById('mm-client').value = '';
+    document.getElementById('mm-comm-preview').textContent = '—';
+    auditDigital('Transaction MM', `${digMMReseau} · ${type} · ${posF(montant)} · Comm: ${posF(commission)}`);
+    alert(`✅ Transaction enregistrée\nCommission: ${posF(commission)}`);
+  } catch(e) { console.error(e); alert('Erreur: ' + e.message); }
+}
+
+// ── Services Numériques ─────────────────────────────────────────────────
+const DIG_SERVICES = [
+  {nom:'Photocopie N&B', prix:50, emoji:'📄'},
+  {nom:'Photocopie Couleur', prix:150, emoji:'🎨'},
+  {nom:'Impression N&B', prix:75, emoji:'🖨️'},
+  {nom:'Impression Couleur', prix:150, emoji:'🌈'},
+  {nom:'Scan', prix:100, emoji:'📷'},
+  {nom:'Reliure', prix:500, emoji:'📚'},
+  {nom:'Création CV', prix:2000, emoji:'📋'},
+  {nom:'Saisie', prix:200, emoji:'⌨️'},
+  {nom:'Inscription en ligne', prix:1000, emoji:'🌐'},
+];
+
+function majSvcPrix() {
+  const sel = document.getElementById('svc-type')?.value || '';
+  const parts = sel.split('|');
+  const prix = parseFloat(parts[1]) || 0;
+  const elPrix = document.getElementById('svc-prix');
+  if (elPrix) elPrix.value = prix;
+  majSvcTotal();
+}
+
+function majSvcTotal() {
+  const prix = parseFloat(document.getElementById('svc-prix')?.value) || 0;
+  const qte = parseFloat(document.getElementById('svc-qte')?.value) || 1;
+  const el = document.getElementById('svc-total-preview');
+  if (el) el.textContent = posF(prix * qte);
+}
+
+function renderDigitalServices() {
+  // Catalogue
+  const cat = document.getElementById('dig-svc-catalogue');
+  if (cat) cat.innerHTML = DIG_SERVICES.map(s => `
+    <div class="dig-svc-card" onclick="selectionnerService('${s.nom}',${s.prix})">
+      <div class="dig-svc-icon">${s.emoji}</div>
+      <div class="dig-svc-nom">${s.nom}</div>
+      <div class="dig-svc-prix">${posF(s.prix)}/unité</div>
+    </div>`).join('');
+  // Historique
+  const periode = document.getElementById('svc-filtre')?.value || 'mois';
+  const svcs = ventesServices.filter(v => digFilterDate(v, periode));
+  const tbody = document.getElementById('svc-histo-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = svcs.length ? svcs.map(s => {
+    const d = s.date?.toDate ? s.date.toDate() : new Date(s.date||0);
+    return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${s.service}</td><td>${s.quantite||1}</td>
+      <td>${posF(s.prixUnitaire)}</td>
+      <td style="color:var(--dig-accent)">${posF(s.total)}</td>
+      <td>${s.client||'—'}</td><td>${s.modePaiement||'Espèces'}</td></tr>`;
+  }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--dig-muted);padding:20px">Aucun service enregistré</td></tr>`;
+}
+
+function selectionnerService(nom, prix) {
+  const elType = document.getElementById('svc-type');
+  if (elType) { for (let opt of elType.options) { if (opt.value.startsWith(nom+'|')) { elType.value = opt.value; break; } } }
+  const elPrix = document.getElementById('svc-prix'); if (elPrix) elPrix.value = prix;
+  const elQte = document.getElementById('svc-qte'); if (elQte) elQte.value = 1;
+  majSvcTotal();
+}
+
+async function enregistrerServiceDigital() {
+  const selVal = document.getElementById('svc-type')?.value || '';
+  if (!selVal) { alert('Choisissez un service'); return; }
+  const nomService = selVal.split('|')[0];
+  const prix = parseFloat(document.getElementById('svc-prix')?.value) || 0;
+  const qte = parseInt(document.getElementById('svc-qte')?.value) || 1;
+  const client = document.getElementById('svc-client')?.value || '';
+  const total = prix * qte;
+  if (total <= 0) { alert('Montant invalide'); return; }
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  try {
+    const batch = db.batch();
+    const svcRef = db.collection('ventes_services').doc();
+    batch.set(svcRef, {
+      service: nomService, prixUnitaire: prix, quantite: qte, total, client,
+      modePaiement: 'Espèces', agent: uid, agentNom: currentUser.label,
+      date: firebase.firestore.FieldValue.serverTimestamp(),
+      source: 'service', zone: 'Digital'
+    });
+    // ventesCaisse pour stats ERP
+    const vcRef = db.collection('ventesCaisse').doc();
+    batch.set(vcRef, {
+      produit: nomService, montant: total, quantite: qte,
+      modePaiement: 'Espèces', source: 'service_digital',
+      agent: uid, agentNom: currentUser.label,
+      date: firebase.firestore.FieldValue.serverTimestamp(),
+      sessionId: posSessionActive?.id || null
+    });
+    if (posSessionActive?.id) {
+      const sessRef = db.collection('sessions_caisse').doc(posSessionActive.id);
+      batch.update(sessRef, { totalVentes: firebase.firestore.FieldValue.increment(total) });
+    }
+    await batch.commit();
+    document.getElementById('svc-qte').value = 1;
+    document.getElementById('svc-client').value = '';
+    document.getElementById('svc-total-preview').textContent = '—';
+    auditDigital('Service', `${nomService} × ${qte} = ${posF(total)}`);
+    alert(`✅ Service enregistré: ${nomService}\nTotal: ${posF(total)}`);
+  } catch(e) { console.error(e); alert('Erreur: ' + e.message); }
+}
+
+// ── Rapports Digital ────────────────────────────────────────────────────
+function switchRapportDigital(mode, btn) {
+  digRapportMode = mode;
+  document.querySelectorAll('.dig-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const elD = document.getElementById('rpt-date'), elM = document.getElementById('rpt-mois');
+  if (elD) elD.style.display = mode === 'jour' ? '' : 'none';
+  if (elM) elM.style.display = mode === 'mois' ? '' : 'none';
+  renderDigitalRapports();
+}
+
+function renderDigitalRapports() {
+  const content = document.getElementById('dig-rapport-content');
+  if (!content) return;
+  let txFiltre, svcFiltre, titre;
+  if (digRapportMode === 'jour') {
+    const dateVal = document.getElementById('rpt-date')?.value || new Date().toISOString().split('T')[0];
+    const dateRef = new Date(dateVal + 'T00:00:00');
+    txFiltre = transactionsMM.filter(t => { const d = t.date?.toDate?t.date.toDate():new Date(t.date||0); return d.toDateString()===dateRef.toDateString(); });
+    svcFiltre = ventesServices.filter(v => { const d = v.date?.toDate?v.date.toDate():new Date(v.date||0); return d.toDateString()===dateRef.toDateString(); });
+    titre = `Rapport Journalier — ${dateRef.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
+  } else {
+    const moisVal = document.getElementById('rpt-mois')?.value || new Date().toISOString().slice(0,7);
+    const [yr, mo] = moisVal.split('-').map(Number);
+    txFiltre = transactionsMM.filter(t => { const d = t.date?.toDate?t.date.toDate():new Date(t.date||0); return d.getMonth()===mo-1&&d.getFullYear()===yr; });
+    svcFiltre = ventesServices.filter(v => { const d = v.date?.toDate?v.date.toDate():new Date(v.date||0); return d.getMonth()===mo-1&&d.getFullYear()===yr; });
+    titre = `Rapport Mensuel — ${new Date(yr,mo-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}`;
+  }
+  // Services par type
+  const svcStats = {};
+  svcFiltre.forEach(s => { if (!svcStats[s.service]) svcStats[s.service] = {qte:0,total:0}; svcStats[s.service].qte+=s.quantite||1; svcStats[s.service].total+=s.total||0; });
+  // MM par réseau
+  const mmStats = {};
+  MM_NETWORKS.forEach(r => {
+    const txR = txFiltre.filter(t => t.reseau===r);
+    mmStats[r] = { depot:txR.filter(t=>t.type==='depot'), retrait:txR.filter(t=>t.type==='retrait'), comm:txR.reduce((s,t)=>s+(t.commission||0),0) };
+  });
+  const totalSvc = svcFiltre.reduce((s,v)=>s+(v.total||0),0);
+  const totalComm = txFiltre.reduce((s,t)=>s+(t.commission||0),0);
+  content.innerHTML = `
+    <div class="dig-card" id="rpt-print-zone">
+      <div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(6,182,212,.2)">
+        <h2 style="color:var(--dig-accent);font-size:18px">🖥️ TeMa Digital — ${titre}</h2>
+        <p style="color:var(--dig-muted);font-size:12px">Agent: ${currentUser.label} · Généré le ${new Date().toLocaleString('fr-FR')}</p>
+      </div>
+      <div class="dig-grid-2" style="margin-bottom:18px">
+        <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:12px;padding:16px">
+          <h4 style="color:var(--dig-accent);margin-bottom:10px">🖨️ Services Numériques</h4>
+          ${Object.keys(svcStats).length ? Object.entries(svcStats).map(([k,v])=>`
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px">
+              <span>${k}</span><span>${v.qte}× = <strong style="color:var(--dig-accent)">${posF(v.total)}</strong></span>
+            </div>`).join('') : '<p style="color:var(--dig-muted);text-align:center">Aucun service</p>'}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(6,182,212,.3);text-align:right;font-weight:700;color:var(--dig-accent)">Total: ${posF(totalSvc)}</div>
+        </div>
+        <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:16px">
+          <h4 style="color:var(--dig-green);margin-bottom:10px">📱 Mobile Money</h4>
+          ${MM_NETWORKS.map(r => `
+            <div style="margin-bottom:8px;padding:6px;background:rgba(255,255,255,.03);border-radius:6px;font-size:12px">
+              <strong>${r}</strong><br>
+              Dépôts: ${mmStats[r].depot.length} · Retraits: ${mmStats[r].retrait.length} · <span style="color:var(--dig-green)">Comm: ${posF(mmStats[r].comm)}</span>
+            </div>`).join('')}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(16,185,129,.3);text-align:right;font-weight:700;color:var(--dig-green)">Total Comm: ${posF(totalComm)}</div>
+        </div>
+      </div>
+      <div style="background:rgba(6,182,212,.06);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:12px;color:var(--dig-muted)">TOTAL GÉNÉRAL (Services + Commissions MM)</div>
+        <div style="font-size:32px;font-weight:900;color:var(--dig-accent)">${posF(totalSvc + totalComm)}</div>
+      </div>
+    </div>`;
+}
+
+function imprimerRapportDigital() {
+  auditDigital('Impression rapport', `Mode: ${digRapportMode}`);
+  window.print();
+}
+
+// ── Clients Digital ─────────────────────────────────────────────────────
+function renderDigitalClients() {
+  const search = (document.getElementById('dig-clients-search')?.value || '').toLowerCase();
+  const list = document.getElementById('dig-clients-list');
+  if (!list) return;
+  const filtered = posClients.filter(c => !search || c.nom?.toLowerCase().includes(search) || c.telephone?.includes(search));
+  list.innerHTML = filtered.length ? `
+    <div class="dig-card">
+      <table class="dig-table">
+        <thead><tr><th>Nom</th><th>Téléphone</th><th>Total achats</th><th>Dernière visite</th><th>Actions</th></tr></thead>
+        <tbody>${filtered.map(c => {
+          const d = c.derniereVisite?.toDate ? c.derniereVisite.toDate() : null;
+          return `<tr><td><strong>${c.nom}</strong></td><td>${c.telephone||'—'}</td>
+            <td style="color:var(--dig-accent)">${posF(c.totalAchats||0)}</td>
+            <td>${d?d.toLocaleDateString('fr-FR'):'—'}</td>
+            <td><button class="dig-btn dig-btn-sm dig-btn-outline" onclick="voirClientDigital('${c.id}')">Voir</button></td></tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`
+  : `<div class="dig-card" style="text-align:center;padding:40px;color:var(--dig-muted)">Aucun client trouvé</div>`;
+}
+
+async function sauvegarderClientDigital(e) {
+  e.preventDefault();
+  const nom = document.getElementById('dc-nom')?.value.trim();
+  if (!nom) return;
+  try {
+    await db.collection('clients_pos').add({
+      nom, telephone: document.getElementById('dc-tel')?.value||'',
+      email: document.getElementById('dc-email')?.value||'',
+      totalAchats: 0, createdBy: currentUser.label,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('dig-modal-client').style.display = 'none';
+    document.getElementById('dc-nom').value = '';
+    document.getElementById('dc-tel').value = '';
+    document.getElementById('dc-email').value = '';
+    auditDigital('Nouveau client', nom);
+  } catch(err) { alert('Erreur: ' + err.message); }
+}
+
+function voirClientDigital(id) {
+  const c = posClients.find(x => x.id === id);
+  if (!c) return;
+  alert(`👤 ${c.nom}\n📞 ${c.telephone||'—'}\n✉️ ${c.email||'—'}\n💰 Total achats: ${posF(c.totalAchats||0)}`);
+}
+
+// ── Stock Zone A/B ──────────────────────────────────────────────────────
+function renderDigitalStock() {
+  const search = (document.getElementById('dig-stock-search')?.value||'').toLowerCase();
+  const filtre = document.getElementById('dig-stock-filtre')?.value || '';
+  let prods = produits.filter(p => DIG_ZONES.some(z => (p.categorie||'').toLowerCase().includes(z.toLowerCase())));
+  if (search) prods = prods.filter(p => (p.nom||'').toLowerCase().includes(search) || (p.reference||'').toLowerCase().includes(search));
+  if (filtre === 'low') prods = prods.filter(p => (p.stock||0) > 0 && (p.stock||0) < 5 && p.type !== 'service');
+  if (filtre === 'out') prods = prods.filter(p => (p.stock||0) <= 0 && p.type !== 'service');
+  const tbody = document.getElementById('dig-stock-tbody');
+  if (!tbody) return;
+  // Badge alerte
+  const alertes = produits.filter(p => DIG_ZONES.some(z => (p.categorie||'').includes(z)) && (p.stock||0) < 5 && p.type !== 'service').length;
+  const badge = document.getElementById('dig-alerte-stock-badge');
+  if (badge) { badge.style.display = alertes > 0 ? '' : 'none'; badge.textContent = alertes; }
+  tbody.innerHTML = prods.length ? prods.map(p => {
+    const s = p.type === 'service' ? null : (p.stock||0);
+    const statut = p.type === 'service' ? '<span class="dig-badge dig-badge-blue">Service</span>'
+      : s <= 0 ? '<span class="dig-badge dig-badge-red">Rupture</span>'
+      : s < 5 ? '<span class="dig-badge dig-badge-orange">Faible</span>'
+      : '<span class="dig-badge dig-badge-green">OK</span>';
+    return `<tr>
+      <td><strong>${p.nom||p.article||'—'}</strong></td>
+      <td>${p.categorie||'—'}</td><td>${p.reference||'—'}</td>
+      <td style="color:var(--dig-accent)">${posF(p.prixVente||p.prix||0)}</td>
+      <td style="text-align:center;font-weight:700;color:${s<=0?'#ef4444':s<5?'#f59e0b':'#10b981'}">${p.type==='service'?'∞':s}</td>
+      <td>${statut}</td></tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--dig-muted);padding:20px">Aucun article dans vos zones</td></tr>`;
+}
+
+// ── Historique ──────────────────────────────────────────────────────────
+function renderDigitalHistorique() {
+  const periode = document.getElementById('histo-filtre')?.value || 'mois';
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  const svcF = ventesServices.filter(v => digFilterDate(v, periode));
+  const mmF = transactionsMM.filter(v => digFilterDate(v, periode));
+  const vcF = ventesCaisse.filter(v => digFilterDate(v, periode) && (v.agent===uid||v.agentNom===currentUser.label));
+  const rows = [
+    ...svcF.map(v => ({ d:v.date?.toDate?v.date.toDate():new Date(v.date||0), action:'🖨️ Service', detail:v.service, montant:v.total||0 })),
+    ...mmF.map(v => ({ d:v.date?.toDate?v.date.toDate():new Date(v.date||0), action:'📱 Mobile Money', detail:`${v.reseau} · ${v.type}`, montant:v.commission||0 })),
+    ...vcF.map(v => ({ d:v.date?.toDate?v.date.toDate():new Date(v.date||0), action:'🛒 Vente POS', detail:v.produit||'—', montant:v.montant||0 })),
+  ].sort((a,b) => b.d-a.d);
+  const tbody = document.getElementById('histo-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr><td>${r.d.toLocaleDateString('fr-FR')} ${r.d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td>
+    <td>${r.action}</td><td>${r.detail}</td>
+    <td style="color:var(--dig-accent)">${posF(r.montant)}</td></tr>`).join('')
+  : `<tr><td colspan="4" style="text-align:center;color:var(--dig-muted);padding:20px">Aucune activité</td></tr>`;
+}
+
+// ── Audit trail ─────────────────────────────────────────────────────────
+function auditDigital(action, detail) {
+  if (!db || !currentUser) return;
+  const uid = currentUser.uid || currentUser.id || currentUser.label;
+  db.collection('audit_trail').add({
+    utilisateur: uid, nom: currentUser.label, role: 'Digital',
+    action, detail,
+    date: firebase.firestore.FieldValue.serverTimestamp(),
+    source: 'digital'
+  }).catch(() => {});
+}
+
+/* ── CSS manquant pour Digital (tabs, grid-2) — injecté inline ─────── */
+(function injectDigitalStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+    .dig-tabs { display:flex; gap:4px; background:rgba(255,255,255,.04); border-radius:8px; padding:3px; }
+    .dig-tab { background:none; border:none; color:var(--dig-muted); padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; transition:.2s; }
+    .dig-tab.active { background:var(--dig-accent); color:#000; }
+    .dig-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:768px){ .dig-grid-2 { grid-template-columns:1fr; } }
+    .dig-nav-badge { background:#ef4444; color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; font-weight:700; margin-left:auto; }
+    .dig-user-badge { display:flex; align-items:center; gap:8px; background:rgba(6,182,212,.08); border:1px solid rgba(6,182,212,.15); border-radius:10px; padding:8px 12px; margin-bottom:16px; cursor:pointer; transition:.2s; font-size:12px; }
+    .dig-user-badge:hover { background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.3); }
+    .dig-user-dot { width:8px; height:8px; border-radius:50%; background:#10b981; flex-shrink:0; }
+    .dig-user-name { font-weight:700; color:var(--dig-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dig-user-role { font-size:10px; color:var(--dig-muted); }
+    .dig-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:600px){ .dig-form-row { grid-template-columns:1fr; } }
+    .dig-form-group { display:flex; flex-direction:column; gap:4px; }
+    .dig-badge-red { background:rgba(239,68,68,.15); color:#ef4444; }
+    .dig-badge-orange { background:rgba(245,158,11,.15); color:#f59e0b; }
+    .dig-badge-green { background:rgba(16,185,129,.15); color:#10b981; }
+    .dig-badge-blue { background:rgba(6,182,212,.15); color:#06b6d4; }
+    .dig-select { background:#0f172a; border:1px solid rgba(6,182,212,.25); border-radius:8px; color:var(--dig-text); padding:8px 12px; font-size:13px; }
+    .dig-btn-lg { width:100%; padding:13px; font-size:14px; }
+    .dig-btn-sm { padding:4px 10px; font-size:11px; }
+    .dig-btn-outline { background:transparent; border:1px solid rgba(6,182,212,.4); color:var(--dig-accent); }
+    .dig-btn-outline:hover { background:rgba(6,182,212,.1); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  `;
+  document.head.appendChild(s);
+})();
+
 function seDeconnecter() {
   if (!confirm('Se déconnecter ?')) return;
   if (currentUser) consigner('Déconnexion', `${currentUser.label} s'est déconnecté(e)`);
@@ -2215,10 +3458,18 @@ function seDeconnecter() {
   sessionStorage.removeItem('tema_user');
   // Reset POS state
   posPanier = []; posSessionActive = null; posClientActuel = null;
+  // Nettoyage Digital
+  clearInterval(window._digClock);
+  if (window._digUnsub1) { window._digUnsub1(); window._digUnsub1 = null; }
+  if (window._digUnsub2) { window._digUnsub2(); window._digUnsub2 = null; }
+  if (window._digUnsub3) { window._digUnsub3(); window._digUnsub3 = null; }
+  transactionsMM = []; ventesServices = []; window._posRetourDigital = false;
   // Masquer tous les écrans, revenir à l'accueil
   document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-erp').style.display = 'none';
+  document.getElementById('screen-digital').style.display = 'none';
   document.getElementById('screen-welcome').classList.add('active');
+  fermerConnexion();
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
   document.getElementById('login-error').style.display = 'none';
@@ -2365,8 +3616,12 @@ function afficherApp() {
   const isComptable = role.includes('comptable') || isAdmin;
   const isCaissier = !isAdmin && !isGerant && !isComptable &&
     (role.includes('caissier') || role.includes('vendeur') || role.includes('caissière'));
+  const isDigital = !isAdmin && !isGerant && !isComptable && !isCaissier && role.includes('digital');
 
-  if (isCaissier) {
+  if (isDigital) {
+    // ── Mode Digital — Zone A & B ──
+    ouvrirEcranDigital();
+  } else if (isCaissier) {
     // ── Mode POS pour les caissier(e)s ──
     document.getElementById('pos-cashier-name').textContent = currentUser.label + ' · ' + currentUser.role;
     document.getElementById('wcl-user') && (document.getElementById('wcl-user').textContent = currentUser.label);
@@ -2445,8 +3700,30 @@ setInterval(majHorlogeWelcome, 1000);
 majHorlogeWelcome();
 
 function focusLogin() {
-  document.getElementById('login-user').focus();
+  ouvrirConnexion('Connexion', '🔐');
 }
+
+// ── Fenêtre de connexion flottante ──────────────────────────────────────
+function ouvrirConnexion(label, icon) {
+  document.getElementById('login-modal-title').textContent = 'Connexion — ' + label;
+  document.getElementById('login-modal-icon').textContent = icon || '🔐';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('login-user').focus(), 200);
+}
+
+function fermerConnexion() {
+  document.getElementById('login-modal-overlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('login-modal-overlay');
+    if (overlay && overlay.classList.contains('open')) fermerConnexion();
+  }
+});
 
 function goScreen(id) {
   document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => {
@@ -2482,6 +3759,15 @@ function ouvrirEcranStock()   { goScreen('screen-stock-pos'); }
 function ouvrirEcranJournal() { goScreen('screen-journal-pos'); }
 
 function retourDepuisPOS() {
+  // Retour Digital si flag posé
+  if (window._posRetourDigital) {
+    window._posRetourDigital = false;
+    document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+    const sc = document.getElementById('screen-digital');
+    sc.style.display = 'flex'; sc.classList.add('active');
+    navigateDigital('dashboard');
+    return;
+  }
   const isAdmin = currentUser && (currentUser.isAdmin || (currentUser.role||'').toLowerCase().includes('propriétaire'));
   if (isAdmin || (currentUser && peutGererCompta())) {
     const erp = document.getElementById('screen-erp');
