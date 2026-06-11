@@ -3991,7 +3991,7 @@ function demarrerListeners() {
   }, err => console.error('clients_pos:', err));
 
   // Listener session caisse active
-  const u14 = db.collection('sessions_caisse').where('statut','==','ouverte').orderBy('dateOuverture','desc').limit(1).onSnapshot(snap => {
+  const u14 = db.collection('sessions_caisse').where('statut','==','ouverte').limit(1).onSnapshot(snap => {
     posSessionActive = snap.empty ? null : {id: snap.docs[0].id, ...snap.docs[0].data()};
     majBadgeSessionPOS();
   }, err => console.error('sessions_caisse:', err));
