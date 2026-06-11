@@ -653,12 +653,29 @@
   .pos-cart {
     width: 360px; flex-shrink: 0; background: #252840;
     display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.06);
+    min-width: 350px; max-width: 80vw;
+  }
+  /* ── Séparateur redimensionnable entre le ticket et les produits ── */
+  .pos-resizer {
+    width: 6px; flex-shrink: 0; cursor: col-resize; background: rgba(255,255,255,.04);
+    position: relative; touch-action: none; transition: background .15s;
+  }
+  .pos-resizer:hover, .pos-resizer.dragging { background: var(--accent); }
+  .pos-resizer::after {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 2px; height: 36px; background: rgba(255,255,255,.25); border-radius: 2px;
   }
   .cart-header {
     padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
-  .cart-header h3 { color: #fff; font-size: 14px; font-weight: 700; }
+  .cart-header h3 { color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .cart-expand-btn {
+    background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.7);
+    width: 28px; height: 28px; border-radius: 8px; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cart-expand-btn:hover { background: rgba(255,255,255,.2); color: var(--accent); }
   .cart-client-btn {
     background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.7);
     padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer;
@@ -675,10 +692,11 @@
   .cart-item {
     background: rgba(255,255,255,.06); border-radius: 10px;
     padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
-    border: 1px solid rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.05); cursor: pointer;
   }
+  .cart-item:hover { background: rgba(255,255,255,.1); }
   .cart-item-info { flex: 1; min-width: 0; }
-  .cart-item-name { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cart-item-name { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help; }
   .cart-item-unit { color: rgba(255,255,255,.4); font-size: 11px; }
   .cart-item-qty { display: flex; align-items: center; gap: 6px; }
   .qty-btn {
@@ -785,6 +803,18 @@
 
   .payment-box { width: 480px; }
   .payment-box h2 { font-size: 20px; color: var(--primary); margin-bottom: 18px; }
+
+  /* ── Détail d'un article du ticket (double-clic) ── */
+  .article-detail-box { width: 380px; }
+  .article-detail-box h2 { font-size: 18px; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .article-detail-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .article-detail-row:last-child { border-bottom: none; }
+  .article-detail-row span:first-child { color: var(--text-muted); font-weight: 600; }
+  .article-detail-row b { color: var(--text); text-align: right; word-break: break-word; }
+  .article-detail-row.total b { color: var(--accent); font-size: 18px; }
   .payment-total-display { background: var(--primary); color: #fff; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 20px; }
   .payment-total-display .ptd-label { font-size: 12px; opacity: .7; margin-bottom: 4px; }
   .payment-total-display .ptd-amount { font-size: 36px; font-weight: 800; }
@@ -2399,6 +2429,7 @@
       <div class="cart-header">
         <h3>🧾 Ticket <span id="ticket-num" style="color:var(--accent);font-size:12px">—</span></h3>
         <button class="cart-client-btn" onclick="ouvrirChoixClient()">👤 <span id="cart-client-name">Aucun client</span></button>
+        <button class="cart-expand-btn" id="btn-cart-expand" onclick="toggleCartExpand()" title="Agrandir le ticket">⤢</button>
       </div>
       <div class="cart-items" id="cart-items">
         <div class="cart-empty"><div class="cart-empty-icon">🛒</div><div>Sélectionnez un produit<br>ou scannez un code-barres</div></div>
@@ -2428,6 +2459,9 @@
       </div>
     </div>
 
+    <!-- Séparateur redimensionnable -->
+    <div class="pos-resizer" id="pos-resizer" title="Glisser pour redimensionner le ticket"></div>
+
     <!-- Produits (droite) -->
     <div class="pos-products">
       <div class="products-search-bar">
@@ -2446,6 +2480,20 @@
         <div id="product-grid" class="product-grid"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- POS MODAL: Détail d'un article du ticket -->
+<div class="pos-modal-overlay" id="modal-article-detail">
+  <div class="pos-modal-box article-detail-box">
+    <button class="pos-modal-close" onclick="closePosModal('modal-article-detail')">×</button>
+    <h2>🔎 Détail de l'article</h2>
+    <div class="article-detail-row"><span>Produit</span><b id="ad-nom">—</b></div>
+    <div class="article-detail-row"><span>Référence</span><b id="ad-ref">—</b></div>
+    <div class="article-detail-row"><span>Code-barres</span><b id="ad-codebarre">—</b></div>
+    <div class="article-detail-row"><span>Prix unitaire</span><b id="ad-prix">—</b></div>
+    <div class="article-detail-row"><span>Quantité</span><b id="ad-qte">—</b></div>
+    <div class="article-detail-row total"><span>Sous-total</span><b id="ad-soustotal">—</b></div>
   </div>
 </div>
 
@@ -4368,6 +4416,84 @@ function changerQte(idx, delta) {
 
 function supprimerLigne(idx) { posPanier.splice(idx,1); renderPanier(); }
 
+// ── Détail d'un article du ticket (double-clic) ──────────────────────────
+function afficherDetailArticle(idx) {
+  const item=posPanier[idx]; if(!item) return;
+  const prod=produits.find(p=>p.id===item.id);
+  document.getElementById('ad-nom').textContent=`${item.serviceType?'🖨️ ':''}${item.nom}`;
+  document.getElementById('ad-ref').textContent=prod?.ref||'—';
+  document.getElementById('ad-codebarre').textContent=item.codeBarre||prod?.codeBarre||'—';
+  document.getElementById('ad-prix').textContent=posF0(item.prix)+' FCFA';
+  document.getElementById('ad-qte').textContent=item.qte;
+  document.getElementById('ad-soustotal').textContent=posF(item.total);
+  document.getElementById('modal-article-detail').classList.add('open');
+}
+
+// ── Redimensionnement / agrandissement du panneau Ticket ─────────────────
+const CART_WIDTH_KEY='tema_cart_width', CART_WIDTH_DEFAULT=360, CART_WIDTH_MIN=350;
+let cartWidthAvantAgrandi=null;
+
+function cartWidthMax() { return Math.round(window.innerWidth*0.8); }
+
+function appliquerLargeurPanier(px) {
+  const cart=document.querySelector('.pos-cart'); if(!cart) return px;
+  px=Math.max(CART_WIDTH_MIN, Math.min(px, cartWidthMax()));
+  cart.style.width=px+'px';
+  return px;
+}
+
+function initResizerPanier() {
+  const cart=document.querySelector('.pos-cart');
+  const resizer=document.getElementById('pos-resizer');
+  if (!cart || !resizer) return;
+
+  const saved=parseInt(localStorage.getItem(CART_WIDTH_KEY),10);
+  appliquerLargeurPanier(saved||CART_WIDTH_DEFAULT);
+
+  let dragging=false, startX=0, startWidth=0;
+  resizer.addEventListener('pointerdown', e=>{
+    dragging=true; startX=e.clientX; startWidth=cart.getBoundingClientRect().width;
+    cartWidthAvantAgrandi=null;
+    document.getElementById('btn-cart-expand').textContent='⤢';
+    document.getElementById('btn-cart-expand').title='Agrandir le ticket';
+    resizer.classList.add('dragging');
+    resizer.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  resizer.addEventListener('pointermove', e=>{
+    if (!dragging) return;
+    const w=appliquerLargeurPanier(startWidth+(e.clientX-startX));
+    localStorage.setItem(CART_WIDTH_KEY, w);
+  });
+  const stopDrag=e=>{ dragging=false; resizer.classList.remove('dragging'); };
+  resizer.addEventListener('pointerup', stopDrag);
+  resizer.addEventListener('pointercancel', stopDrag);
+  resizer.addEventListener('dblclick', ()=>{
+    appliquerLargeurPanier(CART_WIDTH_DEFAULT);
+    localStorage.setItem(CART_WIDTH_KEY, CART_WIDTH_DEFAULT);
+  });
+
+  window.addEventListener('resize', ()=>{
+    const cur=parseInt(cart.style.width,10)||CART_WIDTH_DEFAULT;
+    appliquerLargeurPanier(cur);
+  });
+}
+
+function toggleCartExpand() {
+  const cart=document.querySelector('.pos-cart'); if(!cart) return;
+  const btn=document.getElementById('btn-cart-expand');
+  if (cartWidthAvantAgrandi===null) {
+    cartWidthAvantAgrandi=parseInt(cart.style.width,10)||CART_WIDTH_DEFAULT;
+    appliquerLargeurPanier(cartWidthMax());
+    btn.textContent='⤡'; btn.title='Réduire le ticket';
+  } else {
+    appliquerLargeurPanier(cartWidthAvantAgrandi);
+    localStorage.setItem(CART_WIDTH_KEY, cartWidthAvantAgrandi);
+    cartWidthAvantAgrandi=null;
+    btn.textContent='⤢'; btn.title='Agrandir le ticket';
+  }
+}
+
 function viderPanier() {
   if (posPanier.length && !confirm('Vider le ticket ?')) return;
   posPanier=[]; posClientActuel=null;
@@ -4397,9 +4523,15 @@ function renderPanier() {
   const {sous,remiseFCFA,total}=calculerTotaux();
   el.innerHTML = !posPanier.length
     ? `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div>Sélectionnez un produit<br>ou scannez un code-barres</div></div>`
-    : posPanier.map((item,i)=>`<div class="cart-item">
+    : posPanier.map((item,i)=>{
+        const prod=produits.find(p=>p.id===item.id);
+        const ref=prod?.ref||'—';
+        const codeBarre=item.codeBarre||prod?.codeBarre||'—';
+        const nomComplet=`${item.serviceType?'🖨️ ':''}${item.nom}`;
+        const tooltip=`${nomComplet}\nRéférence : ${ref}\nCode-barres : ${codeBarre}`;
+        return `<div class="cart-item" ondblclick="afficherDetailArticle(${i})">
         <div class="cart-item-info">
-          <div class="cart-item-name">${item.serviceType?'🖨️ ':''}${item.nom}</div>
+          <div class="cart-item-name" title="${tooltip}">${nomComplet}</div>
           <div class="cart-item-unit">${posF0(item.prix)} FCFA × ${item.qte}</div>
         </div>
         <div class="cart-item-qty">
@@ -4409,7 +4541,8 @@ function renderPanier() {
         </div>
         <span class="cart-item-total">${posF0(item.total)} F</span>
         <button class="cart-del-btn" onclick="supprimerLigne(${i})">🗑</button>
-      </div>`).join('');
+      </div>`;
+      }).join('');
   document.getElementById('cart-subtotal').textContent=posF(sous);
   document.getElementById('cart-remise').textContent=remiseFCFA?'−'+posF(remiseFCFA):'0 FCFA';
   document.getElementById('cart-total').textContent=posF(total);
@@ -7448,6 +7581,7 @@ function exportInventaireCSV() {
 
 // ===== INIT PAGE =====
 document.addEventListener('DOMContentLoaded', () => {
+  initResizerPanier();
   if (!FB_CONFIGURED) {
     document.getElementById('config-notice').style.display = 'block';
   }
