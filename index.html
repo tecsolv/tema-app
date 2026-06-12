@@ -5058,7 +5058,8 @@ async function choisirCaisse(caisseId) {
 async function confirmerDemarrageSession() {
   const c = posCaisseChoisie;
   if (!c) return;
-  const fonds = Math.max(0, parseFloat(document.getElementById('sc-fonds-caisse').value) || 0);
+  const fonds = parseFloat(document.getElementById('sc-fonds-caisse').value) || 0;
+  if (fonds < 0) { showToast('Le fonds de caisse ne peut pas être négatif', 'error'); return; }
   const note = document.getElementById('sc-session-note').value.trim();
   const caisseRef = db.collection('caisses').doc(c.id);
   const sessionRef = db.collection('sessions_caisse').doc();
