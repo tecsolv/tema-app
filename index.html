@@ -2536,7 +2536,7 @@
     <div class="form-group"><label>Motif (obligatoire)</label>
       <input class="form-control" id="audit-motif" placeholder="Ex : oubli de clôture, urgence...">
     </div>
-    <button onclick="confirmerActionAudit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">Confirmer</button>
+    <button id="btn-confirm-audit" onclick="confirmerActionAudit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">Confirmer</button>
   </div>
 </div>
 
@@ -5071,7 +5071,7 @@ async function confirmerDemarrageSession() {
       if (caisseSnap.data()?.statut === 'occupee') throw new Error('OCCUPEE');
       tx.set(sessionRef, {
         dateOuverture: now, fondsCaisse: fonds, note, operateur: currentUser.label,
-        statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {},
+        totalVentes: 0, nbTickets: 0, totaux: {},
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         caisseId: c.id, caisseNom: c.nom,
         utilisateurId: currentUser.id, utilisateurNom: currentUser.label,
@@ -5139,19 +5139,39 @@ async function posFinService() {
   const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
   const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  const sessionRef = db.collection('sessions_caisse').doc(session.id);
+  const caisseRef = db.collection('caisses').doc(session.caisseId);
   try {
-    await db.collection('sessions_caisse').doc(session.id).update({
-      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
-      dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
-      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+    await db.runTransaction(async (tx) => {
+      const sessionSnap = await tx.get(sessionRef);
+      const caisseSnap = await tx.get(caisseRef);
+      const sData = sessionSnap.data() || {};
+      if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
+
+      tx.update(sessionRef, {
+        statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
+        dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+        dureeTravailMin, dureePauseMin, dureeEffectiveMin
+      });
+
+      const cData = caisseSnap.data() || {};
+      if (cData.sessionActiveId === session.id) {
+        tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      }
     });
-    await db.collection('caisses').doc(session.caisseId).update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
     consigner('Fin de service', `${currentUser.label} a terminé son service sur ${session.caisseNom||'—'} (travail: ${dureeTravailMin}min, pause: ${dureePauseMin}min, effectif: ${dureeEffectiveMin}min)`);
     posSessionActive = null;
     showToast('Service terminé ✓ — Rapport Z disponible dans Caisse Journalière');
     goScreen('screen-select-caisse');
     renderSelectCaisseGrid();
-  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+  } catch(err) {
+    if (err.message === 'SESSION_DEJA_FERMEE') {
+      posSessionActive = null;
+      showToast('Votre session a déjà été clôturée par un Gérant/Admin','error');
+      goScreen('screen-select-caisse');
+      renderSelectCaisseGrid();
+    } else { showToast('Erreur : '+err.message,'error'); }
+  }
 }
 
 // ═══ Suivi des présences & Tableau de bord caisses (Gérant/Admin) ═══
@@ -5367,6 +5387,8 @@ function ouvrirModaleAuditCaisse(type, caisseId) {
 }
 
 async function confirmerActionAudit() {
+  const btnGuard = document.getElementById('btn-confirm-audit');
+  if (btnGuard && btnGuard.disabled) return;
   const action = auditActionEnCours;
   if (!action) return;
   const motif = document.getElementById('audit-motif').value.trim();
@@ -5374,62 +5396,80 @@ async function confirmerActionAudit() {
   const c = action.caisse;
   const sessionId = c.sessionActiveId;
   if (!sessionId) { showToast('Aucune session active sur cette caisse','error'); closePosModal('modal-audit-caisse'); return; }
+
+  let newUserId = null, newUserNom = null;
+  if (action.type === 'transfert') {
+    const sel = document.getElementById('audit-nouvel-utilisateur');
+    newUserId = sel.value;
+    newUserNom = sel.options[sel.selectedIndex]?.dataset.nom;
+    if (!newUserId) { showToast('Sélectionnez un utilisateur','error'); return; }
+  } else if (action.type === 'reattribution') {
+    newUserId = currentUser.id;
+    newUserNom = currentUser.label;
+  }
+
   const sessionRef = db.collection('sessions_caisse').doc(sessionId);
   const caisseRef = db.collection('caisses').doc(c.id);
   const fin = posDateHeure(), finTS = Date.now();
-  try {
-    const sessionSnap = await sessionRef.get();
-    const session = sessionSnap.data() || {};
-    let pauses = session.pauses || [];
-    if (session.pauseEnCours) {
-      const p = session.pauseEnCours;
-      const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
-      pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
-    }
-    const debutTS = session.dateHeureDebutSessionTS || finTS;
-    const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
-    const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
-    const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  const newSessionRef = (action.type === 'transfert' || action.type === 'reattribution')
+    ? db.collection('sessions_caisse').doc()
+    : null;
 
-    await sessionRef.update({
-      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
-      fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
-      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+  const btn = document.getElementById('btn-confirm-audit');
+  if (btn) btn.disabled = true;
+  let session = {};
+  try {
+    await db.runTransaction(async (tx) => {
+      const sessionSnap = await tx.get(sessionRef);
+      session = sessionSnap.data() || {};
+      let pauses = session.pauses || [];
+      if (session.pauseEnCours) {
+        const p = session.pauseEnCours;
+        const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+        pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
+      }
+      const debutTS = session.dateHeureDebutSessionTS || finTS;
+      const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
+      const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
+      const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+
+      tx.update(sessionRef, {
+        statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
+        fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
+        dureeTravailMin, dureePauseMin, dureeEffectiveMin
+      });
+
+      if (action.type === 'transfert' || action.type === 'reattribution') {
+        const now = posDateHeure(), nowTS = Date.now();
+        tx.set(newSessionRef, {
+          dateOuverture: now, fondsCaisse: 0,
+          note: action.type === 'transfert' ? 'Transfert de caisse' : 'Réattribution de caisse',
+          operateur: newUserNom, totalVentes: 0, nbTickets: 0, totaux: {},
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          caisseId: c.id, caisseNom: c.nom, utilisateurId: newUserId, utilisateurNom: newUserNom,
+          dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
+          statutSession: 'ouverte', pauses: [], pauseEnCours: null
+        });
+        tx.update(caisseRef, { statut: 'occupee', sessionActiveId: newSessionRef.id, utilisateurActifId: newUserId, utilisateurActifNom: newUserNom });
+      } else {
+        tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      }
     });
 
     if (action.type === 'transfert') {
-      const sel = document.getElementById('audit-nouvel-utilisateur');
-      const newUserId = sel.value;
-      const newUserNom = sel.options[sel.selectedIndex]?.dataset.nom;
-      if (!newUserId) { showToast('Sélectionnez un utilisateur','error'); return; }
-      await demarrerNouvelleSessionSurCaisse(c, newUserId, newUserNom, 'Transfert de caisse');
       await consignerAuditCaisse('transfert', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: newUserId, nouvelUtilisateurNom: newUserNom });
       showToast('Caisse transférée à ' + newUserNom + ' ✓');
     } else if (action.type === 'reattribution') {
-      await demarrerNouvelleSessionSurCaisse(c, currentUser.id, currentUser.label, 'Réattribution de caisse');
       await consignerAuditCaisse('reattribution', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: currentUser.id, nouvelUtilisateurNom: currentUser.label });
       showToast('Caisse réattribuée ✓');
     } else {
-      await caisseRef.update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
       await consignerAuditCaisse(action.type, c, session, motif);
       showToast('Session fermée de force ✓');
     }
     consigner('Audit caisse', `${currentUser.label} a effectué "${action.type}" sur ${c.nom} (motif: ${motif})`);
     closePosModal('modal-audit-caisse');
   } catch(err) { showToast('Erreur : '+err.message,'error'); }
-}
-
-async function demarrerNouvelleSessionSurCaisse(c, userId, userNom, note) {
-  const newSessionRef = db.collection('sessions_caisse').doc();
-  const now = posDateHeure(), nowTS = Date.now();
-  await newSessionRef.set({
-    dateOuverture: now, fondsCaisse: 0, note, operateur: userNom,
-    statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    caisseId: c.id, caisseNom: c.nom, utilisateurId: userId, utilisateurNom: userNom,
-    dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
-    statutSession: 'ouverte', pauses: [], pauseEnCours: null
-  });
-  await db.collection('caisses').doc(c.id).update({ statut: 'occupee', sessionActiveId: newSessionRef.id, utilisateurActifId: userId, utilisateurActifNom: userNom });
+  finally { if (btn) btn.disabled = false; }
 }
 
 async function consignerAuditCaisse(type, caisse, session, motif, extra = {}) {
@@ -5454,7 +5494,7 @@ async function ouvrirSessionCaisse() {
   const now = posDateHeure();
   try {
     await db.collection('sessions_caisse').add({
-      dateOuverture:now, fondsCaisse:fonds, note, operateur:currentUser?.label||'—', statut:'ouverte', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      dateOuverture:now, fondsCaisse:fonds, note, operateur:currentUser?.label||'—', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       caisseId: null, caisseNom: null, utilisateurId: currentUser?.id||null, utilisateurNom: currentUser?.label||'—',
       dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: Date.now(),
       statutSession: 'ouverte', pauses: [], pauseEnCours: null
@@ -5480,7 +5520,7 @@ async function fermerSessionCaisse() {
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
   try {
     await db.collection('sessions_caisse').doc(posSessionActive.id).update({
-      statut:'fermée', statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
+      statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
       dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
       dureeTravailMin, dureePauseMin, dureeEffectiveMin
     });
@@ -7101,6 +7141,7 @@ async function enregistrerTransactionMM(event) {
       modePaiement: reseau, client: data.client,
       note: `Réf: ${data.reference || '—'} | Montant opérat.: ${FCFA(montant)}`,
       source: 'mobile_money',
+      sessionId: posSessionActive?.id || null,
       createdBy: currentUser.label,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -7313,6 +7354,7 @@ async function enregistrerVenteService(event) {
       quantite: qte, prixUnitaire: prix, montant,
       modePaiement: mode, client: data.client,
       note: `Service numérique`, source: 'service',
+      sessionId: posSessionActive?.id || null,
       createdBy: currentUser.label,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
