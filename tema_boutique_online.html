@@ -2344,6 +2344,7 @@
             <option value="Magasinier(ère)">Magasinier(ère)</option>
             <option value="Gérant(e)">Gérant(e)</option>
             <option value="Digital">🖥️ Digital — Zone Informatique & Services</option>
+            <option value="Comptable">💼 Comptable — Finance & Comptabilité</option>
           </select>
         </div>
       </div>
@@ -4316,8 +4317,9 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-pos').style.display = 'flex';
   }
 
-  // Masquer Mobile Money/Services : non pertinent pour Comptable seul et pour Magasinier (anomalie de routage corrigée — P3A)
-  if ((isComptable && !isGerant && !isAdmin) || isMagasinier) {
+  // Masquer Mobile Money/Services : non pertinent pour Magasinier (anomalie de routage corrigée — P3A)
+  // Le Comptable conserve un accès en lecture à Mobile Money/Services (rôle Finance — Phase 3A Comptable)
+  if (isMagasinier) {
     ['nav-mobilemoney','nav-services'].forEach(id => document.getElementById(id).style.display = 'none');
   }
 }
@@ -6768,6 +6770,38 @@ function requireComptable(message = "Vous n'avez pas l'autorisation d'effectuer 
   return false;
 }
 
+// ── Rôle Comptable (Phase 3A — Finance) ─────────────────────────────────
+// Détecte un compte réellement déclaré "Comptable" (rôle autonome, finance-only, read-only opérationnel)
+function isComptableReel() {
+  if (!currentUser) return false;
+  return (currentUser.role || '').toLowerCase().includes('comptable');
+}
+
+// Périmètre Finance : Admin, Gérant et Comptable. Ne donne AUCUN droit opérationnel
+// (POS, caisse, ventes, stock) — uniquement un accès aux modules financiers/lecture.
+function isFinanceRole(user) {
+  user = user || currentUser;
+  if (!user) return false;
+  if (user.isAdmin) return true;
+  const role = (user.role || '').toLowerCase();
+  return role.includes('gérant') || role.includes('gerant') || role.includes('comptable');
+}
+
+function requireFinance(message = "Accès comptabilité requis") {
+  if (isFinanceRole()) return true;
+  showToast(message, 'error');
+  return false;
+}
+
+// Autorise la CRÉATION d'écritures comptables et de relevés de trésorerie :
+// Gérant/Admin (peutGererCompta) + Comptable réel. La SUPPRESSION reste sur requireComptable()
+// (Gérant/Admin uniquement) afin de respecter l'interdiction stricte de suppression pour le Comptable.
+function requireFinanceEcriture(message = "Vous n'avez pas l'autorisation d'effectuer cette action comptable") {
+  if (peutGererCompta() || isComptableReel()) return true;
+  showToast(message, 'error');
+  return false;
+}
+
 function requireCashier(message = "Action réservée au personnel opérationnel") {
   if (!currentUser) { showToast(message, 'error'); return false; }
   if (estGerantOuAdmin()) return true;
@@ -6863,7 +6897,7 @@ function renderComptabilite() {
 // Enregistre une nouvelle écriture comptable manuelle (avec contrôle d'équilibre Débit = Crédit)
 async function enregistrerEcriture(event) {
   event.preventDefault();
-  if (!requireComptable("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
+  if (!requireFinanceEcriture("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
   const date = document.getElementById('ec-date').value;
   const libelle = document.getElementById('ec-libelle').value.trim();
   const compteDebit = document.getElementById('ec-compte-debit').value;
@@ -6998,7 +7032,7 @@ function renderRapprochement() {
 // Enregistre un relevé Mobile Money / Espèces saisi manuellement
 async function enregistrerReleve(event) {
   event.preventDefault();
-  if (!requireComptable("Vous n'avez pas l'autorisation de saisir un relevé de trésorerie")) return;
+  if (!requireFinanceEcriture("Vous n'avez pas l'autorisation de saisir un relevé de trésorerie")) return;
   const date = document.getElementById('rl-date').value;
   const canal = document.getElementById('rl-canal').value;
   const type = document.getElementById('rl-type').value;
@@ -7104,7 +7138,7 @@ function renderRapprochementComparatif() {
 
 // Valide et enregistre l'état du rapprochement pour la période choisie (un enregistrement par canal)
 async function validerRapprochement() {
-  if (!peutGererCompta() && !(currentUser.role||'').toLowerCase().includes('caissier')) { showToast("Vous n'avez pas l'autorisation de valider un rapprochement", 'error'); return; }
+  if (!peutGererCompta() && !isComptableReel() && !(currentUser.role||'').toLowerCase().includes('caissier')) { showToast("Vous n'avez pas l'autorisation de valider un rapprochement", 'error'); return; }
   const debut = document.getElementById('rp-debut')?.value || '';
   const fin = document.getElementById('rp-fin')?.value || '';
   if (!debut || !fin) { showToast('Veuillez choisir une période (du / au) avant de valider', 'error'); return; }
@@ -7202,6 +7236,7 @@ function majCommissionPreview() {
 
 async function enregistrerTransactionMM(event) {
   event.preventDefault();
+  if (isComptableReel() && !peutGererCompta()) { showToast("Le Comptable a un accès en lecture seule sur Mobile Money", 'error'); return; }
   const reseau   = document.getElementById('mm-reseau').value;
   const type     = document.getElementById('mm-type').value;
   const montant  = parseFloat(document.getElementById('mm-montant').value);
@@ -7414,6 +7449,7 @@ function annulerVenteService() {
 
 async function enregistrerVenteService(event) {
   event.preventDefault();
+  if (isComptableReel() && !peutGererCompta()) { showToast("Le Comptable a un accès en lecture seule sur les Services", 'error'); return; }
   const serviceId = document.getElementById('svc-service-id').value;
   const s = CATALOGUE_SERVICES.find(x=>x.id===serviceId) || { label:'Service', emoji:'⚡' };
   const qte   = parseInt(document.getElementById('svc-qte').value) || 1;
