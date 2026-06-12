@@ -1325,7 +1325,7 @@
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
     <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
-    <div class="nav-item" id="nav-pos" onclick="ouvrirEcranPOS()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
+    <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
   </div>
   <div class="sidebar-footer">
     <span class="realtime-dot"></span> Synchronisation temps réel<br>
@@ -2479,6 +2479,7 @@
       <div class="pos-cashier-info" id="sc-user-name">—</div>
     </div>
     <div class="pos-topbar-right">
+      <button class="pos-back-btn" id="sc-back-btn" onclick="retourErpDepuisSelectCaisse()" title="Retour" style="font-size:18px;display:none">⬅</button>
       <button class="pos-back-btn" onclick="seDeconnecter()" title="Déconnexion" style="font-size:18px">🚪</button>
     </div>
   </div>
@@ -3532,12 +3533,13 @@ function rafraichirDigital() {
 }
 
 // ── Ouvrir POS depuis Digital ───────────────────────────────────────────
-function ouvrirPOSDigital() {
+async function ouvrirPOSDigital() {
   document.querySelectorAll('.app-screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
   document.getElementById('pos-cashier-name').textContent = currentUser.label + ' · Digital';
-  ouvrirEcranPOS();
   // Override retour pour revenir au Digital
   window._posRetourDigital = true;
+  // Affectation/ouverture automatique de session sur Caisse 2 (Phase P3A-Correctif)
+  await ouvrirPOSAvecSession();
 }
 
 // ── Helper dates ────────────────────────────────────────────────────────
@@ -4307,7 +4309,11 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-comptes').style.display = 'flex';
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
-    document.getElementById('nav-pos').style.display = 'flex'; // Admin peut aussi accéder au POS
+  }
+
+  // Accès POS : Admin et Gérant (Phase P3A-Correctif — via session caisse réelle)
+  if (isAdmin || isGerant) {
+    document.getElementById('nav-pos').style.display = 'flex';
   }
 
   // Masquer Mobile Money/Services : non pertinent pour Comptable seul et pour Magasinier (anomalie de routage corrigée — P3A)
@@ -5011,6 +5017,46 @@ async function demarrerSessionCaissier() {
   } catch(e) { console.error('demarrerSessionCaissier:', e); }
   goScreen('screen-select-caisse');
   renderSelectCaisseGrid();
+}
+
+// Point d'entrée POS générique pour Digital / Gérant / Admin (Phase P3A-Correctif)
+// Réutilise le workflow existant (choisirCaisse / confirmerDemarrageSession) — aucune logique de session dupliquée
+async function ouvrirPOSAvecSession() {
+  if (posSessionActive) { ouvrirEcranPOS(); return; }
+  try {
+    const snap = await db.collection('sessions_caisse').where('utilisateurId','==', currentUser.id).get();
+    const active = snap.docs.map(d => ({id:d.id, ...d.data()})).find(d => d.statutSession === 'ouverte' || d.statutSession === 'en_pause');
+    if (active) { posSessionActive = active; ouvrirEcranPOS(); return; }
+  } catch(e) { console.error('ouvrirPOSAvecSession:', e); }
+
+  const role = (currentUser.role || '').toLowerCase();
+  if (role.includes('digital')) {
+    // Affectation automatique à Caisse 2 (Zone Informatique & Services — Zone A)
+    try {
+      const c2snap = await db.collection('caisses').where('nom','==','Caisse 2').limit(1).get();
+      if (c2snap.empty) { showToast("Caisse 2 introuvable — contactez l'administrateur", 'error'); return; }
+      posCaisseChoisie = { id: c2snap.docs[0].id, ...c2snap.docs[0].data() };
+      document.getElementById('sc-fonds-caisse').value = '0';
+      document.getElementById('sc-session-note').value = '';
+      await confirmerDemarrageSession();
+    } catch(e) { showToast('Erreur : '+e.message, 'error'); }
+  } else {
+    const backBtn = document.getElementById('sc-back-btn');
+    if (backBtn) backBtn.style.display = estGerantOuAdmin() ? 'flex' : 'none';
+    goScreen('screen-select-caisse');
+    renderSelectCaisseGrid();
+  }
+}
+
+// Retour vers l'ERP depuis l'écran de sélection de caisse (Gérant/Admin uniquement)
+function retourErpDepuisSelectCaisse() {
+  document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => {
+    s.classList.remove('active');
+    if (s.id === 'screen-erp') s.style.display = '';
+  });
+  const erp = document.getElementById('screen-erp');
+  erp.style.display = 'flex';
+  erp.classList.add('active');
 }
 
 function renderSelectCaisseGrid() {
@@ -6726,7 +6772,7 @@ function requireCashier(message = "Action réservée au personnel opérationnel"
   if (!currentUser) { showToast(message, 'error'); return false; }
   if (estGerantOuAdmin()) return true;
   const role = (currentUser.role || '').toLowerCase();
-  const ok = ['caissier', 'caissière', 'vendeur', 'magasinier'].some(r => role.includes(r));
+  const ok = ['caissier', 'caissière', 'vendeur', 'magasinier', 'digital'].some(r => role.includes(r));
   if (!ok) { showToast(message, 'error'); return false; }
   return true;
 }
