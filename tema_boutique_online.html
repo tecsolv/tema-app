@@ -1303,19 +1303,19 @@
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
-    <div class="nav-section">Stock</div>
-    <div class="nav-item" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
-    <div class="nav-item" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
-    <div class="nav-section">Achats</div>
-    <div class="nav-item" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
-    <div class="nav-item" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
-    <div class="nav-section">Ventes</div>
-    <div class="nav-item" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
+    <div class="nav-section" id="nav-section-stock">Stock</div>
+    <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
+    <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
+    <div class="nav-section" id="nav-section-achats">Achats</div>
+    <div class="nav-item" id="nav-fournisseurs" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
+    <div class="nav-item" id="nav-commandes" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
+    <div class="nav-section" id="nav-section-ventes">Ventes</div>
+    <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
     <div class="nav-section">Rapports</div>
     <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
     <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
     <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
-    <div class="nav-item" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
+    <div class="nav-item" id="nav-alertes" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
     <div class="nav-section">Services & Finance</div>
     <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
     <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
@@ -4322,6 +4322,29 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
   if (isMagasinier) {
     ['nav-mobilemoney','nav-services'].forEach(id => document.getElementById(id).style.display = 'none');
   }
+
+  // Comptable externe (rôle Finance-only, READ ONLY opérationnel) : masquer les modules
+  // strictement opérationnels (Stock, Achats, Journal de Caisse) — Phase 3A Comptable Correctif
+  const navOperationnels = ['nav-section-stock','nav-inventaire','nav-categories',
+   'nav-section-achats','nav-fournisseurs','nav-commandes',
+   'nav-section-ventes','nav-caisse-journal','nav-alertes'];
+  if (isComptable && !isGerant && !isAdmin) {
+    navOperationnels.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  } else {
+    // Restaurer l'affichage par défaut (utile en cas de changement de session sans rechargement)
+    navOperationnels.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+  }
+}
+
+// Vue "Comptable externe" : Comptable réel sans cumul Gérant/Admin (finance-only, lecture restreinte)
+function isComptableSafeView() {
+  return isComptableReel() && !estGerantOuAdmin();
 }
 
 async function checkEtInitialiserDonnees() {
