@@ -4255,6 +4255,7 @@ function afficherApp() {
   const isCaissier = !isAdmin && !isGerant && !isComptable &&
     (role.includes('caissier') || role.includes('vendeur') || role.includes('caissière'));
   const isDigital = !isAdmin && !isGerant && !isComptable && !isCaissier && role.includes('digital');
+  const isMagasinier = !isAdmin && !isGerant && !isComptable && !isCaissier && !isDigital && role.includes('magasinier');
 
   if (isDigital) {
     // ── Mode Digital — Zone A & B ──
@@ -4272,13 +4273,13 @@ function afficherApp() {
     document.getElementById('user-display').textContent = currentUser.label;
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', {weekday:'short',year:'numeric',month:'short',day:'numeric'});
     setConnStatus('online');
-    appliquerFiltreNavigation(isAdmin, isGerant, isComptable);
+    appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier);
     checkEtInitialiserDonnees();
     renderDashboard();
   }
 }
 
-function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
+function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
    'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences'].forEach(id => {
@@ -4309,8 +4310,8 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
     document.getElementById('nav-pos').style.display = 'flex'; // Admin peut aussi accéder au POS
   }
 
-  // Masquer modules non pertinents pour comptable (pas de gestion stock/achats)
-  if (isComptable && !isGerant && !isAdmin) {
+  // Masquer Mobile Money/Services : non pertinent pour Comptable seul et pour Magasinier (anomalie de routage corrigée — P3A)
+  if ((isComptable && !isGerant && !isAdmin) || isMagasinier) {
     ['nav-mobilemoney','nav-services'].forEach(id => document.getElementById(id).style.display = 'none');
   }
 }
@@ -5056,6 +5057,7 @@ async function choisirCaisse(caisseId) {
 }
 
 async function confirmerDemarrageSession() {
+  if (!requireCashier()) return;
   const c = posCaisseChoisie;
   if (!c) return;
   const fonds = parseFloat(document.getElementById('sc-fonds-caisse').value) || 0;
@@ -5100,6 +5102,7 @@ async function confirmerDemarrageSession() {
 }
 
 async function posPause() {
+  if (!requireCashier()) return;
   if (!posSessionActive || !posSessionActive.caisseId) return;
   if (posSessionActive.pauseEnCours) return;
   const debut = posDateHeure(), debutTS = Date.now();
@@ -5110,6 +5113,7 @@ async function posPause() {
 }
 
 async function posReprendre() {
+  if (!requireCashier()) return;
   if (!posSessionActive || !posSessionActive.pauseEnCours) return;
   const fin = posDateHeure(), finTS = Date.now();
   const p = posSessionActive.pauseEnCours;
@@ -5387,6 +5391,7 @@ function ouvrirModaleAuditCaisse(type, caisseId) {
 }
 
 async function confirmerActionAudit() {
+  if (!requireManager()) return;
   const btnGuard = document.getElementById('btn-confirm-audit');
   if (btnGuard && btnGuard.disabled) return;
   const action = auditActionEnCours;
@@ -5504,6 +5509,7 @@ async function ouvrirSessionCaisse() {
 }
 
 async function fermerSessionCaisse() {
+  if (!requireCashier()) return;
   if (!posSessionActive) return;
   if (!confirm('Clôturer la session et générer le rapport Z ?')) return;
   const fin = posDateHeure(), finTS = Date.now();
@@ -6701,6 +6707,36 @@ function peutGererCompta() {
   return currentUser.isAdmin || (currentUser.role || '').toLowerCase().includes('gérant') || (currentUser.role || '').toLowerCase().includes('gerant');
 }
 
+// ── Contrôles d'accès standardisés (Phase 3A) ──────────────────────────
+// Hiérarchie : Admin > Gérant(e) > Caissier(ère)/Vendeur(se)/Magasinier(ère) > Digital
+// "Comptable" (Option A validée) : alias strict de peutGererCompta() — non activé séparément
+function requireManager(message = "Action réservée au Gérant ou à l'Administrateur") {
+  if (estGerantOuAdmin()) return true;
+  showToast(message, 'error');
+  return false;
+}
+
+function requireComptable(message = "Vous n'avez pas l'autorisation d'effectuer cette action comptable") {
+  if (peutGererCompta()) return true; // alias Gérant/Admin (Option A)
+  showToast(message, 'error');
+  return false;
+}
+
+function requireCashier(message = "Action réservée au personnel opérationnel") {
+  if (!currentUser) { showToast(message, 'error'); return false; }
+  if (estGerantOuAdmin()) return true;
+  const role = (currentUser.role || '').toLowerCase();
+  const ok = ['caissier', 'caissière', 'vendeur', 'magasinier'].some(r => role.includes(r));
+  if (!ok) { showToast(message, 'error'); return false; }
+  return true;
+}
+
+// Vérifie si l'utilisateur courant est l'auteur de la vente ET que la vente date d'aujourd'hui
+// (basé sur les champs existants createdBy/date — aucun nouveau champ Firestore)
+function estAuteurVenteAujourdHui(vente) {
+  return !!vente && vente.createdBy === currentUser?.label && vente.date === today();
+}
+
 // Correspondance Mode de paiement (vente) → Compte de trésorerie OHADA
 const COMPTE_TRESORERIE_PAR_MODE = { 'Espèces': '521', 'Orange Money': '522', 'MTN MoMo': '523', 'Wave': '524', 'Autre': '521' };
 // Correspondance Zone de vente → Compte de produits OHADA (classe 7)
@@ -6781,7 +6817,7 @@ function renderComptabilite() {
 // Enregistre une nouvelle écriture comptable manuelle (avec contrôle d'équilibre Débit = Crédit)
 async function enregistrerEcriture(event) {
   event.preventDefault();
-  if (!peutGererCompta()) { showToast("Vous n'avez pas l'autorisation de créer des écritures comptables", 'error'); return; }
+  if (!requireComptable("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
   const date = document.getElementById('ec-date').value;
   const libelle = document.getElementById('ec-libelle').value.trim();
   const compteDebit = document.getElementById('ec-compte-debit').value;
@@ -6916,6 +6952,7 @@ function renderRapprochement() {
 // Enregistre un relevé Mobile Money / Espèces saisi manuellement
 async function enregistrerReleve(event) {
   event.preventDefault();
+  if (!requireComptable("Vous n'avez pas l'autorisation de saisir un relevé de trésorerie")) return;
   const date = document.getElementById('rl-date').value;
   const canal = document.getElementById('rl-canal').value;
   const type = document.getElementById('rl-type').value;
@@ -6961,6 +6998,7 @@ function renderReleves() {
 }
 
 async function supprimerReleve(id) {
+  if (!requireComptable("Vous n'avez pas l'autorisation de supprimer un relevé de trésorerie")) return;
   const r = releves.find(x=>x.id===id); if (!r) return;
   if (!confirm(`Supprimer ce relevé "${r.canal} — ${FCFA(r.montant)}" ?`)) return;
   try {
@@ -7203,6 +7241,7 @@ function renderMMHistorique() {
 }
 
 async function supprimerTransactionMM(id) {
+  if (!requireManager("Seul le Gérant ou l'Administrateur peut supprimer une transaction Mobile Money")) return;
   if (!confirm('Supprimer cette transaction Mobile Money ?')) return;
   try {
     await db.collection('transactions_mobile_money').doc(id).delete();
@@ -7415,6 +7454,7 @@ function renderSvcHistorique() {
 }
 
 async function supprimerVenteService(id) {
+  if (!requireManager("Seul le Gérant ou l'Administrateur peut supprimer une vente de service")) return;
   if (!confirm('Supprimer cette vente de service ?')) return;
   try {
     await db.collection('ventes_services').doc(id).delete();
@@ -7812,6 +7852,7 @@ function renderCaisseSaisie() {
 
 async function ajouterVenteCaisse(event) {
   event.preventDefault();
+  if (!requireCashier()) return;
   const article = document.getElementById('cs-article').value.trim();
   const prixUnitaire = Number(document.getElementById('cs-prix').value);
   const quantite = Number(document.getElementById('cs-quantite').value || 1);
@@ -7893,6 +7934,10 @@ function ouvrirVenteModal() {
 
 async function supprimerVenteCaisse(id) {
   const v = ventesCaisse.find(x => x.id === id); if (!v) return;
+  if (!estGerantOuAdmin() && !estAuteurVenteAujourdHui(v)) {
+    showToast("Seul le Gérant ou l'Administrateur peut supprimer une vente antérieure ou saisie par un autre utilisateur", 'error');
+    return;
+  }
   if (!confirm(`Supprimer cette vente "${v.article}" (${FCFA(v.montant)}) ?`)) return;
   try {
     await db.collection('ventesCaisse').doc(id).delete();

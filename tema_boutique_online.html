@@ -2536,7 +2536,7 @@
     <div class="form-group"><label>Motif (obligatoire)</label>
       <input class="form-control" id="audit-motif" placeholder="Ex : oubli de clôture, urgence...">
     </div>
-    <button onclick="confirmerActionAudit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">Confirmer</button>
+    <button id="btn-confirm-audit" onclick="confirmerActionAudit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">Confirmer</button>
   </div>
 </div>
 
@@ -4255,6 +4255,7 @@ function afficherApp() {
   const isCaissier = !isAdmin && !isGerant && !isComptable &&
     (role.includes('caissier') || role.includes('vendeur') || role.includes('caissière'));
   const isDigital = !isAdmin && !isGerant && !isComptable && !isCaissier && role.includes('digital');
+  const isMagasinier = !isAdmin && !isGerant && !isComptable && !isCaissier && !isDigital && role.includes('magasinier');
 
   if (isDigital) {
     // ── Mode Digital — Zone A & B ──
@@ -4272,13 +4273,13 @@ function afficherApp() {
     document.getElementById('user-display').textContent = currentUser.label;
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', {weekday:'short',year:'numeric',month:'short',day:'numeric'});
     setConnStatus('online');
-    appliquerFiltreNavigation(isAdmin, isGerant, isComptable);
+    appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier);
     checkEtInitialiserDonnees();
     renderDashboard();
   }
 }
 
-function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
+function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
    'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences'].forEach(id => {
@@ -4309,8 +4310,8 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
     document.getElementById('nav-pos').style.display = 'flex'; // Admin peut aussi accéder au POS
   }
 
-  // Masquer modules non pertinents pour comptable (pas de gestion stock/achats)
-  if (isComptable && !isGerant && !isAdmin) {
+  // Masquer Mobile Money/Services : non pertinent pour Comptable seul et pour Magasinier (anomalie de routage corrigée — P3A)
+  if ((isComptable && !isGerant && !isAdmin) || isMagasinier) {
     ['nav-mobilemoney','nav-services'].forEach(id => document.getElementById(id).style.display = 'none');
   }
 }
@@ -5056,6 +5057,7 @@ async function choisirCaisse(caisseId) {
 }
 
 async function confirmerDemarrageSession() {
+  if (!requireCashier()) return;
   const c = posCaisseChoisie;
   if (!c) return;
   const fonds = parseFloat(document.getElementById('sc-fonds-caisse').value) || 0;
@@ -5071,7 +5073,7 @@ async function confirmerDemarrageSession() {
       if (caisseSnap.data()?.statut === 'occupee') throw new Error('OCCUPEE');
       tx.set(sessionRef, {
         dateOuverture: now, fondsCaisse: fonds, note, operateur: currentUser.label,
-        statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {},
+        totalVentes: 0, nbTickets: 0, totaux: {},
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         caisseId: c.id, caisseNom: c.nom,
         utilisateurId: currentUser.id, utilisateurNom: currentUser.label,
@@ -5100,6 +5102,7 @@ async function confirmerDemarrageSession() {
 }
 
 async function posPause() {
+  if (!requireCashier()) return;
   if (!posSessionActive || !posSessionActive.caisseId) return;
   if (posSessionActive.pauseEnCours) return;
   const debut = posDateHeure(), debutTS = Date.now();
@@ -5110,6 +5113,7 @@ async function posPause() {
 }
 
 async function posReprendre() {
+  if (!requireCashier()) return;
   if (!posSessionActive || !posSessionActive.pauseEnCours) return;
   const fin = posDateHeure(), finTS = Date.now();
   const p = posSessionActive.pauseEnCours;
@@ -5139,19 +5143,39 @@ async function posFinService() {
   const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
   const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  const sessionRef = db.collection('sessions_caisse').doc(session.id);
+  const caisseRef = db.collection('caisses').doc(session.caisseId);
   try {
-    await db.collection('sessions_caisse').doc(session.id).update({
-      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
-      dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
-      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+    await db.runTransaction(async (tx) => {
+      const sessionSnap = await tx.get(sessionRef);
+      const caisseSnap = await tx.get(caisseRef);
+      const sData = sessionSnap.data() || {};
+      if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
+
+      tx.update(sessionRef, {
+        statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
+        dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+        dureeTravailMin, dureePauseMin, dureeEffectiveMin
+      });
+
+      const cData = caisseSnap.data() || {};
+      if (cData.sessionActiveId === session.id) {
+        tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      }
     });
-    await db.collection('caisses').doc(session.caisseId).update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
     consigner('Fin de service', `${currentUser.label} a terminé son service sur ${session.caisseNom||'—'} (travail: ${dureeTravailMin}min, pause: ${dureePauseMin}min, effectif: ${dureeEffectiveMin}min)`);
     posSessionActive = null;
     showToast('Service terminé ✓ — Rapport Z disponible dans Caisse Journalière');
     goScreen('screen-select-caisse');
     renderSelectCaisseGrid();
-  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+  } catch(err) {
+    if (err.message === 'SESSION_DEJA_FERMEE') {
+      posSessionActive = null;
+      showToast('Votre session a déjà été clôturée par un Gérant/Admin','error');
+      goScreen('screen-select-caisse');
+      renderSelectCaisseGrid();
+    } else { showToast('Erreur : '+err.message,'error'); }
+  }
 }
 
 // ═══ Suivi des présences & Tableau de bord caisses (Gérant/Admin) ═══
@@ -5367,6 +5391,9 @@ function ouvrirModaleAuditCaisse(type, caisseId) {
 }
 
 async function confirmerActionAudit() {
+  if (!requireManager()) return;
+  const btnGuard = document.getElementById('btn-confirm-audit');
+  if (btnGuard && btnGuard.disabled) return;
   const action = auditActionEnCours;
   if (!action) return;
   const motif = document.getElementById('audit-motif').value.trim();
@@ -5374,62 +5401,80 @@ async function confirmerActionAudit() {
   const c = action.caisse;
   const sessionId = c.sessionActiveId;
   if (!sessionId) { showToast('Aucune session active sur cette caisse','error'); closePosModal('modal-audit-caisse'); return; }
+
+  let newUserId = null, newUserNom = null;
+  if (action.type === 'transfert') {
+    const sel = document.getElementById('audit-nouvel-utilisateur');
+    newUserId = sel.value;
+    newUserNom = sel.options[sel.selectedIndex]?.dataset.nom;
+    if (!newUserId) { showToast('Sélectionnez un utilisateur','error'); return; }
+  } else if (action.type === 'reattribution') {
+    newUserId = currentUser.id;
+    newUserNom = currentUser.label;
+  }
+
   const sessionRef = db.collection('sessions_caisse').doc(sessionId);
   const caisseRef = db.collection('caisses').doc(c.id);
   const fin = posDateHeure(), finTS = Date.now();
-  try {
-    const sessionSnap = await sessionRef.get();
-    const session = sessionSnap.data() || {};
-    let pauses = session.pauses || [];
-    if (session.pauseEnCours) {
-      const p = session.pauseEnCours;
-      const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
-      pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
-    }
-    const debutTS = session.dateHeureDebutSessionTS || finTS;
-    const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
-    const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
-    const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  const newSessionRef = (action.type === 'transfert' || action.type === 'reattribution')
+    ? db.collection('sessions_caisse').doc()
+    : null;
 
-    await sessionRef.update({
-      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
-      fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
-      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+  const btn = document.getElementById('btn-confirm-audit');
+  if (btn) btn.disabled = true;
+  let session = {};
+  try {
+    await db.runTransaction(async (tx) => {
+      const sessionSnap = await tx.get(sessionRef);
+      session = sessionSnap.data() || {};
+      let pauses = session.pauses || [];
+      if (session.pauseEnCours) {
+        const p = session.pauseEnCours;
+        const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+        pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
+      }
+      const debutTS = session.dateHeureDebutSessionTS || finTS;
+      const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
+      const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
+      const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+
+      tx.update(sessionRef, {
+        statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
+        fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
+        dureeTravailMin, dureePauseMin, dureeEffectiveMin
+      });
+
+      if (action.type === 'transfert' || action.type === 'reattribution') {
+        const now = posDateHeure(), nowTS = Date.now();
+        tx.set(newSessionRef, {
+          dateOuverture: now, fondsCaisse: 0,
+          note: action.type === 'transfert' ? 'Transfert de caisse' : 'Réattribution de caisse',
+          operateur: newUserNom, totalVentes: 0, nbTickets: 0, totaux: {},
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          caisseId: c.id, caisseNom: c.nom, utilisateurId: newUserId, utilisateurNom: newUserNom,
+          dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
+          statutSession: 'ouverte', pauses: [], pauseEnCours: null
+        });
+        tx.update(caisseRef, { statut: 'occupee', sessionActiveId: newSessionRef.id, utilisateurActifId: newUserId, utilisateurActifNom: newUserNom });
+      } else {
+        tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      }
     });
 
     if (action.type === 'transfert') {
-      const sel = document.getElementById('audit-nouvel-utilisateur');
-      const newUserId = sel.value;
-      const newUserNom = sel.options[sel.selectedIndex]?.dataset.nom;
-      if (!newUserId) { showToast('Sélectionnez un utilisateur','error'); return; }
-      await demarrerNouvelleSessionSurCaisse(c, newUserId, newUserNom, 'Transfert de caisse');
       await consignerAuditCaisse('transfert', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: newUserId, nouvelUtilisateurNom: newUserNom });
       showToast('Caisse transférée à ' + newUserNom + ' ✓');
     } else if (action.type === 'reattribution') {
-      await demarrerNouvelleSessionSurCaisse(c, currentUser.id, currentUser.label, 'Réattribution de caisse');
       await consignerAuditCaisse('reattribution', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: currentUser.id, nouvelUtilisateurNom: currentUser.label });
       showToast('Caisse réattribuée ✓');
     } else {
-      await caisseRef.update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
       await consignerAuditCaisse(action.type, c, session, motif);
       showToast('Session fermée de force ✓');
     }
     consigner('Audit caisse', `${currentUser.label} a effectué "${action.type}" sur ${c.nom} (motif: ${motif})`);
     closePosModal('modal-audit-caisse');
   } catch(err) { showToast('Erreur : '+err.message,'error'); }
-}
-
-async function demarrerNouvelleSessionSurCaisse(c, userId, userNom, note) {
-  const newSessionRef = db.collection('sessions_caisse').doc();
-  const now = posDateHeure(), nowTS = Date.now();
-  await newSessionRef.set({
-    dateOuverture: now, fondsCaisse: 0, note, operateur: userNom,
-    statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    caisseId: c.id, caisseNom: c.nom, utilisateurId: userId, utilisateurNom: userNom,
-    dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
-    statutSession: 'ouverte', pauses: [], pauseEnCours: null
-  });
-  await db.collection('caisses').doc(c.id).update({ statut: 'occupee', sessionActiveId: newSessionRef.id, utilisateurActifId: userId, utilisateurActifNom: userNom });
+  finally { if (btn) btn.disabled = false; }
 }
 
 async function consignerAuditCaisse(type, caisse, session, motif, extra = {}) {
@@ -5454,7 +5499,7 @@ async function ouvrirSessionCaisse() {
   const now = posDateHeure();
   try {
     await db.collection('sessions_caisse').add({
-      dateOuverture:now, fondsCaisse:fonds, note, operateur:currentUser?.label||'—', statut:'ouverte', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      dateOuverture:now, fondsCaisse:fonds, note, operateur:currentUser?.label||'—', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       caisseId: null, caisseNom: null, utilisateurId: currentUser?.id||null, utilisateurNom: currentUser?.label||'—',
       dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: Date.now(),
       statutSession: 'ouverte', pauses: [], pauseEnCours: null
@@ -5464,6 +5509,7 @@ async function ouvrirSessionCaisse() {
 }
 
 async function fermerSessionCaisse() {
+  if (!requireCashier()) return;
   if (!posSessionActive) return;
   if (!confirm('Clôturer la session et générer le rapport Z ?')) return;
   const fin = posDateHeure(), finTS = Date.now();
@@ -5480,7 +5526,7 @@ async function fermerSessionCaisse() {
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
   try {
     await db.collection('sessions_caisse').doc(posSessionActive.id).update({
-      statut:'fermée', statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
+      statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
       dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
       dureeTravailMin, dureePauseMin, dureeEffectiveMin
     });
@@ -6661,6 +6707,36 @@ function peutGererCompta() {
   return currentUser.isAdmin || (currentUser.role || '').toLowerCase().includes('gérant') || (currentUser.role || '').toLowerCase().includes('gerant');
 }
 
+// ── Contrôles d'accès standardisés (Phase 3A) ──────────────────────────
+// Hiérarchie : Admin > Gérant(e) > Caissier(ère)/Vendeur(se)/Magasinier(ère) > Digital
+// "Comptable" (Option A validée) : alias strict de peutGererCompta() — non activé séparément
+function requireManager(message = "Action réservée au Gérant ou à l'Administrateur") {
+  if (estGerantOuAdmin()) return true;
+  showToast(message, 'error');
+  return false;
+}
+
+function requireComptable(message = "Vous n'avez pas l'autorisation d'effectuer cette action comptable") {
+  if (peutGererCompta()) return true; // alias Gérant/Admin (Option A)
+  showToast(message, 'error');
+  return false;
+}
+
+function requireCashier(message = "Action réservée au personnel opérationnel") {
+  if (!currentUser) { showToast(message, 'error'); return false; }
+  if (estGerantOuAdmin()) return true;
+  const role = (currentUser.role || '').toLowerCase();
+  const ok = ['caissier', 'caissière', 'vendeur', 'magasinier'].some(r => role.includes(r));
+  if (!ok) { showToast(message, 'error'); return false; }
+  return true;
+}
+
+// Vérifie si l'utilisateur courant est l'auteur de la vente ET que la vente date d'aujourd'hui
+// (basé sur les champs existants createdBy/date — aucun nouveau champ Firestore)
+function estAuteurVenteAujourdHui(vente) {
+  return !!vente && vente.createdBy === currentUser?.label && vente.date === today();
+}
+
 // Correspondance Mode de paiement (vente) → Compte de trésorerie OHADA
 const COMPTE_TRESORERIE_PAR_MODE = { 'Espèces': '521', 'Orange Money': '522', 'MTN MoMo': '523', 'Wave': '524', 'Autre': '521' };
 // Correspondance Zone de vente → Compte de produits OHADA (classe 7)
@@ -6741,7 +6817,7 @@ function renderComptabilite() {
 // Enregistre une nouvelle écriture comptable manuelle (avec contrôle d'équilibre Débit = Crédit)
 async function enregistrerEcriture(event) {
   event.preventDefault();
-  if (!peutGererCompta()) { showToast("Vous n'avez pas l'autorisation de créer des écritures comptables", 'error'); return; }
+  if (!requireComptable("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
   const date = document.getElementById('ec-date').value;
   const libelle = document.getElementById('ec-libelle').value.trim();
   const compteDebit = document.getElementById('ec-compte-debit').value;
@@ -6876,6 +6952,7 @@ function renderRapprochement() {
 // Enregistre un relevé Mobile Money / Espèces saisi manuellement
 async function enregistrerReleve(event) {
   event.preventDefault();
+  if (!requireComptable("Vous n'avez pas l'autorisation de saisir un relevé de trésorerie")) return;
   const date = document.getElementById('rl-date').value;
   const canal = document.getElementById('rl-canal').value;
   const type = document.getElementById('rl-type').value;
@@ -6921,6 +6998,7 @@ function renderReleves() {
 }
 
 async function supprimerReleve(id) {
+  if (!requireComptable("Vous n'avez pas l'autorisation de supprimer un relevé de trésorerie")) return;
   const r = releves.find(x=>x.id===id); if (!r) return;
   if (!confirm(`Supprimer ce relevé "${r.canal} — ${FCFA(r.montant)}" ?`)) return;
   try {
@@ -7101,6 +7179,7 @@ async function enregistrerTransactionMM(event) {
       modePaiement: reseau, client: data.client,
       note: `Réf: ${data.reference || '—'} | Montant opérat.: ${FCFA(montant)}`,
       source: 'mobile_money',
+      sessionId: posSessionActive?.id || null,
       createdBy: currentUser.label,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -7162,6 +7241,7 @@ function renderMMHistorique() {
 }
 
 async function supprimerTransactionMM(id) {
+  if (!requireManager("Seul le Gérant ou l'Administrateur peut supprimer une transaction Mobile Money")) return;
   if (!confirm('Supprimer cette transaction Mobile Money ?')) return;
   try {
     await db.collection('transactions_mobile_money').doc(id).delete();
@@ -7313,6 +7393,7 @@ async function enregistrerVenteService(event) {
       quantite: qte, prixUnitaire: prix, montant,
       modePaiement: mode, client: data.client,
       note: `Service numérique`, source: 'service',
+      sessionId: posSessionActive?.id || null,
       createdBy: currentUser.label,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -7373,6 +7454,7 @@ function renderSvcHistorique() {
 }
 
 async function supprimerVenteService(id) {
+  if (!requireManager("Seul le Gérant ou l'Administrateur peut supprimer une vente de service")) return;
   if (!confirm('Supprimer cette vente de service ?')) return;
   try {
     await db.collection('ventes_services').doc(id).delete();
@@ -7770,6 +7852,7 @@ function renderCaisseSaisie() {
 
 async function ajouterVenteCaisse(event) {
   event.preventDefault();
+  if (!requireCashier()) return;
   const article = document.getElementById('cs-article').value.trim();
   const prixUnitaire = Number(document.getElementById('cs-prix').value);
   const quantite = Number(document.getElementById('cs-quantite').value || 1);
@@ -7851,6 +7934,10 @@ function ouvrirVenteModal() {
 
 async function supprimerVenteCaisse(id) {
   const v = ventesCaisse.find(x => x.id === id); if (!v) return;
+  if (!estGerantOuAdmin() && !estAuteurVenteAujourdHui(v)) {
+    showToast("Seul le Gérant ou l'Administrateur peut supprimer une vente antérieure ou saisie par un autre utilisateur", 'error');
+    return;
+  }
   if (!confirm(`Supprimer cette vente "${v.article}" (${FCFA(v.montant)}) ?`)) return;
   try {
     await db.collection('ventesCaisse').doc(id).delete();
