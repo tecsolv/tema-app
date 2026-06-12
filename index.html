@@ -647,6 +647,7 @@
     border-radius: 20px; font-size: 11px; font-weight: 700;
   }
   .pos-session-badge.closed { background: var(--danger); }
+  .pos-session-badge.pause { background: #f59e0b; }
 
   .pos-main { flex: 1; display: flex; overflow: hidden; }
 
@@ -1319,6 +1320,7 @@
     <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
     <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
     <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
+    <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Suivi des Présences</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
@@ -1638,6 +1640,74 @@
             💰 Revenu net famille visé (mois 3) : +150 000 FCFA<br>
             🚫 Zéro crédit client les 3 premiers mois<br>
             📓 Enregistrer chaque vente le jour même
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUIVI DES PRÉSENCES & TABLEAU DE BORD CAISSES -->
+    <div class="page" id="page-presences">
+      <div class="alert alert-info no-print">🪪 Suivi en temps réel des caisses (occupation, exclusivité) et des présences du personnel (arrivées, départs, pauses, ventes). Visible par le Gérant et l'Administrateur.</div>
+
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="presences-tab-btn-caisses" onclick="presencesNavigate('caisses')" style="flex:1;min-width:140px">🖥️ Tableau de bord caisses</button>
+        <button class="btn btn-sm caisse-tab-btn" id="presences-tab-btn-rh" onclick="presencesNavigate('rh')" style="flex:1;min-width:140px">🪪 Suivi des présences</button>
+        <button class="btn btn-sm caisse-tab-btn" id="presences-tab-btn-audit" onclick="presencesNavigate('audit')" style="flex:1;min-width:140px">📜 Journal d'audit</button>
+      </div>
+
+      <!-- ONGLET TABLEAU DE BORD CAISSES -->
+      <div class="caisse-tab active" id="presences-tab-caisses">
+        <div class="kpi-grid" id="presences-caisses-grid"></div>
+      </div>
+
+      <!-- ONGLET SUIVI DES PRÉSENCES -->
+      <div class="caisse-tab" id="presences-tab-rh">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0"><label>Employé</label>
+              <select class="form-control" id="presences-filtre-employe" onchange="renderPresences()"><option value="">Tous</option></select>
+            </div>
+            <div class="form-group" style="margin:0"><label>Caisse</label>
+              <select class="form-control" id="presences-filtre-caisse" onchange="renderPresences()"><option value="">Toutes</option></select>
+            </div>
+            <div class="form-group" style="margin:0"><label>Période</label>
+              <select class="form-control" id="presences-filtre-periode" onchange="presencesChangerPeriode()">
+                <option value="jour">Jour</option>
+                <option value="semaine">Semaine</option>
+                <option value="mois" selected>Mois</option>
+                <option value="custom">Période personnalisée</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0" id="presences-filtre-date-grp"><label>Date</label>
+              <input type="date" class="form-control" id="presences-filtre-date" onchange="renderPresences()">
+            </div>
+            <div class="form-group" style="margin:0;display:none" id="presences-filtre-fin-grp"><label>Au</label>
+              <input type="date" class="form-control" id="presences-filtre-date-fin" onchange="renderPresences()">
+            </div>
+            <button class="btn btn-primary" onclick="renderPresences()">🔍 Filtrer</button>
+            <button class="btn btn-outline" onclick="exporterPresencesCSV()">⬇️ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="presences-kpis"></div>
+
+        <div class="card">
+          <div class="card-header"><h2>🪪 Détail des présences</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>Employé</th><th>Caisse</th><th>Arrivée</th><th>Départ</th><th>Pause(s)</th><th>Temps travaillé</th><th>Temps effectif</th><th>Tickets</th><th>CA</th><th>Panier moyen</th><th>Statut</th>
+            </tr></thead><tbody id="presences-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET JOURNAL D'AUDIT -->
+      <div class="caisse-tab" id="presences-tab-audit">
+        <div class="card">
+          <div class="card-header"><h2>📜 Journal d'audit des caisses</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Caisse</th><th>Employé concerné</th><th>Responsable</th><th>Détail</th><th>Motif</th></tr></thead>
+            <tbody id="audit-caisses-body"></tbody></table>
           </div>
         </div>
       </div>
@@ -2400,6 +2470,77 @@
 </div><!-- /#screen-erp -->
 
 <!-- ═══════════════════════════════════════════════════════
+     SÉLECTION DE CAISSE — avant accès au POS
+═══════════════════════════════════════════════════════ -->
+<div class="app-screen" id="screen-select-caisse" style="background:#13151f">
+  <div class="pos-topbar">
+    <div class="pos-topbar-left">
+      <div class="pos-title">🏪 TeMa Smart Caisse</div>
+      <div class="pos-cashier-info" id="sc-user-name">—</div>
+    </div>
+    <div class="pos-topbar-right">
+      <button class="pos-back-btn" onclick="seDeconnecter()" title="Déconnexion" style="font-size:18px">🚪</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:30px;display:flex;flex-direction:column;align-items:center">
+    <h2 style="color:#fff;margin-bottom:6px">Sélectionnez votre caisse</h2>
+    <p style="color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center;max-width:480px">Votre session démarrera automatiquement dès que vous choisissez une caisse disponible.</p>
+    <div id="select-caisse-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;max-width:780px;width:100%"></div>
+  </div>
+</div>
+
+<!-- Modale : caisse occupée (exclusivité) -->
+<div class="pos-modal-overlay" id="modal-caisse-occupee">
+  <div class="pos-modal" style="max-width:420px">
+    <button class="pos-modal-close" onclick="closePosModal('modal-caisse-occupee')">×</button>
+    <h3 style="margin-bottom:14px">⚠️ Caisse déjà utilisée</h3>
+    <div style="background:var(--bg-soft,#f5f6fa);border-radius:10px;padding:14px;font-size:14px;line-height:1.9">
+      ⚠️ Cette caisse est actuellement utilisée par :<br>
+      Nom : <b id="co-nom">—</b><br>
+      Heure d'ouverture : <b id="co-heure">—</b><br>
+      Statut : <b id="co-statut">—</b>
+    </div>
+    <p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Veuillez sélectionner une autre caisse ou contacter un responsable.</p>
+    <div id="co-actions-gerant" style="display:none;margin-top:14px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('fermeture_forcee')">🔒 Forcer la fermeture de cette session</button>
+      <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('transfert')">🔁 Transférer cette caisse</button>
+      <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('reattribution')">♻️ Réattribuer (fermer + ouvrir pour moi)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : démarrage de session (fonds de caisse) -->
+<div class="pos-modal-overlay" id="modal-demarrer-session">
+  <div class="pos-modal">
+    <button class="pos-modal-close" onclick="closePosModal('modal-demarrer-session')">×</button>
+    <h3 style="margin-bottom:14px">✅ Démarrer la session — <span id="sc-caisse-nom">—</span></h3>
+    <div class="form-group"><label>Fonds de caisse initial (FCFA)</label>
+      <input class="form-control" id="sc-fonds-caisse" type="number" min="0" required placeholder="Ex : 50 000" style="font-size:20px;text-align:right">
+    </div>
+    <div class="form-group"><label>Note (optionnel)</label>
+      <input class="form-control" id="sc-session-note" placeholder="Ex : Ouverture du service">
+    </div>
+    <button onclick="confirmerDemarrageSession()" style="width:100%;padding:13px;background:var(--success);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">▶ Démarrer ma session</button>
+  </div>
+</div>
+
+<!-- Modale : motif d'action Gérant/Admin (audit) -->
+<div class="pos-modal-overlay" id="modal-audit-caisse">
+  <div class="pos-modal">
+    <button class="pos-modal-close" onclick="closePosModal('modal-audit-caisse')">×</button>
+    <h3 style="margin-bottom:14px" id="audit-titre">Action sur la caisse</h3>
+    <div class="form-group" id="audit-nouvel-utilisateur-grp" style="display:none">
+      <label>Transférer à</label>
+      <select class="form-control" id="audit-nouvel-utilisateur"></select>
+    </div>
+    <div class="form-group"><label>Motif (obligatoire)</label>
+      <input class="form-control" id="audit-motif" placeholder="Ex : oubli de clôture, urgence...">
+    </div>
+    <button onclick="confirmerActionAudit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">Confirmer</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
      POS SCREEN — TeMa Smart Caisse
 ═══════════════════════════════════════════════════════ -->
 <div class="app-screen" id="screen-pos">
@@ -2414,7 +2555,10 @@
     </div>
     <div class="pos-topbar-right">
       <span class="pos-clock" id="pos-clock">--:--</span>
-      <span class="pos-session-badge closed" id="pos-session-badge">🔴 Hors session</span>
+      <span class="pos-session-badge closed" id="pos-session-badge">⚫ HORS SESSION</span>
+      <button class="pos-back-btn" id="btn-pos-pause" onclick="posPause()" title="Pause" style="font-size:18px;display:none">☕</button>
+      <button class="pos-back-btn" id="btn-pos-reprendre" onclick="posReprendre()" title="Reprendre" style="font-size:18px;display:none">▶</button>
+      <button class="pos-back-btn" id="btn-pos-fin-service" onclick="posFinService()" title="Fin de service" style="font-size:18px;display:none">🔴</button>
       <button class="pos-back-btn" onclick="ouvrirEcranStats()" title="Statistiques" style="font-size:18px">📊</button>
       <button class="pos-back-btn" onclick="ouvrirEcranStock()" title="Stock" style="font-size:18px">📦</button>
       <button class="pos-back-btn" onclick="ouvrirEcranJournal()" title="Caisse Journalière" style="font-size:18px">💰</button>
@@ -3043,6 +3187,15 @@ let transactionsMM = [], ventesServices = [];
 // ── POS state ──────────────────────────────────────────
 let posClients = [];          // clients_pos
 let posSessionActive = null;  // session_caisse active
+let caisses = [];              // registre des postes de caisse physiques
+let sessionsCaisseAll = [];    // toutes les sessions (Gérant/Admin — Suivi des présences)
+let auditCaisses = [];         // journal d'audit des caisses (Gérant/Admin)
+function estGerantOuAdmin() {
+  if (!currentUser) return false;
+  if (currentUser.isAdmin) return true;
+  const role = (currentUser.role || '').toLowerCase();
+  return role.includes('gérant') || role.includes('gerant') || role.includes('propriétaire') || role.includes('proprietaire');
+}
 let posPanier = [];
 let posCategorieActive = '';
 let posClientActuel = null;
@@ -3180,6 +3333,7 @@ async function seConnecter() {
     assurerFirebaseInit();
 
     await assurerCompteAdmin();
+    await assurerCaissesInitiales();
 
     const snap = await db.collection('users').where('username', '==', username).limit(1).get();
     if (snap.empty) { showLoginError('Identifiant ou mot de passe incorrect.'); resetLoginBtn(); return; }
@@ -3233,6 +3387,27 @@ async function assurerCompteAdmin() {
     createdBy: 'système',
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
+}
+
+// Crée le registre des caisses physiques une seule fois si la collection caisses est vide
+const CAISSES_INITIALES = [
+  { nom: 'Caisse 1', code: 'C1', zones: 'Boutique principale (Zones B, C, D)' },
+  { nom: 'Caisse 2', code: 'C2', zones: 'Informatique & Services (Zone A)' }
+];
+async function assurerCaissesInitiales() {
+  const snap = await db.collection('caisses').limit(1).get();
+  if (!snap.empty) return;
+  const batch = db.batch();
+  CAISSES_INITIALES.forEach(c => {
+    const ref = db.collection('caisses').doc();
+    batch.set(ref, {
+      nom: c.nom, code: c.code, zones: c.zones,
+      statut: 'disponible', sessionActiveId: null,
+      utilisateurActifId: null, utilisateurActifNom: null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  await batch.commit();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -3315,9 +3490,10 @@ function demarrerListenersDigital() {
         });
     });
   window._digUnsub3 = db.collection('sessions_caisse')
-    .where('statut','==','ouverte').limit(1)
+    .where('utilisateurId','==', uid)
     .onSnapshot(snap => {
-      posSessionActive = snap.empty ? null : {id:snap.docs[0].id,...snap.docs[0].data()};
+      const docs = snap.docs.map(d => ({id:d.id,...d.data()}));
+      posSessionActive = docs.find(d => d.statutSession === 'ouverte' || d.statutSession === 'en_pause') || null;
       const ind = document.getElementById('dig-session-ind');
       const st = document.getElementById('dig-session-status');
       if (ind) ind.textContent = posSessionActive ? 'ON' : 'OFF';
@@ -3593,7 +3769,7 @@ function renderDigitalServices() {
   // Catalogue
   const cat = document.getElementById('dig-svc-catalogue');
   if (cat) cat.innerHTML = DIG_SERVICES.map(s => `
-    <div class="dig-svc-card" onclick="selectionnerService('${s.nom}',${s.prix})">
+    <div class="dig-svc-card" onclick="selectionnerServiceDigital('${s.nom}',${s.prix})">
       <div class="dig-svc-icon">${s.emoji}</div>
       <div class="dig-svc-nom">${s.nom}</div>
       <div class="dig-svc-prix">${posF(s.prix)}/unité</div>
@@ -3613,7 +3789,7 @@ function renderDigitalServices() {
   }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--dig-muted);padding:20px">Aucun service enregistré</td></tr>`;
 }
 
-function selectionnerService(nom, prix) {
+function selectionnerServiceDigital(nom, prix) {
   const elType = document.getElementById('svc-type');
   if (elType) { for (let opt of elType.options) { if (opt.value.startsWith(nom+'|')) { elType.value = opt.value; break; } } }
   const elPrix = document.getElementById('svc-prix'); if (elPrix) elPrix.value = prix;
@@ -3990,13 +4166,38 @@ function demarrerListeners() {
     posClients = snap.docs.map(d => ({id: d.id, ...d.data()}));
   }, err => console.error('clients_pos:', err));
 
-  // Listener session caisse active
-  const u14 = db.collection('sessions_caisse').where('statut','==','ouverte').limit(1).onSnapshot(snap => {
-    posSessionActive = snap.empty ? null : {id: snap.docs[0].id, ...snap.docs[0].data()};
+  // Listener session caisse active de l'utilisateur courant (sans orderBy pour éviter un index composite)
+  const u14 = db.collection('sessions_caisse').where('utilisateurId','==', currentUser.id).onSnapshot(snap => {
+    const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    const active = docs.find(d => d.statutSession === 'ouverte' || d.statutSession === 'en_pause');
+    posSessionActive = active || null;
     majBadgeSessionPOS();
+    if (document.getElementById('screen-select-caisse')?.classList.contains('active') && posSessionActive) {
+      ouvrirEcranPOS();
+    }
   }, err => console.error('sessions_caisse:', err));
 
-  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14];
+  // Listener registre des caisses physiques
+  const u15 = db.collection('caisses').onSnapshot(snap => {
+    caisses = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (document.getElementById('screen-select-caisse')?.classList.contains('active')) renderSelectCaisseGrid();
+    if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
+  }, err => console.error('caisses:', err));
+
+  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15];
+
+  // Listeners Suivi des présences / Tableau de bord caisses (Gérant/Admin)
+  if (estGerantOuAdmin()) {
+    const u16 = db.collection('sessions_caisse').onSnapshot(snap => {
+      sessionsCaisseAll = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
+    }, err => console.error('sessions_caisse(all):', err));
+    const u17 = db.collection('audit_caisses').onSnapshot(snap => {
+      auditCaisses = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
+    }, err => console.error('audit_caisses:', err));
+    unsubscribers.push(u16, u17);
+  }
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -4017,6 +4218,13 @@ function demarrerListeners() {
       rafraichirPageActive();
     }, err => console.error('paiements:', err));
     unsubscribers.push(u6);
+  } else if (estGerantOuAdmin()) {
+    // Gérant non-admin : besoin de la liste des utilisateurs pour le transfert de caisse
+    const u4b = db.collection('users').onSnapshot(snap => {
+      utilisateurs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      rafraichirPageActive();
+    }, err => console.error('users:', err));
+    unsubscribers.push(u4b);
   }
 
   // Statut connexion
@@ -4055,7 +4263,7 @@ function afficherApp() {
     // ── Mode POS pour les caissier(e)s ──
     document.getElementById('pos-cashier-name').textContent = currentUser.label + ' · ' + currentUser.role;
     document.getElementById('wcl-user') && (document.getElementById('wcl-user').textContent = currentUser.label);
-    ouvrirEcranPOS();
+    demarrerSessionCaissier();
   } else {
     // ── Mode ERP : Gérant / Comptable / Admin ──
     const erp = document.getElementById('screen-erp');
@@ -4073,7 +4281,7 @@ function afficherApp() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos'].forEach(id => {
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -4083,6 +4291,10 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable) {
     document.getElementById('nav-comptabilite').style.display = 'flex';
     document.getElementById('nav-rapprochement').style.display = 'flex';
     document.getElementById('nav-rentabilite').style.display = 'flex';
+  }
+  // Suivi des présences & Tableau de bord caisses : Gérant et Admin uniquement
+  if (isGerant) {
+    document.getElementById('nav-presences').style.display = 'flex';
   }
   // Mobile Money & Services : tout le monde (sauf caissier qui est en POS)
   document.getElementById('nav-mobilemoney').style.display = 'flex';
@@ -4546,11 +4758,12 @@ function renderPanier() {
   document.getElementById('cart-subtotal').textContent=posF(sous);
   document.getElementById('cart-remise').textContent=remiseFCFA?'−'+posF(remiseFCFA):'0 FCFA';
   document.getElementById('cart-total').textContent=posF(total);
-  document.getElementById('btn-pay').disabled=!posPanier.length;
+  document.getElementById('btn-pay').disabled = !posPanier.length || posSessionActive?.statutSession === 'en_pause';
 }
 
 function posOuvrirPaiement() {
   if (!posPanier.length) return;
+  if (posSessionActive?.statutSession === 'en_pause') { showToast('Reprenez votre session pour encaisser','error'); return; }
   const {total}=calculerTotaux(); posModePayActuel='Espèces';
   document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelector('[data-mode="Espèces"]').classList.add('selected');
@@ -4594,6 +4807,7 @@ function calculerMonnaie() {
 async function confirmerVente() {
   if (!posPanier.length) return;
   const {sous,remiseFCFA,total}=calculerTotaux();
+  if (total <= 0) { showToast('Le montant total doit être supérieur à 0', 'error'); return; }
   const montantRemis=parseFloat(document.getElementById('montant-remis').value)||total;
   const monnaie=posModePayActuel==='Espèces'?montantRemis-total:0;
   const ticketNum=document.getElementById('ticket-num').textContent;
@@ -4767,15 +4981,483 @@ function renderPOSStats() {
 // ── Session caisse ──
 function majBadgeSessionPOS() {
   const badge=document.getElementById('pos-session-badge'); if(!badge) return;
-  badge.textContent = posSessionActive ? '🟢 Session ouverte' : '🔴 Hors session';
-  badge.className = 'pos-session-badge' + (posSessionActive ? '' : ' closed');
+  const st = posSessionActive?.statutSession;
+  if (st === 'en_pause') { badge.textContent = '🟡 EN PAUSE'; badge.className = 'pos-session-badge pause'; }
+  else if (posSessionActive) { badge.textContent = '🟢 EN SESSION'; badge.className = 'pos-session-badge'; }
+  else { badge.textContent = '⚫ HORS SESSION'; badge.className = 'pos-session-badge closed'; }
+
+  const hasCaisse = !!posSessionActive?.caisseId;
+  const btnPause = document.getElementById('btn-pos-pause');
+  const btnReprendre = document.getElementById('btn-pos-reprendre');
+  const btnFin = document.getElementById('btn-pos-fin-service');
+  if (btnPause) btnPause.style.display = (hasCaisse && st === 'ouverte') ? 'flex' : 'none';
+  if (btnReprendre) btnReprendre.style.display = (hasCaisse && st === 'en_pause') ? 'flex' : 'none';
+  if (btnFin) btnFin.style.display = hasCaisse ? 'flex' : 'none';
+  if (typeof renderPanier === 'function') renderPanier();
 }
 
+// Données initiales du registre des caisses → voir CAISSES_INITIALES / assurerCaissesInitiales()
+
+// Reprend ou démarre la session du caissier connecté
+async function demarrerSessionCaissier() {
+  const lbl = document.getElementById('sc-user-name');
+  if (lbl) lbl.textContent = currentUser.label;
+  if (posSessionActive) { ouvrirEcranPOS(); return; }
+  try {
+    const snap = await db.collection('sessions_caisse').where('utilisateurId','==', currentUser.id).get();
+    const active = snap.docs.map(d => ({id:d.id, ...d.data()})).find(d => d.statutSession === 'ouverte' || d.statutSession === 'en_pause');
+    if (active) { posSessionActive = active; ouvrirEcranPOS(); return; }
+  } catch(e) { console.error('demarrerSessionCaissier:', e); }
+  goScreen('screen-select-caisse');
+  renderSelectCaisseGrid();
+}
+
+function renderSelectCaisseGrid() {
+  const grid = document.getElementById('select-caisse-grid');
+  if (!grid) return;
+  grid.innerHTML = caisses.map(c => {
+    const occupee = c.statut === 'occupee';
+    return `<div onclick="choisirCaisse('${c.id}')" style="background:${occupee?'#2a1f24':'#1c2236'};border:2px solid ${occupee?'var(--danger)':'var(--success)'};border-radius:14px;padding:22px;cursor:pointer;color:#fff;text-align:center;transition:transform .15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+      <div style="font-size:28px;margin-bottom:8px">${occupee?'🔴':'🟢'}</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:4px">${c.nom}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px">${c.zones||''}</div>
+      <div style="font-size:13px;font-weight:700">${occupee ? 'Occupée — '+(c.utilisateurActifNom||'—') : 'Disponible'}</div>
+    </div>`;
+  }).join('') || '<p style="color:#fff">Aucune caisse configurée. Contactez l\'administrateur.</p>';
+}
+
+let posCaisseChoisie = null;
+let posCaisseAuditCible = null;
+
+async function choisirCaisse(caisseId) {
+  try {
+    const doc = await db.collection('caisses').doc(caisseId).get();
+    const c = {id: doc.id, ...doc.data()};
+    if (c.statut === 'occupee') {
+      let sess = null;
+      if (c.sessionActiveId) {
+        const sd = await db.collection('sessions_caisse').doc(c.sessionActiveId).get();
+        sess = sd.exists ? {id: sd.id, ...sd.data()} : null;
+      }
+      document.getElementById('co-nom').textContent = c.utilisateurActifNom || sess?.utilisateurNom || '—';
+      document.getElementById('co-heure').textContent = sess?.dateHeureDebutSession || '—';
+      document.getElementById('co-statut').textContent = sess?.statutSession === 'en_pause' ? 'En pause' : 'En session';
+      posCaisseAuditCible = { caisse: c, session: sess };
+      document.getElementById('co-actions-gerant').style.display = estGerantOuAdmin() ? 'flex' : 'none';
+      document.getElementById('modal-caisse-occupee').classList.add('open');
+      return;
+    }
+    posCaisseChoisie = c;
+    document.getElementById('sc-caisse-nom').textContent = c.nom;
+    document.getElementById('sc-fonds-caisse').value = '';
+    document.getElementById('sc-session-note').value = '';
+    document.getElementById('modal-demarrer-session').classList.add('open');
+  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+}
+
+async function confirmerDemarrageSession() {
+  const c = posCaisseChoisie;
+  if (!c) return;
+  const fonds = Math.max(0, parseFloat(document.getElementById('sc-fonds-caisse').value) || 0);
+  const note = document.getElementById('sc-session-note').value.trim();
+  const caisseRef = db.collection('caisses').doc(c.id);
+  const sessionRef = db.collection('sessions_caisse').doc();
+  const now = posDateHeure();
+  const nowTS = Date.now();
+  try {
+    await db.runTransaction(async (tx) => {
+      const caisseSnap = await tx.get(caisseRef);
+      if (caisseSnap.data()?.statut === 'occupee') throw new Error('OCCUPEE');
+      tx.set(sessionRef, {
+        dateOuverture: now, fondsCaisse: fonds, note, operateur: currentUser.label,
+        statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {},
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        caisseId: c.id, caisseNom: c.nom,
+        utilisateurId: currentUser.id, utilisateurNom: currentUser.label,
+        dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
+        statutSession: 'ouverte', pauses: [], pauseEnCours: null
+      });
+      tx.update(caisseRef, { statut: 'occupee', sessionActiveId: sessionRef.id, utilisateurActifId: currentUser.id, utilisateurActifNom: currentUser.label });
+    });
+    posSessionActive = {
+      id: sessionRef.id, caisseId: c.id, caisseNom: c.nom, statutSession: 'ouverte',
+      utilisateurId: currentUser.id, utilisateurNom: currentUser.label,
+      dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
+      fondsCaisse: fonds, totalVentes: 0, nbTickets: 0, totaux: {}, statut: 'ouverte', pauses: [], pauseEnCours: null
+    };
+    closePosModal('modal-demarrer-session');
+    consigner('Ouverture de session', `${currentUser.label} a démarré une session sur ${c.nom}`);
+    showToast('Session démarrée sur '+c.nom+' ✓');
+    ouvrirEcranPOS();
+  } catch(err) {
+    if (err.message === 'OCCUPEE') {
+      showToast('Cette caisse vient d\'être prise par un autre utilisateur.','error');
+      closePosModal('modal-demarrer-session');
+      renderSelectCaisseGrid();
+    } else { showToast('Erreur : '+err.message,'error'); }
+  }
+}
+
+async function posPause() {
+  if (!posSessionActive || !posSessionActive.caisseId) return;
+  if (posSessionActive.pauseEnCours) return;
+  const debut = posDateHeure(), debutTS = Date.now();
+  try {
+    await db.collection('sessions_caisse').doc(posSessionActive.id).update({ statutSession: 'en_pause', pauseEnCours: { debut, debutTS } });
+    showToast('Pause démarrée ☕');
+  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+}
+
+async function posReprendre() {
+  if (!posSessionActive || !posSessionActive.pauseEnCours) return;
+  const fin = posDateHeure(), finTS = Date.now();
+  const p = posSessionActive.pauseEnCours;
+  const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+  const pause = { debut: p.debut, fin, dureeMin };
+  try {
+    await db.collection('sessions_caisse').doc(posSessionActive.id).update({
+      statutSession: 'ouverte', pauseEnCours: null,
+      pauses: firebase.firestore.FieldValue.arrayUnion(pause)
+    });
+    showToast('Session reprise ▶');
+  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+}
+
+async function posFinService() {
+  if (!posSessionActive || !posSessionActive.caisseId) return;
+  if (!confirm('Terminer votre service ? Cette action clôture votre session sur cette caisse.')) return;
+  const session = posSessionActive;
+  const fin = posDateHeure(), finTS = Date.now();
+  let pauses = session.pauses || [];
+  if (session.pauseEnCours) {
+    const p = session.pauseEnCours;
+    const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+    pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
+  }
+  const debutTS = session.dateHeureDebutSessionTS || finTS;
+  const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
+  const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
+  const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  try {
+    await db.collection('sessions_caisse').doc(session.id).update({
+      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
+      dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+    });
+    await db.collection('caisses').doc(session.caisseId).update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+    consigner('Fin de service', `${currentUser.label} a terminé son service sur ${session.caisseNom||'—'} (travail: ${dureeTravailMin}min, pause: ${dureePauseMin}min, effectif: ${dureeEffectiveMin}min)`);
+    posSessionActive = null;
+    showToast('Service terminé ✓ — Rapport Z disponible dans Caisse Journalière');
+    goScreen('screen-select-caisse');
+    renderSelectCaisseGrid();
+  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+}
+
+// ═══ Suivi des présences & Tableau de bord caisses (Gérant/Admin) ═══
+
+function parseDateFrToTS(str) {
+  if (!str) return null;
+  const m = String(str).match(/(\d{2})\/(\d{2})\/(\d{4})[, ]+(\d{2}):(\d{2})/);
+  if (!m) return null;
+  return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5]).getTime();
+}
+function sessionDebutTS(s) {
+  return s.dateHeureDebutSessionTS || parseDateFrToTS(s.dateHeureDebutSession) || parseDateFrToTS(s.dateOuverture) || 0;
+}
+function formatMinutes(min) {
+  const m = Math.max(0, Math.round(min||0));
+  const h = Math.floor(m/60), r = m%60;
+  return (h ? h+'h ' : '') + r + 'min';
+}
+
+function presencesNavigate(tab) {
+  document.querySelectorAll('#page-presences .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-presences .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('presences-tab-' + tab).classList.add('active');
+  document.getElementById('presences-tab-btn-' + tab).classList.add('active');
+  renderPresences();
+}
+
+function renderPresences() {
+  if (!document.getElementById('page-presences')?.classList.contains('active')) return;
+  renderTableauBordCaisses();
+  renderSuiviPresencesTable();
+  renderAuditCaissesTable();
+}
+
+function renderTableauBordCaisses() {
+  const grid = document.getElementById('presences-caisses-grid');
+  if (!grid) return;
+  grid.innerHTML = caisses.map(c => {
+    let statutLabel = 'Disponible', cls = 'success', icon = '⚪';
+    let session = null;
+    if (c.statut === 'occupee' && c.sessionActiveId) {
+      session = sessionsCaisseAll.find(s => s.id === c.sessionActiveId);
+      if (session?.statutSession === 'en_pause') { statutLabel = 'En pause'; cls = 'accent'; icon = '🟡'; }
+      else { statutLabel = 'En session'; cls = 'danger'; icon = '🟢'; }
+    }
+    const actions = c.statut === 'occupee' ? `
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-outline" onclick="ouvrirModaleAuditCaisse('fermeture_forcee','${c.id}')">🔒 Forcer fermeture</button>
+        <button class="btn btn-sm btn-outline" onclick="ouvrirModaleAuditCaisse('transfert','${c.id}')">🔁 Transférer</button>
+      </div>` : '';
+    return `<div class="kpi-card ${cls}">
+      <div class="kpi-icon">${icon}</div>
+      <div class="kpi-info">
+        <h3>${c.nom}</h3>
+        <p>${c.utilisateurActifNom ? c.utilisateurActifNom + ' — ' : ''}${statutLabel}</p>
+        <div class="trend up">${c.zones || ''}${session?.dateHeureDebutSession ? ' · depuis ' + session.dateHeureDebutSession.split(' ').pop() : ''}</div>
+        ${actions}
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--text-muted)">Aucune caisse configurée.</p>';
+}
+
+function presencesChangerPeriode() {
+  const p = document.getElementById('presences-filtre-periode').value;
+  document.getElementById('presences-filtre-fin-grp').style.display = (p === 'custom') ? 'block' : 'none';
+  const lbl = document.querySelector('#presences-filtre-date-grp label');
+  if (lbl) lbl.textContent = (p === 'custom') ? 'Du' : 'Date';
+  renderPresences();
+}
+
+function getPeriodeRange() {
+  const periode = document.getElementById('presences-filtre-periode')?.value || 'mois';
+  const dateVal = document.getElementById('presences-filtre-date')?.value;
+  const ref = dateVal ? new Date(dateVal + 'T00:00:00') : new Date();
+  let debut, fin;
+  if (periode === 'jour') {
+    debut = new Date(ref); debut.setHours(0,0,0,0);
+    fin = new Date(ref); fin.setHours(23,59,59,999);
+  } else if (periode === 'semaine') {
+    const day = (ref.getDay() + 6) % 7; // lundi = 0
+    debut = new Date(ref); debut.setDate(ref.getDate() - day); debut.setHours(0,0,0,0);
+    fin = new Date(debut); fin.setDate(debut.getDate() + 6); fin.setHours(23,59,59,999);
+  } else if (periode === 'mois') {
+    debut = new Date(ref.getFullYear(), ref.getMonth(), 1);
+    fin = new Date(ref.getFullYear(), ref.getMonth()+1, 0, 23,59,59,999);
+  } else { // custom
+    const d2 = document.getElementById('presences-filtre-date-fin')?.value;
+    debut = dateVal ? new Date(dateVal + 'T00:00:00') : new Date(0);
+    fin = d2 ? new Date(d2 + 'T23:59:59') : new Date();
+  }
+  return { debutTS: debut.getTime(), finTS: fin.getTime() };
+}
+
+function renderSuiviPresencesTable() {
+  const selEmp = document.getElementById('presences-filtre-employe');
+  if (selEmp && selEmp.options.length <= 1) {
+    const noms = [...new Set(sessionsCaisseAll.map(s => s.utilisateurNom).filter(Boolean))].sort();
+    selEmp.innerHTML = '<option value="">Tous</option>' + noms.map(n => `<option value="${n}">${n}</option>`).join('');
+  }
+  const selCaisse = document.getElementById('presences-filtre-caisse');
+  if (selCaisse && selCaisse.options.length <= 1) {
+    selCaisse.innerHTML = '<option value="">Toutes</option>' + caisses.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+  }
+
+  const { debutTS, finTS } = getPeriodeRange();
+  const empFiltre = selEmp?.value || '';
+  const caisseFiltre = selCaisse?.value || '';
+
+  const rows = sessionsCaisseAll.filter(s => {
+    const ts = sessionDebutTS(s);
+    if (ts < debutTS || ts > finTS) return false;
+    if (empFiltre && s.utilisateurNom !== empFiltre) return false;
+    if (caisseFiltre && s.caisseId !== caisseFiltre) return false;
+    return true;
+  }).sort((a,b) => sessionDebutTS(b) - sessionDebutTS(a));
+
+  const totalCA = rows.reduce((s,r) => s + (r.totalVentes||0), 0);
+  const totalTickets = rows.reduce((s,r) => s + (r.nbTickets||0), 0);
+  const totalEffectif = rows.reduce((s,r) => s + (r.dureeEffectiveMin||0), 0);
+  const panierMoyen = totalTickets ? totalCA/totalTickets : 0;
+  const kpis = document.getElementById('presences-kpis');
+  if (kpis) kpis.innerHTML = `
+    <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${posF(totalCA)}</h3><p>Chiffre d'affaires</p></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">🧾</div><div class="kpi-info"><h3>${totalTickets}</h3><p>Tickets</p></div></div>
+    <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-info"><h3>${formatMinutes(totalEffectif)}</h3><p>Temps effectif cumulé</p></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3>${posF(panierMoyen)}</h3><p>Panier moyen</p></div></div>
+  `;
+
+  const body = document.getElementById('presences-body');
+  if (!body) return;
+  body.innerHTML = rows.map(r => {
+    const pauseTxt = (r.pauses||[]).length ? (r.pauses.length + ' pause(s) — ' + formatMinutes(r.dureePauseMin||0)) : '—';
+    const panierMoy = r.nbTickets ? (r.totalVentes||0)/r.nbTickets : 0;
+    let statut = '⚫ Fermée';
+    if (r.statutSession === 'ouverte') statut = '🟢 En session';
+    else if (r.statutSession === 'en_pause') statut = '🟡 En pause';
+    return `<tr>
+      <td>${r.utilisateurNom || r.operateur || '—'}</td>
+      <td>${r.caisseNom || '—'}</td>
+      <td>${r.dateHeureDebutSession || r.dateOuverture || '—'}</td>
+      <td>${r.dateHeureFin || r.dateFermeture || '—'}</td>
+      <td>${pauseTxt}</td>
+      <td>${r.dureeTravailMin != null ? formatMinutes(r.dureeTravailMin) : '—'}</td>
+      <td>${r.dureeEffectiveMin != null ? formatMinutes(r.dureeEffectiveMin) : '—'}</td>
+      <td>${r.nbTickets||0}</td>
+      <td>${posF(r.totalVentes||0)}</td>
+      <td>${posF(panierMoy)}</td>
+      <td>${statut}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:30px">Aucune donnée pour cette période</td></tr>';
+}
+
+function renderAuditCaissesTable() {
+  const body = document.getElementById('audit-caisses-body');
+  if (!body) return;
+  body.innerHTML = [...auditCaisses].sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0)).map(a => `
+    <tr>
+      <td>${a.date||'—'}</td><td>${a.heure||'—'}</td>
+      <td>${a.type||'—'}</td><td>${a.caisseNom||'—'}</td>
+      <td>${a.utilisateurConcerneNom||'—'}</td><td>${a.responsableNom||'—'}</td>
+      <td>${a.type==='transfert' ? `${a.ancienUtilisateurNom||'—'} → ${a.nouvelUtilisateurNom||'—'}` : '—'}</td>
+      <td>${a.motif||'—'}</td>
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px">Aucune action enregistrée</td></tr>';
+}
+
+function exporterPresencesCSV() {
+  const rows = document.querySelectorAll('#presences-body tr');
+  if (!rows.length || !rows[0].children.length || rows[0].children.length < 11) { showToast('Aucune donnée à exporter','error'); return; }
+  const headers = ['Employé','Caisse','Arrivée','Départ','Pauses','Temps travaillé','Temps effectif','Tickets','CA','Panier moyen','Statut'];
+  let csv = headers.join(';') + '\n';
+  rows.forEach(tr => {
+    const cells = [...tr.children].map(td => '"' + td.textContent.replace(/"/g,'""') + '"');
+    if (cells.length === headers.length) csv += cells.join(';') + '\n';
+  });
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'suivi_presences_' + today() + '.csv';
+  link.click();
+}
+
+// Actions Gérant/Admin sur une caisse occupée (audit)
+let auditActionEnCours = null;
+function ouvrirModaleAuditCaisse(type, caisseId) {
+  let c, session = null;
+  if (caisseId) {
+    c = caisses.find(x => x.id === caisseId);
+    if (c?.sessionActiveId) session = sessionsCaisseAll.find(s => s.id === c.sessionActiveId) || null;
+  } else if (posCaisseAuditCible) {
+    c = posCaisseAuditCible.caisse;
+    session = posCaisseAuditCible.session;
+  }
+  if (!c) return;
+  auditActionEnCours = { type, caisse: c, session };
+  const titres = {
+    fermeture_forcee: `🔒 Forcer la fermeture — ${c.nom}`,
+    transfert: `🔁 Transférer ${c.nom}`,
+    reattribution: `♻️ Réattribuer ${c.nom}`
+  };
+  document.getElementById('audit-titre').textContent = titres[type] || 'Action sur la caisse';
+  document.getElementById('audit-motif').value = '';
+  const grpSel = document.getElementById('audit-nouvel-utilisateur-grp');
+  if (type === 'transfert') {
+    grpSel.style.display = 'block';
+    const sel = document.getElementById('audit-nouvel-utilisateur');
+    const candidats = utilisateurs.filter(u => u.id !== c.utilisateurActifId && /caiss|vendeur/i.test(u.role||''));
+    sel.innerHTML = candidats.map(u => `<option value="${u.id}" data-nom="${u.nom}">${u.nom} (${u.role})</option>`).join('') || '<option value="">Aucun autre caissier disponible</option>';
+  } else {
+    grpSel.style.display = 'none';
+  }
+  closePosModal('modal-caisse-occupee');
+  document.getElementById('modal-audit-caisse').classList.add('open');
+}
+
+async function confirmerActionAudit() {
+  const action = auditActionEnCours;
+  if (!action) return;
+  const motif = document.getElementById('audit-motif').value.trim();
+  if (!motif) { showToast('Le motif est obligatoire','error'); return; }
+  const c = action.caisse;
+  const sessionId = c.sessionActiveId;
+  if (!sessionId) { showToast('Aucune session active sur cette caisse','error'); closePosModal('modal-audit-caisse'); return; }
+  const sessionRef = db.collection('sessions_caisse').doc(sessionId);
+  const caisseRef = db.collection('caisses').doc(c.id);
+  const fin = posDateHeure(), finTS = Date.now();
+  try {
+    const sessionSnap = await sessionRef.get();
+    const session = sessionSnap.data() || {};
+    let pauses = session.pauses || [];
+    if (session.pauseEnCours) {
+      const p = session.pauseEnCours;
+      const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+      pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
+    }
+    const debutTS = session.dateHeureDebutSessionTS || finTS;
+    const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
+    const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
+    const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+
+    await sessionRef.update({
+      statut: 'fermée', statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
+      fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
+      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+    });
+
+    if (action.type === 'transfert') {
+      const sel = document.getElementById('audit-nouvel-utilisateur');
+      const newUserId = sel.value;
+      const newUserNom = sel.options[sel.selectedIndex]?.dataset.nom;
+      if (!newUserId) { showToast('Sélectionnez un utilisateur','error'); return; }
+      await demarrerNouvelleSessionSurCaisse(c, newUserId, newUserNom, 'Transfert de caisse');
+      await consignerAuditCaisse('transfert', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: newUserId, nouvelUtilisateurNom: newUserNom });
+      showToast('Caisse transférée à ' + newUserNom + ' ✓');
+    } else if (action.type === 'reattribution') {
+      await demarrerNouvelleSessionSurCaisse(c, currentUser.id, currentUser.label, 'Réattribution de caisse');
+      await consignerAuditCaisse('reattribution', c, session, motif, { ancienUtilisateurId: session.utilisateurId, ancienUtilisateurNom: session.utilisateurNom, nouvelUtilisateurId: currentUser.id, nouvelUtilisateurNom: currentUser.label });
+      showToast('Caisse réattribuée ✓');
+    } else {
+      await caisseRef.update({ statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      await consignerAuditCaisse(action.type, c, session, motif);
+      showToast('Session fermée de force ✓');
+    }
+    consigner('Audit caisse', `${currentUser.label} a effectué "${action.type}" sur ${c.nom} (motif: ${motif})`);
+    closePosModal('modal-audit-caisse');
+  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+}
+
+async function demarrerNouvelleSessionSurCaisse(c, userId, userNom, note) {
+  const newSessionRef = db.collection('sessions_caisse').doc();
+  const now = posDateHeure(), nowTS = Date.now();
+  await newSessionRef.set({
+    dateOuverture: now, fondsCaisse: 0, note, operateur: userNom,
+    statut: 'ouverte', totalVentes: 0, nbTickets: 0, totaux: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    caisseId: c.id, caisseNom: c.nom, utilisateurId: userId, utilisateurNom: userNom,
+    dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
+    statutSession: 'ouverte', pauses: [], pauseEnCours: null
+  });
+  await db.collection('caisses').doc(c.id).update({ statut: 'occupee', sessionActiveId: newSessionRef.id, utilisateurActifId: userId, utilisateurActifNom: userNom });
+}
+
+async function consignerAuditCaisse(type, caisse, session, motif, extra = {}) {
+  const now = new Date();
+  await db.collection('audit_caisses').add({
+    type, caisseId: caisse.id, caisseNom: caisse.nom,
+    utilisateurConcerneId: session?.utilisateurId || null, utilisateurConcerneNom: session?.utilisateurNom || null,
+    responsableId: currentUser.id, responsableNom: currentUser.label,
+    sessionId: caisse.sessionActiveId || null,
+    motif,
+    date: now.toLocaleDateString('fr-FR'), heure: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    createdAtMs: now.getTime(),
+    ...extra,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+// Ouverture manuelle (Gérant/Admin via Caisse POS, sans caisse physique attribuée)
 async function ouvrirSessionCaisse() {
   const fonds=parseFloat(document.getElementById('fonds-caisse').value)||0;
   const note=document.getElementById('session-note').value.trim();
+  const now = posDateHeure();
   try {
-    await db.collection('sessions_caisse').add({dateOuverture:posDateHeure(), fondsCaisse:fonds, note, operateur:currentUser?.label||'—', statut:'ouverte', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await db.collection('sessions_caisse').add({
+      dateOuverture:now, fondsCaisse:fonds, note, operateur:currentUser?.label||'—', statut:'ouverte', totalVentes:0, nbTickets:0, totaux:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      caisseId: null, caisseNom: null, utilisateurId: currentUser?.id||null, utilisateurNom: currentUser?.label||'—',
+      dateHeureConnexion: now, dateHeureDebutSession: now, dateHeureDebutSessionTS: Date.now(),
+      statutSession: 'ouverte', pauses: [], pauseEnCours: null
+    });
     closePosModal('modal-open-session'); showToast('Caisse ouverte avec '+posF(fonds)+' de fonds ✓');
   } catch(err) { showToast('Erreur : '+err.message,'error'); }
 }
@@ -4783,8 +5465,24 @@ async function ouvrirSessionCaisse() {
 async function fermerSessionCaisse() {
   if (!posSessionActive) return;
   if (!confirm('Clôturer la session et générer le rapport Z ?')) return;
+  const fin = posDateHeure(), finTS = Date.now();
+  const session = posSessionActive;
+  let pauses = session.pauses || [];
+  if (session.pauseEnCours) {
+    const p = session.pauseEnCours;
+    const dureeMin = Math.max(0, Math.round((finTS - (p.debutTS || finTS)) / 60000));
+    pauses = [...pauses, { debut: p.debut, fin, dureeMin }];
+  }
+  const debutTS = session.dateHeureDebutSessionTS || finTS;
+  const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
+  const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
+  const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
   try {
-    await db.collection('sessions_caisse').doc(posSessionActive.id).update({statut:'fermée', dateFermeture:posDateHeure(), fermeePar:currentUser?.label||'—'});
+    await db.collection('sessions_caisse').doc(posSessionActive.id).update({
+      statut:'fermée', statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
+      dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+      dureeTravailMin, dureePauseMin, dureeEffectiveMin
+    });
     showToast('Session clôturée ✓ — Rapport Z généré'); renderPOSJournal();
   } catch(err) { showToast('Erreur : '+err.message,'error'); }
 }
@@ -4915,7 +5613,8 @@ const pageTitles = {
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
-  caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)'
+  caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)',
+  presences:'Suivi des Présences & Caisses'
 };
 
 function toggleUserMenu(e) {
@@ -4971,6 +5670,19 @@ function rafraichirPage(page) {
   else if (page === 'mobilemoney') renderMobileMoney();
   else if (page === 'services') renderServices();
   else if (page === 'rentabilite') renderRentabilite();
+  else if (page === 'presences') renderPresences();
+  else if (page === 'rapports') renderRapports();
+}
+
+// ===== RAPPORTS (initialisation des dates par défaut) =====
+function renderRapports() {
+  const debutEl = document.getElementById('rapport-date-debut');
+  const finEl = document.getElementById('rapport-date-fin');
+  if (debutEl && !debutEl.value) {
+    const d = new Date();
+    debutEl.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+  }
+  if (finEl && !finEl.value) finEl.value = today();
 }
 
 // ===== DASHBOARD =====
@@ -5551,6 +6263,8 @@ function renderAlertes() {
 
 function commanderArticle(prodId) {
   const p = produits.find(x=>x.id===prodId); if (!p) return;
+  if (!Number.isFinite(p.stockMin)) p.stockMin = 0;
+  if (!Number.isFinite(p.stock)) p.stock = 0;
   const manquant = Math.max(p.stockMin*2-p.stock, p.stockMin);
   cmdLignes = [{nom:p.nom, qte:manquant, pu:p.pachat||0}];
   populateFournSelects();
@@ -5706,6 +6420,7 @@ function ouvrirResetPass(id, nom) {
 }
 
 async function confirmerResetPass() {
+  if (!currentUser.isAdmin) return;
   const pw = document.getElementById('resetpass-val').value;
   if (!pw || pw.length < 8) { showToast('Le mot de passe doit contenir au moins 8 caractères', 'error'); return; }
   try {
