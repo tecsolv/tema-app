@@ -1321,6 +1321,13 @@
     <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
     <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
     <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Suivi des Présences</div>
+    <div class="nav-section" id="nav-section-rh" style="display:none">Ressources Humaines</div>
+    <div class="nav-item" id="nav-rh-employes" onclick="navigate('rh-employes')" style="display:none"><span class="icon">👤</span> Employés</div>
+    <div class="nav-item" id="nav-rh-contrats" onclick="navigate('rh-contrats')" style="display:none"><span class="icon">📄</span> Contrats</div>
+    <div class="nav-item" id="nav-rh-presences" onclick="navigate('rh-presences')" style="display:none"><span class="icon">🕑</span> Pointages</div>
+    <div class="nav-item" id="nav-rh-absences" onclick="navigate('rh-absences')" style="display:none"><span class="icon">🌴</span> Congés & Absences</div>
+    <div class="nav-item" id="nav-rh-planning" onclick="navigate('rh-planning')" style="display:none"><span class="icon">🗓️</span> Planning</div>
+    <div class="nav-item" id="nav-rh-dashboard" onclick="navigate('rh-dashboard')" style="display:none"><span class="icon">📊</span> Tableau RH</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
@@ -2132,6 +2139,105 @@
       </div>
     </div>
 
+    <!-- MODULE RH — TABLEAU DE BORD -->
+    <div class="page" id="page-rh-dashboard">
+      <div class="alert alert-info no-print">📊 Indicateurs Ressources Humaines en temps réel — effectif, statuts et contrats arrivant à échéance.</div>
+      <div class="kpi-grid" id="rh-dashboard-kpis"></div>
+      <div class="card">
+        <div class="card-header"><h2>⏳ Contrats arrivant à échéance (≤ 30 jours)</h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr><th>Employé</th><th>Type</th><th>Fin de contrat</th><th>Statut</th></tr></thead>
+          <tbody id="tbody-rh-dashboard-contrats"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — EMPLOYÉS -->
+    <div class="page" id="page-rh-employes">
+      <div class="alert alert-info no-print">👤 Fiches employés — informations personnelles, professionnelles, compétences et documents.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-employes-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouvelEmploye()">+ Nouvel Employé</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>👥 Employés <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-emp-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Matricule</th><th>Nom & Prénom</th><th>Poste</th><th>Département</th><th>Téléphone</th><th>Statut</th><th id="rh-employes-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-employes"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — CONTRATS -->
+    <div class="page" id="page-rh-contrats">
+      <div class="alert alert-info no-print">📄 Contrats des employés — types, durées, rémunération et alertes d'expiration.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-contrats-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouveauContrat()">+ Nouveau Contrat</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>📄 Contrats <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-contrat-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Type</th><th>Début</th><th>Fin</th><th>Salaire base</th><th>Statut</th><th id="rh-contrats-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-contrats"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — POINTAGES (PRÉSENCES) -->
+    <div class="page" id="page-rh-presences">
+      <div class="alert alert-info no-print">🕑 Pointages journaliers — heures d'arrivée, de départ et calcul automatique des heures travaillées.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-presences-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouveauPointage()">+ Nouveau Pointage</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>🕑 Pointages <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-pointage-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Date</th><th>Arrivée</th><th>Départ</th><th>Pause (min)</th><th>Heures travaillées</th><th id="rh-presences-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-presences"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — CONGÉS & ABSENCES -->
+    <div class="page" id="page-rh-absences">
+      <div class="alert alert-info no-print">🌴 Demandes de congés et absences — workflow demande → validation Gérant/Admin → historique.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-absences-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouvelleAbsence()">+ Nouvelle Demande</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>🌴 Congés & Absences <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-absence-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Type</th><th>Du</th><th>Au</th><th>Motif</th><th>Statut</th><th>Validé par</th><th id="rh-absences-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-absences"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — PLANNING -->
+    <div class="page" id="page-rh-planning">
+      <div class="alert alert-info no-print">🗓️ Planning des employés — vues Jour / Semaine / Mois.</div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="btn btn-sm caisse-tab-btn active" id="rh-planning-tab-btn-jour" onclick="rhPlanningNavigate('jour')" style="flex:1;min-width:100px">📅 Jour</button>
+        <button type="button" class="btn btn-sm caisse-tab-btn" id="rh-planning-tab-btn-semaine" onclick="rhPlanningNavigate('semaine')" style="flex:1;min-width:100px">📆 Semaine</button>
+        <button type="button" class="btn btn-sm caisse-tab-btn" id="rh-planning-tab-btn-mois" onclick="rhPlanningNavigate('mois')" style="flex:1;min-width:100px">🗓️ Mois</button>
+        <input type="date" class="form-control" id="rh-planning-date" style="max-width:160px" onchange="renderRHPlanning()">
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-planning-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouvelleAffectation()">+ Nouvelle Affectation</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>🗓️ Affectations <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-planning-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Poste</th><th>Date</th><th>Début</th><th>Fin</th><th id="rh-planning-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-planning"></tbody></table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2417,6 +2523,230 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-paiement')">Annuler</button>
         <button type="submit" class="btn btn-primary">Enregistrer le versement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Fiche Employé -->
+<div class="modal-overlay" id="modal-rh-employe">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 id="modal-rh-employe-title">Nouvel Employé</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-employe')">×</button>
+    </div>
+    <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+      <button type="button" class="btn btn-sm caisse-tab-btn active" id="rhemp-tab-btn-infos" onclick="rhEmpNavigate('infos')" style="flex:1;min-width:120px">🪪 Informations</button>
+      <button type="button" class="btn btn-sm caisse-tab-btn" id="rhemp-tab-btn-famille" onclick="rhEmpNavigate('famille')" style="flex:1;min-width:120px">👨‍👩‍👧 Famille & Urgence</button>
+      <button type="button" class="btn btn-sm caisse-tab-btn" id="rhemp-tab-btn-competences" onclick="rhEmpNavigate('competences')" style="flex:1;min-width:120px">🛠️ Compétences</button>
+      <button type="button" class="btn btn-sm caisse-tab-btn" id="rhemp-tab-btn-documents" onclick="rhEmpNavigate('documents')" style="flex:1;min-width:120px">📁 Documents</button>
+    </div>
+    <form onsubmit="enregistrerEmploye(event)">
+      <!-- ONGLET INFORMATIONS -->
+      <div class="caisse-tab active" id="rhemp-tab-infos">
+        <div class="form-row">
+          <div class="form-group"><label>Matricule *</label><input class="form-control" id="rhemp-matricule" required readonly style="background:var(--bg-soft,#eef2f6);font-weight:600" placeholder="Généré automatiquement"></div>
+          <div class="form-group"><label>Statut *</label>
+            <select class="form-control" id="rhemp-statut" required>
+              <option value="actif">Actif</option>
+              <option value="suspendu">Suspendu</option>
+              <option value="demissionnaire">Démissionnaire</option>
+              <option value="licencie">Licencié</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Nom *</label><input class="form-control" id="rhemp-nom" required></div>
+          <div class="form-group"><label>Prénom *</label><input class="form-control" id="rhemp-prenom" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Sexe</label>
+            <select class="form-control" id="rhemp-sexe"><option value="">--</option><option value="Homme">Homme</option><option value="Femme">Femme</option></select>
+          </div>
+          <div class="form-group"><label>Date de naissance</label><input class="form-control" type="date" id="rhemp-naissance"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Téléphone</label><input class="form-control" id="rhemp-telephone" placeholder="Ex: 07 00 00 00 00"></div>
+          <div class="form-group"><label>Email</label><input class="form-control" type="email" id="rhemp-email"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Adresse</label><input class="form-control" id="rhemp-adresse"></div>
+          <div class="form-group"><label>Nationalité</label><input class="form-control" id="rhemp-nationalite"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Poste *</label><input class="form-control" id="rhemp-poste" required placeholder="Ex: Vendeuse"></div>
+          <div class="form-group"><label>Département</label><input class="form-control" id="rhemp-departement" placeholder="Ex: Ventes"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Responsable hiérarchique</label><input class="form-control" id="rhemp-responsable"></div>
+          <div class="form-group"><label>Date d'embauche</label><input class="form-control" type="date" id="rhemp-embauche"></div>
+        </div>
+        <div class="form-group"><label>Photo (URL)</label><input class="form-control" id="rhemp-photo" placeholder="https://..."></div>
+      </div>
+      <!-- ONGLET FAMILLE & URGENCE -->
+      <div class="caisse-tab" id="rhemp-tab-famille">
+        <div class="form-row">
+          <div class="form-group"><label>Situation familiale</label>
+            <select class="form-control" id="rhemp-situation"><option value="celibataire">Célibataire</option><option value="marie">Marié(e)</option></select>
+          </div>
+          <div class="form-group"><label>Nombre d'enfants</label><input class="form-control" type="number" min="0" id="rhemp-enfants" value="0"></div>
+        </div>
+        <h4 style="margin:14px 0 8px">Contact d'urgence</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Nom</label><input class="form-control" id="rhemp-urgence-nom"></div>
+          <div class="form-group"><label>Téléphone</label><input class="form-control" id="rhemp-urgence-telephone"></div>
+        </div>
+        <div class="form-group"><label>Lien de parenté</label><input class="form-control" id="rhemp-urgence-lien" placeholder="Ex: Conjoint, Parent, Frère/Sœur..."></div>
+      </div>
+      <!-- ONGLET COMPÉTENCES -->
+      <div class="caisse-tab" id="rhemp-tab-competences">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Caisse"> Caisse</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Stock"> Stock</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Mobile Money"> Mobile Money</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="SAV"> SAV</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Informatique"> Informatique</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Réseau"> Réseau</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Formation HACCP"> Formation HACCP</label>
+          <label style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer"><input type="checkbox" class="rhemp-competence-check" value="Habilitation électrique"> Habilitation électrique</label>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:2"><label>Autre compétence</label><input class="form-control" id="rhemp-competence-autre" placeholder="Ex: Permis B"></div>
+          <div class="form-group" style="display:flex;align-items:flex-end"><button type="button" class="btn btn-outline" onclick="ajouterCompetenceLibre()">+ Ajouter</button></div>
+        </div>
+        <div id="rhemp-competences-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+      </div>
+      <!-- ONGLET DOCUMENTS -->
+      <div class="caisse-tab" id="rhemp-tab-documents">
+        <div id="rhemp-documents-list"></div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="ajouterLigneDocument()">+ Ajouter un document</button>
+      </div>
+      <input type="hidden" id="rhemp-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rhemp" style="display:none;margin-right:auto" onclick="supprimerEmployeDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-employe')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Contrat -->
+<div class="modal-overlay" id="modal-rh-contrat">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-rh-contrat-title">Nouveau Contrat</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-contrat')">×</button>
+    </div>
+    <form onsubmit="enregistrerContrat(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhc-employe" required></select></div>
+      <div class="form-group"><label>Type de contrat *</label>
+        <select class="form-control" id="rhc-type" required>
+          <option value="CDI">CDI</option><option value="CDD">CDD</option><option value="Stage">Stage</option>
+          <option value="Prestataire">Prestataire</option><option value="Consultant">Consultant</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date de début *</label><input class="form-control" type="date" id="rhc-debut" required></div>
+        <div class="form-group"><label>Date de fin</label><input class="form-control" type="date" id="rhc-fin" placeholder="Laisser vide si CDI"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Salaire de base (FCFA)</label><input class="form-control" type="number" min="0" id="rhc-salairebase"></div>
+        <div class="form-group"><label>Salaire horaire (FCFA)</label><input class="form-control" type="number" min="0" id="rhc-salairehoraire"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Prime transport</label><input class="form-control" type="number" min="0" id="rhc-primetransport"></div>
+        <div class="form-group"><label>Prime logement</label><input class="form-control" type="number" min="0" id="rhc-primelogement"></div>
+        <div class="form-group"><label>Prime rendement</label><input class="form-control" type="number" min="0" id="rhc-primerendement"></div>
+      </div>
+      <input type="hidden" id="rhc-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rhc" style="display:none;margin-right:auto" onclick="supprimerContratDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-contrat')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Pointage -->
+<div class="modal-overlay" id="modal-rh-pointage">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-rh-pointage-title">Nouveau Pointage</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-pointage')">×</button>
+    </div>
+    <form onsubmit="enregistrerPointage(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhp-employe" required></select></div>
+      <div class="form-group"><label>Date *</label><input class="form-control" type="date" id="rhp-date" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>Heure d'arrivée *</label><input class="form-control" type="time" id="rhp-arrivee" required></div>
+        <div class="form-group"><label>Heure de départ</label><input class="form-control" type="time" id="rhp-depart"></div>
+      </div>
+      <div class="form-group"><label>Pause (minutes)</label><input class="form-control" type="number" min="0" id="rhp-pause" value="0"></div>
+      <input type="hidden" id="rhp-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rhp" style="display:none;margin-right:auto" onclick="supprimerPointageDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-pointage')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Congé / Absence -->
+<div class="modal-overlay" id="modal-rh-absence">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-rh-absence-title">Nouvelle Demande</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-absence')">×</button>
+    </div>
+    <form onsubmit="enregistrerAbsence(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rha-employe" required></select></div>
+      <div class="form-group"><label>Type *</label>
+        <select class="form-control" id="rha-type" required>
+          <option value="Congé payé">Congé payé</option>
+          <option value="Maladie">Maladie</option>
+          <option value="Permission">Permission</option>
+          <option value="Retard">Retard</option>
+          <option value="Absence injustifiée">Absence injustifiée</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date de début *</label><input class="form-control" type="date" id="rha-debut" required></div>
+        <div class="form-group"><label>Date de fin *</label><input class="form-control" type="date" id="rha-fin" required></div>
+      </div>
+      <div class="form-group"><label>Motif</label><input class="form-control" id="rha-motif" placeholder="Ex: Mariage, repos médical..."></div>
+      <input type="hidden" id="rha-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rha" style="display:none;margin-right:auto" onclick="supprimerAbsenceDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-absence')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Planning -->
+<div class="modal-overlay" id="modal-rh-planning">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-rh-planning-title">Nouvelle Affectation</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-planning')">×</button>
+    </div>
+    <form onsubmit="enregistrerAffectation(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhpl-employe" required></select></div>
+      <div class="form-group"><label>Poste / Tâche</label><input class="form-control" id="rhpl-poste" placeholder="Ex: Caisse, Magasin, Livraison..."></div>
+      <div class="form-group"><label>Date *</label><input class="form-control" type="date" id="rhpl-date" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>Heure de début *</label><input class="form-control" type="time" id="rhpl-debut" required></div>
+        <div class="form-group"><label>Heure de fin *</label><input class="form-control" type="time" id="rhpl-fin" required></div>
+      </div>
+      <input type="hidden" id="rhpl-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rhpl" style="display:none;margin-right:auto" onclick="supprimerAffectationDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-planning')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
       </div>
     </form>
   </div>
@@ -3185,6 +3515,12 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [];
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
+// ── RH (Phase RH-A) ────────────────────────────────────────
+let rhEmployes = [], rhContrats = [];
+let rhListenersDemarres = false;
+let rhEmpCompetencesTemp = [], rhEmpDocumentsTemp = [];
+// ── RH (Phase RH-B) ────────────────────────────────────────
+let rhPointages = [], rhAbsences = [], rhPlanning = [];
 
 // ── POS state ──────────────────────────────────────────
 let posClients = [];          // clients_pos
@@ -4236,6 +4572,41 @@ function demarrerListeners() {
   });
 }
 
+// ── Listeners RH (Phase RH-A) ─────────────────────────────────
+// Démarrés séparément de demarrerListeners(), après afficherApp(),
+// uniquement pour les rôles ayant un accès en lecture RH (peutLireRH()).
+// Ne participent pas au compteur loadCount (n'impacte pas l'affichage initial).
+function demarrerListenersRH() {
+  if (rhListenersDemarres) return;
+  rhListenersDemarres = true;
+
+  db.collection('rh_employes').orderBy('nom').onSnapshot(snap => {
+    rhEmployes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_employes:', err));
+
+  db.collection('rh_contrats').orderBy('dateDebut','desc').onSnapshot(snap => {
+    rhContrats = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_contrats:', err));
+
+  // Phase RH-B
+  db.collection('rh_pointages').orderBy('date','desc').onSnapshot(snap => {
+    rhPointages = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_pointages:', err));
+
+  db.collection('rh_absences').orderBy('dateDebut','desc').onSnapshot(snap => {
+    rhAbsences = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_absences:', err));
+
+  db.collection('rh_planning').orderBy('date','desc').onSnapshot(snap => {
+    rhPlanning = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_planning:', err));
+}
+
 function setConnStatus(status) {
   const bar = document.getElementById('conn-bar');
   const sync = document.getElementById('sync-status');
@@ -4279,13 +4650,16 @@ function afficherApp() {
     appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier);
     checkEtInitialiserDonnees();
     renderDashboard();
+    if (peutLireRH()) demarrerListenersRH();
   }
 }
 
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences'].forEach(id => {
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences',
+   'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
+   'nav-rh-presences','nav-rh-absences','nav-rh-planning'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -4340,11 +4714,51 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
       if (el) el.style.display = '';
     });
   }
+
+  // Menu Ressources Humaines (Phase RH-A)
+  // Admin/Gérant : accès complet. Comptable seul : Contrats en lecture uniquement. Autres : aucun accès.
+  if (estGerantOuAdmin()) {
+    document.getElementById('nav-section-rh').style.display = 'block';
+    document.getElementById('nav-rh-employes').style.display = 'flex';
+    document.getElementById('nav-rh-contrats').style.display = 'flex';
+    document.getElementById('nav-rh-presences').style.display = 'flex';
+    document.getElementById('nav-rh-absences').style.display = 'flex';
+    document.getElementById('nav-rh-planning').style.display = 'flex';
+    document.getElementById('nav-rh-dashboard').style.display = 'flex';
+  } else if (isComptable) {
+    document.getElementById('nav-section-rh').style.display = 'block';
+    document.getElementById('nav-rh-contrats').style.display = 'flex';
+  }
 }
 
 // Vue "Comptable externe" : Comptable réel sans cumul Gérant/Admin (finance-only, lecture restreinte)
 function isComptableSafeView() {
   return isComptableReel() && !estGerantOuAdmin();
+}
+
+// ── Helpers RH (Phase RH-A) ──────────────────────────────────
+// Pas de rôle "RH" dédié en V1 : Admin/Gérant ont l'accès complet.
+// Ces helpers sont des points d'extension pour un futur rôle RH
+// (il suffira d'ajouter une condition role.includes('rh') ci-dessous).
+function estRH() {
+  if (!currentUser) return false;
+  return (currentUser.role || '').toLowerCase().includes('rh');
+}
+
+// Lecture RH : Admin/Gérant (tout) + Comptable (Contrats uniquement, filtré au niveau page) + futur rôle RH
+function peutLireRH() {
+  return estGerantOuAdmin() || isComptableReel() || estRH();
+}
+
+// Gestion RH (création/modification/suppression) : Admin/Gérant + futur rôle RH
+function peutGererRH() {
+  return estGerantOuAdmin() || estRH();
+}
+
+function requireRH(message = "Accès Ressources Humaines requis") {
+  if (peutGererRH()) return true;
+  showToast(message, 'error');
+  return false;
 }
 
 async function checkEtInitialiserDonnees() {
@@ -5732,7 +6146,11 @@ const pageTitles = {
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)',
-  presences:'Suivi des Présences & Caisses'
+  presences:'Suivi des Présences & Caisses',
+  'rh-employes':'Ressources Humaines — Employés', 'rh-contrats':'Ressources Humaines — Contrats',
+  'rh-presences':'Ressources Humaines — Pointages', 'rh-absences':'Ressources Humaines — Congés & Absences',
+  'rh-planning':'Ressources Humaines — Planning',
+  'rh-dashboard':'Ressources Humaines — Tableau de Bord'
 };
 
 function toggleUserMenu(e) {
@@ -5790,6 +6208,12 @@ function rafraichirPage(page) {
   else if (page === 'rentabilite') renderRentabilite();
   else if (page === 'presences') renderPresences();
   else if (page === 'rapports') renderRapports();
+  else if (page === 'rh-employes') renderRHEmployes();
+  else if (page === 'rh-contrats') renderRHContrats();
+  else if (page === 'rh-presences') renderRHPresences();
+  else if (page === 'rh-absences') renderRHAbsences();
+  else if (page === 'rh-planning') renderRHPlanning();
+  else if (page === 'rh-dashboard') renderRHDashboard();
 }
 
 // ===== RAPPORTS (initialisation des dates par défaut) =====
@@ -8485,6 +8909,720 @@ function exportInventaireCSV() {
   a.href=url; a.download=`TeMa_Inventaire_${today()}.csv`; a.click();
   URL.revokeObjectURL(url);
   showToast('Export CSV téléchargé');
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE RH (Phase RH-A) — Employés, Contrats, Tableau de bord
+// ════════════════════════════════════════════════════════════
+
+const RH_EMP_FIELDS = [
+  ['matricule','matricule'], ['statut','statut'], ['nom','nom'], ['prenom','prenom'],
+  ['sexe','sexe'], ['naissance','dateNaissance'], ['telephone','telephone'], ['email','email'],
+  ['adresse','adresse'], ['nationalite','nationalite'], ['poste','poste'], ['departement','departement'],
+  ['responsable','responsable'], ['embauche','dateEmbauche'], ['photo','photo'],
+  ['situation','situationFamiliale'], ['enfants','nbEnfants']
+];
+const RH_DOC_TYPES = ['CNI','Passeport','Permis de conduire','Diplôme','Certificat','Contrat signé','Visite médicale','Autre'];
+
+function rhEmpNavigate(tab) {
+  ['infos','famille','competences','documents'].forEach(t => {
+    document.getElementById('rhemp-tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('rhemp-tab-btn-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+// ── Compétences (onglet fiche employé) ───────────────────────
+function ajouterCompetenceLibre() {
+  const input = document.getElementById('rhemp-competence-autre');
+  const val = (input.value||'').trim();
+  if (!val) return;
+  if (!rhEmpCompetencesTemp.includes(val)) rhEmpCompetencesTemp.push(val);
+  input.value = '';
+  renderRHEmpCompetencesChips();
+}
+
+function supprimerCompetenceLibre(index) {
+  rhEmpCompetencesTemp.splice(index, 1);
+  renderRHEmpCompetencesChips();
+}
+
+function renderRHEmpCompetencesChips() {
+  const c = document.getElementById('rhemp-competences-chips'); if (!c) return;
+  c.innerHTML = rhEmpCompetencesTemp.map((comp, i) =>
+    `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:20px;padding:4px 10px;font-size:12px">
+      ${comp} <span style="cursor:pointer;color:var(--danger)" onclick="supprimerCompetenceLibre(${i})">×</span>
+    </span>`).join('');
+}
+
+// ── Documents RH (onglet fiche employé) ───────────────────────
+function ajouterLigneDocument() {
+  rhEmpDocumentsTemp.push({ type: RH_DOC_TYPES[0], reference: '', dateExpiration: '' });
+  renderRHEmpDocumentsList();
+}
+
+function supprimerLigneDocument(index) {
+  rhEmpDocumentsTemp.splice(index, 1);
+  renderRHEmpDocumentsList();
+}
+
+function majLigneDocument(index, champ, valeur) {
+  rhEmpDocumentsTemp[index][champ] = valeur;
+}
+
+function renderRHEmpDocumentsList() {
+  const c = document.getElementById('rhemp-documents-list'); if (!c) return;
+  c.innerHTML = rhEmpDocumentsTemp.map((doc, i) => `
+    <div class="form-row" style="align-items:flex-end">
+      <div class="form-group"><label>Type</label>
+        <select class="form-control" onchange="majLigneDocument(${i},'type',this.value)">
+          ${RH_DOC_TYPES.map(t => `<option value="${t}" ${doc.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>Référence</label><input class="form-control" value="${doc.reference||''}" oninput="majLigneDocument(${i},'reference',this.value)"></div>
+      <div class="form-group"><label>Expiration</label><input class="form-control" type="date" value="${doc.dateExpiration||''}" oninput="majLigneDocument(${i},'dateExpiration',this.value)"></div>
+      <div class="form-group" style="flex:0"><button type="button" class="btn btn-sm btn-outline" onclick="supprimerLigneDocument(${i})">🗑</button></div>
+    </div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">Aucun document enregistré.</p>';
+}
+
+// ── Matricule automatique (EMP-AAAA-NNN, séquentiel par année) ──
+function genererMatriculeRH() {
+  const annee = new Date().getFullYear();
+  const prefix = `EMP-${annee}-`;
+  const numeros = rhEmployes
+    .map(e => e.matricule || '')
+    .filter(m => m.startsWith(prefix))
+    .map(m => parseInt(m.slice(prefix.length), 10))
+    .filter(n => !isNaN(n));
+  const suivant = (numeros.length ? Math.max(...numeros) : 0) + 1;
+  return prefix + String(suivant).padStart(3, '0');
+}
+
+// ── Fiche Employé : ouverture / enregistrement / suppression ──
+function ouvrirNouvelEmploye() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-employe-title').textContent = 'Nouvel Employé';
+  document.querySelector('#modal-rh-employe form').reset();
+  document.getElementById('rhemp-edit-id').value = '';
+  document.getElementById('rhemp-matricule').value = genererMatriculeRH();
+  document.getElementById('rhemp-enfants').value = 0;
+  document.querySelectorAll('.rhemp-competence-check').forEach(cb => cb.checked = false);
+  rhEmpCompetencesTemp = [];
+  rhEmpDocumentsTemp = [];
+  renderRHEmpCompetencesChips();
+  renderRHEmpDocumentsList();
+  document.getElementById('btn-delete-rhemp').style.display = 'none';
+  rhEmpNavigate('infos');
+  openModal('modal-rh-employe');
+}
+
+function ouvrirModifierEmploye(id) {
+  if (!requireRH()) return;
+  const e = rhEmployes.find(x => x.id === id); if (!e) return;
+  document.getElementById('modal-rh-employe-title').textContent = `Modifier — ${e.prenom||''} ${e.nom||''}`;
+  RH_EMP_FIELDS.forEach(([suf,key]) => {
+    const el = document.getElementById('rhemp-'+suf);
+    if (el) el.value = key==='nbEnfants' ? (e[key]||0) : (e[key]||'');
+  });
+  const urg = e.contactUrgence || {};
+  ['nom','telephone','lien'].forEach(k => { document.getElementById('rhemp-urgence-'+k).value = urg[k] || ''; });
+
+  const checks = document.querySelectorAll('.rhemp-competence-check');
+  checks.forEach(cb => { cb.checked = (e.competences||[]).includes(cb.value); });
+  const predefinies = Array.from(checks).map(cb => cb.value);
+  rhEmpCompetencesTemp = (e.competences||[]).filter(c => !predefinies.includes(c));
+  renderRHEmpCompetencesChips();
+
+  rhEmpDocumentsTemp = JSON.parse(JSON.stringify(e.documents || []));
+  renderRHEmpDocumentsList();
+
+  document.getElementById('rhemp-edit-id').value = id;
+  document.getElementById('btn-delete-rhemp').style.display = '';
+  rhEmpNavigate('infos');
+  openModal('modal-rh-employe');
+}
+
+async function enregistrerEmploye(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const data = { contactUrgence: {} };
+  RH_EMP_FIELDS.forEach(([suf,key]) => {
+    const el = document.getElementById('rhemp-'+suf);
+    data[key] = key==='nbEnfants' ? (parseInt(el.value,10)||0) : (el.value||'');
+  });
+  ['nom','telephone','lien'].forEach(k => {
+    data.contactUrgence[k] = document.getElementById('rhemp-urgence-'+k).value || '';
+  });
+  const competencesCochees = Array.from(document.querySelectorAll('.rhemp-competence-check:checked')).map(cb => cb.value);
+  data.competences = [...competencesCochees, ...rhEmpCompetencesTemp];
+  data.documents = rhEmpDocumentsTemp.filter(d => d.reference || d.dateExpiration);
+
+  if (!data.matricule || !data.nom || !data.prenom || !data.poste) {
+    showToast('Veuillez renseigner les champs obligatoires (matricule, nom, prénom, poste)', 'error');
+    return;
+  }
+
+  const editId = document.getElementById('rhemp-edit-id').value;
+  try {
+    if (editId) {
+      await db.collection('rh_employes').doc(editId).update(data);
+      consigner('Employé modifié', `${data.prenom} ${data.nom} (${data.matricule})`);
+      showToast('Employé mis à jour');
+    } else {
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('rh_employes').add(data);
+      consigner('Employé créé', `${data.prenom} ${data.nom} (${data.matricule})`);
+      showToast('Employé créé');
+    }
+    closeModal('modal-rh-employe');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function supprimerEmployeDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rhemp-edit-id').value; if (!id) return;
+  const e = rhEmployes.find(x => x.id === id); if (!e) return;
+  const contratsLies = rhContrats.filter(c => c.employeId === id).length;
+  const msg = contratsLies > 0
+    ? `Supprimer ${e.prenom||''} ${e.nom||''} ? ${contratsLies} contrat(s) lié(s) resteront dans l'historique.`
+    : `Supprimer l'employé ${e.prenom||''} ${e.nom||''} ?`;
+  if (!confirm(msg)) return;
+  try {
+    await db.collection('rh_employes').doc(id).delete();
+    consigner('Employé supprimé', `${e.prenom||''} ${e.nom||''} (${e.matricule||''})`);
+    showToast('Employé supprimé', 'warning');
+    closeModal('modal-rh-employe');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+// ── Liste des employés ─────────────────────────────────────
+function renderRHEmployes() {
+  const tbody = document.getElementById('tbody-rh-employes'); if (!tbody) return;
+  const cnt = document.getElementById('rh-emp-count');
+  if (cnt) cnt.textContent = `(${rhEmployes.length} employé(s))`;
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-employes-th-actions').style.display = peutGerer ? '' : 'none';
+  const btnNouveau = document.querySelector('#rh-employes-actions button');
+  if (btnNouveau) btnNouveau.style.display = peutGerer ? '' : 'none';
+
+  const statutLabels = { actif:'Actif', suspendu:'Suspendu', demissionnaire:'Démissionnaire', licencie:'Licencié' };
+  const statutColors = { actif:'var(--success)', suspendu:'#C8981A', demissionnaire:'var(--text-muted)', licencie:'var(--danger)' };
+
+  tbody.innerHTML = rhEmployes.map(e => `<tr>
+    <td>${e.matricule||'—'}</td>
+    <td><strong>${e.nom||''} ${e.prenom||''}</strong></td>
+    <td>${e.poste||'—'}</td>
+    <td>${e.departement||'—'}</td>
+    <td>${e.telephone||'—'}</td>
+    <td><span style="color:${statutColors[e.statut]||'var(--text-muted)'};font-weight:600">${statutLabels[e.statut]||e.statut||'—'}</span></td>
+    ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierEmploye('${e.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
+  </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">Aucun employé enregistré</td></tr>`;
+}
+
+// ── Contrats : ouverture / enregistrement / suppression ───────
+function rhContratStatutInfo(contrat) {
+  if (!contrat.dateFin) return { label: 'En cours (sans échéance)', color: 'var(--success)' };
+  const fin = new Date(contrat.dateFin);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffJours = Math.ceil((fin - today) / (1000*60*60*24));
+  if (diffJours < 0) return { label: 'Expiré', color: 'var(--danger)' };
+  if (diffJours <= 15) return { label: `Expire dans ${diffJours} j`, color: 'var(--danger)' };
+  if (diffJours <= 30) return { label: `Expire dans ${diffJours} j`, color: '#C8981A' };
+  return { label: 'En cours', color: 'var(--success)' };
+}
+
+function ouvrirNouveauContrat() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-contrat-title').textContent = 'Nouveau Contrat';
+  document.querySelector('#modal-rh-contrat form').reset();
+  document.getElementById('rhc-edit-id').value = '';
+  const sel = document.getElementById('rhc-employe');
+  sel.innerHTML = '<option value="">-- Sélectionner --</option>' +
+    rhEmployes.map(e => `<option value="${e.id}">${e.nom||''} ${e.prenom||''} (${e.matricule||''})</option>`).join('');
+  document.getElementById('btn-delete-rhc').style.display = 'none';
+  openModal('modal-rh-contrat');
+}
+
+function ouvrirModifierContrat(id) {
+  if (!requireRH()) return;
+  const c = rhContrats.find(x => x.id === id); if (!c) return;
+  document.getElementById('modal-rh-contrat-title').textContent = 'Modifier le Contrat';
+  const sel = document.getElementById('rhc-employe');
+  sel.innerHTML = '<option value="">-- Sélectionner --</option>' +
+    rhEmployes.map(e => `<option value="${e.id}" ${e.id===c.employeId?'selected':''}>${e.nom||''} ${e.prenom||''} (${e.matricule||''})</option>`).join('');
+  document.getElementById('rhc-type').value = c.type || 'CDI';
+  document.getElementById('rhc-debut').value = c.dateDebut || '';
+  document.getElementById('rhc-fin').value = c.dateFin || '';
+  document.getElementById('rhc-salairebase').value = c.salaireBase || '';
+  document.getElementById('rhc-salairehoraire').value = c.salaireHoraire || '';
+  document.getElementById('rhc-primetransport').value = c.primeTransport || '';
+  document.getElementById('rhc-primelogement').value = c.primeLogement || '';
+  document.getElementById('rhc-primerendement').value = c.primeRendement || '';
+  document.getElementById('rhc-edit-id').value = id;
+  document.getElementById('btn-delete-rhc').style.display = '';
+  openModal('modal-rh-contrat');
+}
+
+async function enregistrerContrat(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const employeId = document.getElementById('rhc-employe').value;
+  if (!employeId) { showToast('Veuillez sélectionner un employé', 'error'); return; }
+  const data = {
+    employeId,
+    type: document.getElementById('rhc-type').value,
+    dateDebut: document.getElementById('rhc-debut').value,
+    dateFin: document.getElementById('rhc-fin').value || '',
+    salaireBase: parseFloat(document.getElementById('rhc-salairebase').value) || 0,
+    salaireHoraire: parseFloat(document.getElementById('rhc-salairehoraire').value) || 0,
+    primeTransport: parseFloat(document.getElementById('rhc-primetransport').value) || 0,
+    primeLogement: parseFloat(document.getElementById('rhc-primelogement').value) || 0,
+    primeRendement: parseFloat(document.getElementById('rhc-primerendement').value) || 0
+  };
+  const emp = rhEmployes.find(e => e.id === employeId);
+  const nomEmp = emp ? `${emp.nom||''} ${emp.prenom||''}` : employeId;
+  const editId = document.getElementById('rhc-edit-id').value;
+  try {
+    if (editId) {
+      await db.collection('rh_contrats').doc(editId).update(data);
+      consigner('Contrat modifié', `${nomEmp} — ${data.type}`);
+      showToast('Contrat mis à jour');
+    } else {
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('rh_contrats').add(data);
+      consigner('Contrat créé', `${nomEmp} — ${data.type}`);
+      showToast('Contrat créé');
+    }
+    closeModal('modal-rh-contrat');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function supprimerContratDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rhc-edit-id').value; if (!id) return;
+  const c = rhContrats.find(x => x.id === id); if (!c) return;
+  const emp = rhEmployes.find(e => e.id === c.employeId);
+  const nomEmp = emp ? `${emp.nom||''} ${emp.prenom||''}` : c.employeId;
+  if (!confirm(`Supprimer le contrat (${c.type}) de ${nomEmp} ?`)) return;
+  try {
+    await db.collection('rh_contrats').doc(id).delete();
+    consigner('Contrat supprimé', `${nomEmp} — ${c.type}`);
+    showToast('Contrat supprimé', 'warning');
+    closeModal('modal-rh-contrat');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderRHContrats() {
+  const tbody = document.getElementById('tbody-rh-contrats'); if (!tbody) return;
+  const cnt = document.getElementById('rh-contrat-count');
+  if (cnt) cnt.textContent = `(${rhContrats.length} contrat(s))`;
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-contrats-th-actions').style.display = peutGerer ? '' : 'none';
+  const btnNouveau = document.querySelector('#rh-contrats-actions button');
+  if (btnNouveau) btnNouveau.style.display = peutGerer ? '' : 'none';
+
+  tbody.innerHTML = rhContrats.map(c => {
+    const emp = rhEmployes.find(e => e.id === c.employeId);
+    const nomEmp = emp ? `${emp.nom||''} ${emp.prenom||''}` : '—';
+    const statut = rhContratStatutInfo(c);
+    return `<tr>
+      <td>${nomEmp}</td>
+      <td>${c.type||'—'}</td>
+      <td>${c.dateDebut||'—'}</td>
+      <td>${c.dateFin||'—'}</td>
+      <td>${c.salaireBase ? FCFA(c.salaireBase) : '—'}</td>
+      <td><span style="color:${statut.color};font-weight:600">${statut.label}</span></td>
+      ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierContrat('${c.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">Aucun contrat enregistré</td></tr>`;
+}
+
+// ── Tableau de bord RH ─────────────────────────────────────
+function renderRHDashboard() {
+  const kpis = document.getElementById('rh-dashboard-kpis'); if (!kpis) return;
+  const effectifTotal = rhEmployes.length;
+  const actifs = rhEmployes.filter(e => e.statut === 'actif').length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const contratsExpirant = rhContrats.filter(c => {
+    if (!c.dateFin) return false;
+    const diffJours = Math.ceil((new Date(c.dateFin) - today) / (1000*60*60*24));
+    return diffJours >= 0 && diffJours <= 30;
+  });
+
+  kpis.innerHTML = `
+    <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${effectifTotal}</h3><p>Effectif total</p></div></div>
+    <div class="kpi-card success"><div class="kpi-icon">✅</div><div class="kpi-info"><h3>${actifs}</h3><p>Employés actifs</p></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">📄</div><div class="kpi-info"><h3>${rhContrats.length}</h3><p>Contrats enregistrés</p></div></div>
+    <div class="kpi-card danger"><div class="kpi-icon">⏳</div><div class="kpi-info"><h3>${contratsExpirant.length}</h3><p>Contrats expirant ≤ 30j</p></div></div>
+  `;
+
+  const tbody = document.getElementById('tbody-rh-dashboard-contrats'); if (!tbody) return;
+  tbody.innerHTML = contratsExpirant.map(c => {
+    const emp = rhEmployes.find(e => e.id === c.employeId);
+    const nomEmp = emp ? `${emp.nom||''} ${emp.prenom||''}` : '—';
+    const statut = rhContratStatutInfo(c);
+    return `<tr><td>${nomEmp}</td><td>${c.type||'—'}</td><td>${c.dateFin||'—'}</td>
+      <td><span style="color:${statut.color};font-weight:600">${statut.label}</span></td></tr>`;
+  }).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucun contrat arrivant à échéance</td></tr>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE RH (Phase RH-B) — Pointages, Congés & Absences, Planning
+// ════════════════════════════════════════════════════════════
+
+function rhOptionsEmployes(selectedId) {
+  return '<option value="">-- Sélectionner --</option>' +
+    rhEmployes.map(e => `<option value="${e.id}" ${e.id===selectedId?'selected':''}>${e.nom||''} ${e.prenom||''} (${e.matricule||''})</option>`).join('');
+}
+
+function rhNomEmploye(employeId) {
+  const e = rhEmployes.find(x => x.id === employeId);
+  return e ? `${e.nom||''} ${e.prenom||''}` : '—';
+}
+
+// ── Pointages ──────────────────────────────────────────────
+function calculerHeuresTravaillees(heureArrivee, heureDepart, pauseMinutes) {
+  if (!heureArrivee || !heureDepart) return 0;
+  const [ha, ma] = heureArrivee.split(':').map(Number);
+  const [hd, md] = heureDepart.split(':').map(Number);
+  let minutes = (hd*60+md) - (ha*60+ma);
+  if (minutes < 0) minutes += 24*60; // pointage traversant minuit
+  minutes -= (pauseMinutes || 0);
+  return Math.max(0, Math.round((minutes/60) * 100) / 100);
+}
+
+function ouvrirNouveauPointage() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-pointage-title').textContent = 'Nouveau Pointage';
+  document.querySelector('#modal-rh-pointage form').reset();
+  document.getElementById('rhp-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rhp-date').value = today();
+  document.getElementById('rhp-pause').value = 0;
+  document.getElementById('rhp-edit-id').value = '';
+  document.getElementById('btn-delete-rhp').style.display = 'none';
+  openModal('modal-rh-pointage');
+}
+
+function ouvrirModifierPointage(id) {
+  if (!requireRH()) return;
+  const p = rhPointages.find(x => x.id === id); if (!p) return;
+  document.getElementById('modal-rh-pointage-title').textContent = 'Modifier le Pointage';
+  document.getElementById('rhp-employe').innerHTML = rhOptionsEmployes(p.employeId);
+  document.getElementById('rhp-date').value = p.date || '';
+  document.getElementById('rhp-arrivee').value = p.heureArrivee || '';
+  document.getElementById('rhp-depart').value = p.heureDepart || '';
+  document.getElementById('rhp-pause').value = p.pauseMinutes || 0;
+  document.getElementById('rhp-edit-id').value = id;
+  document.getElementById('btn-delete-rhp').style.display = '';
+  openModal('modal-rh-pointage');
+}
+
+async function enregistrerPointage(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const employeId = document.getElementById('rhp-employe').value;
+  if (!employeId) { showToast('Veuillez sélectionner un employé', 'error'); return; }
+  const heureArrivee = document.getElementById('rhp-arrivee').value;
+  const heureDepart = document.getElementById('rhp-depart').value;
+  const pauseMinutes = parseInt(document.getElementById('rhp-pause').value, 10) || 0;
+  const data = {
+    employeId,
+    date: document.getElementById('rhp-date').value,
+    heureArrivee, heureDepart, pauseMinutes,
+    heuresTravaillees: calculerHeuresTravaillees(heureArrivee, heureDepart, pauseMinutes)
+  };
+  const nomEmp = rhNomEmploye(employeId);
+  const editId = document.getElementById('rhp-edit-id').value;
+  try {
+    if (editId) {
+      await db.collection('rh_pointages').doc(editId).update(data);
+      consigner('Pointage modifié', `${nomEmp} — ${data.date}`);
+      showToast('Pointage mis à jour');
+    } else {
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('rh_pointages').add(data);
+      consigner('Pointage créé', `${nomEmp} — ${data.date}`);
+      showToast('Pointage enregistré');
+    }
+    closeModal('modal-rh-pointage');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function supprimerPointageDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rhp-edit-id').value; if (!id) return;
+  const p = rhPointages.find(x => x.id === id); if (!p) return;
+  if (!confirm(`Supprimer le pointage du ${p.date} pour ${rhNomEmploye(p.employeId)} ?`)) return;
+  try {
+    await db.collection('rh_pointages').doc(id).delete();
+    consigner('Pointage supprimé', `${rhNomEmploye(p.employeId)} — ${p.date}`);
+    showToast('Pointage supprimé', 'warning');
+    closeModal('modal-rh-pointage');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderRHPresences() {
+  const tbody = document.getElementById('tbody-rh-presences'); if (!tbody) return;
+  const cnt = document.getElementById('rh-pointage-count');
+  if (cnt) cnt.textContent = `(${rhPointages.length} pointage(s))`;
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-presences-th-actions').style.display = peutGerer ? '' : 'none';
+  const btnNouveau = document.querySelector('#rh-presences-actions button');
+  if (btnNouveau) btnNouveau.style.display = peutGerer ? '' : 'none';
+
+  tbody.innerHTML = rhPointages.map(p => `<tr>
+    <td>${rhNomEmploye(p.employeId)}</td>
+    <td>${p.date||'—'}</td>
+    <td>${p.heureArrivee||'—'}</td>
+    <td>${p.heureDepart||'—'}</td>
+    <td>${p.pauseMinutes||0}</td>
+    <td><strong>${p.heuresTravaillees!=null ? p.heuresTravaillees+' h' : '—'}</strong></td>
+    ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierPointage('${p.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
+  </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">Aucun pointage enregistré</td></tr>`;
+}
+
+// ── Congés & Absences ──────────────────────────────────────
+function rhAbsenceStatutInfo(statut) {
+  if (statut === 'validé') return { label: 'Validé', color: 'var(--success)' };
+  if (statut === 'refusé') return { label: 'Refusé', color: 'var(--danger)' };
+  return { label: 'Demande', color: '#C8981A' };
+}
+
+function ouvrirNouvelleAbsence() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-absence-title').textContent = 'Nouvelle Demande';
+  document.querySelector('#modal-rh-absence form').reset();
+  document.getElementById('rha-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rha-edit-id').value = '';
+  document.getElementById('btn-delete-rha').style.display = 'none';
+  openModal('modal-rh-absence');
+}
+
+function ouvrirModifierAbsence(id) {
+  if (!requireRH()) return;
+  const a = rhAbsences.find(x => x.id === id); if (!a) return;
+  document.getElementById('modal-rh-absence-title').textContent = 'Modifier la Demande';
+  document.getElementById('rha-employe').innerHTML = rhOptionsEmployes(a.employeId);
+  document.getElementById('rha-type').value = a.type || 'Congé payé';
+  document.getElementById('rha-debut').value = a.dateDebut || '';
+  document.getElementById('rha-fin').value = a.dateFin || '';
+  document.getElementById('rha-motif').value = a.motif || '';
+  document.getElementById('rha-edit-id').value = id;
+  document.getElementById('btn-delete-rha').style.display = '';
+  openModal('modal-rh-absence');
+}
+
+async function enregistrerAbsence(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const employeId = document.getElementById('rha-employe').value;
+  if (!employeId) { showToast('Veuillez sélectionner un employé', 'error'); return; }
+  const data = {
+    employeId,
+    type: document.getElementById('rha-type').value,
+    dateDebut: document.getElementById('rha-debut').value,
+    dateFin: document.getElementById('rha-fin').value,
+    motif: document.getElementById('rha-motif').value || ''
+  };
+  const nomEmp = rhNomEmploye(employeId);
+  const editId = document.getElementById('rha-edit-id').value;
+  try {
+    if (editId) {
+      await db.collection('rh_absences').doc(editId).update(data);
+      consigner('Demande de congé/absence modifiée', `${nomEmp} — ${data.type}`);
+      showToast('Demande mise à jour');
+    } else {
+      data.statut = 'demande';
+      data.validePar = '';
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('rh_absences').add(data);
+      consigner('Demande de congé/absence créée', `${nomEmp} — ${data.type}`);
+      showToast('Demande enregistrée');
+    }
+    closeModal('modal-rh-absence');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function supprimerAbsenceDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rha-edit-id').value; if (!id) return;
+  const a = rhAbsences.find(x => x.id === id); if (!a) return;
+  if (!confirm(`Supprimer la demande (${a.type}) de ${rhNomEmploye(a.employeId)} ?`)) return;
+  try {
+    await db.collection('rh_absences').doc(id).delete();
+    consigner('Demande de congé/absence supprimée', `${rhNomEmploye(a.employeId)} — ${a.type}`);
+    showToast('Demande supprimée', 'warning');
+    closeModal('modal-rh-absence');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function validerAbsence(id) {
+  if (!requireRH()) return;
+  const a = rhAbsences.find(x => x.id === id); if (!a) return;
+  try {
+    await db.collection('rh_absences').doc(id).update({ statut: 'validé', validePar: currentUser.label });
+    consigner('Demande validée', `${rhNomEmploye(a.employeId)} — ${a.type}`);
+    showToast('Demande validée');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function refuserAbsence(id) {
+  if (!requireRH()) return;
+  const a = rhAbsences.find(x => x.id === id); if (!a) return;
+  try {
+    await db.collection('rh_absences').doc(id).update({ statut: 'refusé', validePar: currentUser.label });
+    consigner('Demande refusée', `${rhNomEmploye(a.employeId)} — ${a.type}`);
+    showToast('Demande refusée', 'warning');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderRHAbsences() {
+  const tbody = document.getElementById('tbody-rh-absences'); if (!tbody) return;
+  const cnt = document.getElementById('rh-absence-count');
+  if (cnt) cnt.textContent = `(${rhAbsences.length} demande(s))`;
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-absences-th-actions').style.display = peutGerer ? '' : 'none';
+  const btnNouveau = document.querySelector('#rh-absences-actions button');
+  if (btnNouveau) btnNouveau.style.display = peutGerer ? '' : 'none';
+
+  tbody.innerHTML = rhAbsences.map(a => {
+    const statut = rhAbsenceStatutInfo(a.statut);
+    let actions = '';
+    if (peutGerer) {
+      if (a.statut === 'demande' || !a.statut) {
+        actions += `<button class="btn btn-sm btn-success" onclick="validerAbsence('${a.id}')" title="Valider">✓</button>
+          <button class="btn btn-sm btn-danger" onclick="refuserAbsence('${a.id}')" title="Refuser">✗</button> `;
+      }
+      actions += `<button class="btn btn-sm btn-outline" onclick="ouvrirModifierAbsence('${a.id}')">✏</button>`;
+    }
+    return `<tr>
+      <td>${rhNomEmploye(a.employeId)}</td>
+      <td>${a.type||'—'}</td>
+      <td>${a.dateDebut||'—'}</td>
+      <td>${a.dateFin||'—'}</td>
+      <td>${a.motif||'—'}</td>
+      <td><span style="color:${statut.color};font-weight:600">${statut.label}</span></td>
+      <td>${a.validePar||'—'}</td>
+      ${peutGerer ? `<td>${actions}</td>` : '<td style="display:none"></td>'}
+    </tr>`;
+  }).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px">Aucune demande enregistrée</td></tr>`;
+}
+
+// ── Planning ───────────────────────────────────────────────
+let rhPlanningVue = 'jour';
+
+function rhPlanningNavigate(vue) {
+  rhPlanningVue = vue;
+  ['jour','semaine','mois'].forEach(v => {
+    document.getElementById('rh-planning-tab-btn-'+v).classList.toggle('active', v===vue);
+  });
+  renderRHPlanning();
+}
+
+function ouvrirNouvelleAffectation() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-planning-title').textContent = 'Nouvelle Affectation';
+  document.querySelector('#modal-rh-planning form').reset();
+  document.getElementById('rhpl-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rhpl-date').value = document.getElementById('rh-planning-date').value || today();
+  document.getElementById('rhpl-edit-id').value = '';
+  document.getElementById('btn-delete-rhpl').style.display = 'none';
+  openModal('modal-rh-planning');
+}
+
+function ouvrirModifierAffectation(id) {
+  if (!requireRH()) return;
+  const p = rhPlanning.find(x => x.id === id); if (!p) return;
+  document.getElementById('modal-rh-planning-title').textContent = "Modifier l'Affectation";
+  document.getElementById('rhpl-employe').innerHTML = rhOptionsEmployes(p.employeId);
+  document.getElementById('rhpl-poste').value = p.poste || '';
+  document.getElementById('rhpl-date').value = p.date || '';
+  document.getElementById('rhpl-debut').value = p.heureDebut || '';
+  document.getElementById('rhpl-fin').value = p.heureFin || '';
+  document.getElementById('rhpl-edit-id').value = id;
+  document.getElementById('btn-delete-rhpl').style.display = '';
+  openModal('modal-rh-planning');
+}
+
+async function enregistrerAffectation(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const employeId = document.getElementById('rhpl-employe').value;
+  if (!employeId) { showToast('Veuillez sélectionner un employé', 'error'); return; }
+  const data = {
+    employeId,
+    poste: document.getElementById('rhpl-poste').value || '',
+    date: document.getElementById('rhpl-date').value,
+    heureDebut: document.getElementById('rhpl-debut').value,
+    heureFin: document.getElementById('rhpl-fin').value
+  };
+  const nomEmp = rhNomEmploye(employeId);
+  const editId = document.getElementById('rhpl-edit-id').value;
+  try {
+    if (editId) {
+      await db.collection('rh_planning').doc(editId).update(data);
+      consigner('Affectation planning modifiée', `${nomEmp} — ${data.date}`);
+      showToast('Affectation mise à jour');
+    } else {
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('rh_planning').add(data);
+      consigner('Affectation planning créée', `${nomEmp} — ${data.date}`);
+      showToast('Affectation enregistrée');
+    }
+    closeModal('modal-rh-planning');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function supprimerAffectationDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rhpl-edit-id').value; if (!id) return;
+  const p = rhPlanning.find(x => x.id === id); if (!p) return;
+  if (!confirm(`Supprimer l'affectation du ${p.date} pour ${rhNomEmploye(p.employeId)} ?`)) return;
+  try {
+    await db.collection('rh_planning').doc(id).delete();
+    consigner('Affectation planning supprimée', `${rhNomEmploye(p.employeId)} — ${p.date}`);
+    showToast('Affectation supprimée', 'warning');
+    closeModal('modal-rh-planning');
+  } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function renderRHPlanning() {
+  const tbody = document.getElementById('tbody-rh-planning'); if (!tbody) return;
+  const dateInput = document.getElementById('rh-planning-date');
+  if (!dateInput.value) dateInput.value = today();
+  const refDate = new Date(dateInput.value);
+
+  let filtres = rhPlanning;
+  if (rhPlanningVue === 'jour') {
+    filtres = rhPlanning.filter(p => p.date === dateInput.value);
+  } else if (rhPlanningVue === 'semaine') {
+    const debutSemaine = new Date(refDate);
+    debutSemaine.setDate(refDate.getDate() - refDate.getDay());
+    const finSemaine = new Date(debutSemaine);
+    finSemaine.setDate(debutSemaine.getDate() + 6);
+    filtres = rhPlanning.filter(p => {
+      const d = new Date(p.date);
+      return d >= debutSemaine && d <= finSemaine;
+    });
+  } else if (rhPlanningVue === 'mois') {
+    filtres = rhPlanning.filter(p => p.date && p.date.slice(0,7) === dateInput.value.slice(0,7));
+  }
+  filtres = filtres.slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
+  const cnt = document.getElementById('rh-planning-count');
+  if (cnt) cnt.textContent = `(${filtres.length} affectation(s))`;
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-planning-th-actions').style.display = peutGerer ? '' : 'none';
+  const btnNouveau = document.querySelector('#rh-planning-actions button');
+  if (btnNouveau) btnNouveau.style.display = peutGerer ? '' : 'none';
+
+  tbody.innerHTML = filtres.map(p => `<tr>
+    <td>${rhNomEmploye(p.employeId)}</td>
+    <td>${p.poste||'—'}</td>
+    <td>${p.date||'—'}</td>
+    <td>${p.heureDebut||'—'}</td>
+    <td>${p.heureFin||'—'}</td>
+    ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierAffectation('${p.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
+  </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucune affectation pour cette période</td></tr>`;
 }
 
 // ===== INIT PAGE =====
