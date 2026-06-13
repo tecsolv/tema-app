@@ -3713,6 +3713,20 @@
 
 <script>
 // ============================================================
+//  🔒 FEATURE FREEZE — MVP LOCK v1.0
+//  Aucune nouvelle fonctionnalité, aucun nouveau module, aucun
+//  nouveau workflow métier tant que ce flag est actif.
+//  Autorisé pendant le freeze : bugfix critique, hotfix sécurité,
+//  ajustement UI mineur sans impact sur la logique métier.
+//  Toute évolution future nécessite une validation manuelle externe.
+// ============================================================
+const FEATURE_FREEZE = true;
+const FREEZE_DATE = "2026-06-13";
+const FREEZE_UNTIL = "2026-10-31";
+const FREEZE_REASON = "MVP stabilisé - production prête jusqu'au 31/10/2026";
+if (FEATURE_FREEZE) console.log(`🔒 FEATURE FREEZE actif depuis le ${FREEZE_DATE} jusqu'au ${FREEZE_UNTIL} — ${FREEZE_REASON}`);
+
+// ============================================================
 //  ⚙️  CONFIGURATION FIREBASE — À REMPLIR AVEC VOS CLÉS
 //  Obtenez-les sur : https://console.firebase.google.com
 //  Projet > Paramètres > Vos applications > Config SDK Web
@@ -5282,6 +5296,7 @@ function handleBarcodeScan(e) {
 function ajouterAuPanier(id) {
   const p = produits.find(x => x.id === id);
   if (!p) return;
+  if ((p.stock||0) <= 0) { showToast('🚫 Rupture de stock — article non disponible', 'error'); return; }
   const exist = posPanier.find(item => item.id === id && !item.serviceType);
   if (exist) {
     if ((p.stock||0) > 0 && exist.qte >= (p.stock||0)) { showToast('Stock insuffisant', 'error'); return; }
