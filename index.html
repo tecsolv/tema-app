@@ -1327,7 +1327,11 @@
     <div class="nav-item" id="nav-rh-presences" onclick="navigate('rh-presences')" style="display:none"><span class="icon">🕑</span> Pointages</div>
     <div class="nav-item" id="nav-rh-absences" onclick="navigate('rh-absences')" style="display:none"><span class="icon">🌴</span> Congés & Absences</div>
     <div class="nav-item" id="nav-rh-planning" onclick="navigate('rh-planning')" style="display:none"><span class="icon">🗓️</span> Planning</div>
+    <div class="nav-item" id="nav-rh-formations" onclick="navigate('rh-formations')" style="display:none"><span class="icon">🎓</span> Formations</div>
+    <div class="nav-item" id="nav-rh-avances" onclick="navigate('rh-avances')" style="display:none"><span class="icon">💰</span> Avances & Prêts</div>
+    <div class="nav-item" id="nav-rh-paie" onclick="navigate('rh-paie')" style="display:none"><span class="icon">💴</span> Paie</div>
     <div class="nav-item" id="nav-rh-dashboard" onclick="navigate('rh-dashboard')" style="display:none"><span class="icon">📊</span> Tableau RH</div>
+    <div class="nav-item" id="nav-rh-parametres" onclick="navigate('rh-parametres')" style="display:none"><span class="icon">⚙️</span> Paramètres de Paie</div>
     <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
@@ -2238,6 +2242,99 @@
       </div>
     </div>
 
+    <!-- MODULE RH — FORMATIONS -->
+    <div class="page" id="page-rh-formations">
+      <div class="alert alert-info no-print">🎓 Suivi des formations des employés — organisme, dates, coût et statut.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-formations-actions">
+        <button class="btn btn-primary" onclick="ouvrirNouvelleFormation()">+ Nouvelle Formation</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>🎓 Formations <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-formations-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Intitulé</th><th>Organisme</th><th>Début</th><th>Fin</th><th>Coût</th><th>Statut</th><th>Coût payé</th><th id="rh-formations-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-formations"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — AVANCES & PRÊTS EMPLOYÉS -->
+    <div class="page" id="page-rh-avances">
+      <div class="alert alert-info no-print">💰 Avances sur salaire, acomptes et prêts employés — déduits automatiquement à la validation des bulletins de paie.</div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="btn btn-sm caisse-tab-btn active" id="rh-avances-tab-btn-avances" onclick="rhAvancesPretsNavigate('avances')" style="flex:1;min-width:120px">💵 Avances & Acomptes</button>
+        <button type="button" class="btn btn-sm caisse-tab-btn" id="rh-avances-tab-btn-prets" onclick="rhAvancesPretsNavigate('prets')" style="flex:1;min-width:120px">🏦 Prêts employés</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px" id="rh-avances-actions">
+        <button class="btn btn-primary" id="rh-avances-btn-avance" onclick="ouvrirNouvelleAvance()">+ Nouvelle Avance / Acompte</button>
+        <button class="btn btn-primary" id="rh-avances-btn-pret" onclick="ouvrirNouveauPret()" style="display:none">+ Nouveau Prêt</button>
+      </div>
+      <div class="card" id="rh-avances-card-avances">
+        <div class="card-header"><h2>💵 Avances & Acomptes <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-avances-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Type</th><th>Montant</th><th>Date octroi</th><th>Mois déduction</th><th>Échéances restantes</th><th>Statut</th><th id="rh-avances-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-avances"></tbody></table>
+        </div>
+      </div>
+      <div class="card" id="rh-avances-card-prets" style="display:none">
+        <div class="card-header"><h2>🏦 Prêts employés <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-prets-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Employé</th><th>Montant total</th><th>Échéance mensuelle</th><th>Début</th><th>Échéances remboursées</th><th>Statut</th><th id="rh-prets-th-actions">Actions</th>
+          </tr></thead><tbody id="tbody-rh-prets"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE RH — PAIE -->
+    <div class="page" id="page-rh-paie">
+      <div class="alert alert-info no-print">💴 Bulletins de paie mensuels — calcul automatique (primes, heures supplémentaires, absences, CNPS, avances/prêts). Préparation : Admin/Gérant/Comptable. Validation et paiement : Admin/Gérant uniquement.</div>
+      <div class="nav no-print" style="display:flex;gap:10px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <label style="margin:0">Mois :</label>
+        <input type="month" class="form-control" id="rh-paie-mois" style="max-width:160px" onchange="renderRHPaie()">
+        <button class="btn btn-primary" id="rh-paie-btn-generer" onclick="genererBrouillonsDuMois()">⚙️ Générer les brouillons du mois</button>
+        <button class="btn btn-outline" onclick="exporterPaieCSV()">⬇️ Export Excel</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>💴 Bulletins de paie <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="rh-paie-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>N° Bulletin</th><th>Employé</th><th>Salaire brut</th><th>Retenues</th><th>Net à payer</th><th>Statut</th><th>Actions</th>
+          </tr></thead><tbody id="tbody-rh-paie"></tbody></table>
+        </div>
+      </div>
+      <div class="kpi-grid" id="rh-paie-kpis" style="margin-top:14px"></div>
+    </div>
+
+    <!-- MODULE RH — PARAMÈTRES DE PAIE (Administration > Paramètres RH) -->
+    <div class="page" id="page-rh-parametres">
+      <div class="alert alert-info no-print">⚙️ Paramètres utilisés pour le calcul automatique de la paie (taux CNPS, heures supplémentaires, heures contractuelles). Lecture : Admin/Gérant. Modification : Admin uniquement.</div>
+      <div class="card" style="max-width:520px">
+        <div class="card-header"><h2>⚙️ Paramètres de Paie</h2></div>
+        <div class="card-body">
+          <form id="form-rh-parametres" onsubmit="enregistrerParametresPaie(event)">
+            <div class="form-group">
+              <label>Taux CNPS salarié (%)</label>
+              <input class="form-control" type="number" step="0.01" min="0" max="100" id="rhparam-cnps" required>
+            </div>
+            <div class="form-group">
+              <label>Taux heure supplémentaire (multiplicateur)</label>
+              <input class="form-control" type="number" step="0.01" min="1" id="rhparam-heuresup" required>
+            </div>
+            <div class="form-group">
+              <label>Heures contractuelles mensuelles</label>
+              <input class="form-control" type="number" step="1" min="1" id="rhparam-heurescontrat" required>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="rhparam-meta"></div>
+            <div style="display:flex;justify-content:flex-end" id="rhparam-actions">
+              <button type="submit" class="btn btn-primary">Enregistrer les paramètres</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2749,6 +2846,128 @@
         <button type="submit" class="btn btn-primary">Enregistrer</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Formation -->
+<div class="modal-overlay" id="modal-rh-formation">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-rh-formation-title">Nouvelle Formation</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-formation')">×</button>
+    </div>
+    <form onsubmit="enregistrerFormation(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhf-employe" required></select></div>
+      <div class="form-group"><label>Intitulé de la formation *</label><input class="form-control" id="rhf-intitule" required placeholder="Ex: Gestion de stock"></div>
+      <div class="form-group"><label>Organisme</label><input class="form-control" id="rhf-organisme" placeholder="Ex: CCI, organisme interne..."></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date de début *</label><input class="form-control" type="date" id="rhf-debut" required></div>
+        <div class="form-group"><label>Date de fin</label><input class="form-control" type="date" id="rhf-fin"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Coût (FCFA)</label><input class="form-control" type="number" min="0" id="rhf-cout" value="0"></div>
+        <div class="form-group"><label>Statut *</label>
+          <select class="form-control" id="rhf-statut" required>
+            <option value="planifiée">Planifiée</option>
+            <option value="en cours">En cours</option>
+            <option value="terminée">Terminée</option>
+            <option value="annulée">Annulée</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="rhf-cout-paye" style="width:auto">
+        <label style="margin:0">Coût payé</label>
+      </div>
+      <div class="form-group"><label>Notes</label><input class="form-control" id="rhf-notes"></div>
+      <input type="hidden" id="rhf-edit-id" value="">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-delete-rhf" style="display:none;margin-right:auto" onclick="supprimerFormationDepuisModal()">🗑 Supprimer</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-formation')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Avance / Acompte -->
+<div class="modal-overlay" id="modal-rh-avance">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nouvelle Avance / Acompte</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-avance')">×</button>
+    </div>
+    <form onsubmit="enregistrerAvance(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhav-employe" required></select></div>
+      <div class="form-group"><label>Type *</label>
+        <select class="form-control" id="rhav-type" required onchange="document.getElementById('rhav-echeances-group').style.display = this.value==='avance' ? '' : 'none'">
+          <option value="acompte">Acompte (déduit sur le mois en cours)</option>
+          <option value="avance">Avance (remboursable sur plusieurs mois)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Montant (FCFA) *</label><input class="form-control" type="number" min="1" id="rhav-montant" required></div>
+        <div class="form-group"><label>Date d'octroi *</label><input class="form-control" type="date" id="rhav-date" required></div>
+      </div>
+      <div class="form-group"><label>Mois de déduction (premier mois) *</label><input class="form-control" type="month" id="rhav-mois" required></div>
+      <div class="form-group" id="rhav-echeances-group" style="display:none"><label>Nombre d'échéances</label><input class="form-control" type="number" min="2" id="rhav-echeances" value="2"></div>
+      <div class="form-group"><label>Motif</label><input class="form-control" id="rhav-motif" placeholder="Ex: Avance sur salaire pour..."></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-avance')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RH : Prêt employé -->
+<div class="modal-overlay" id="modal-rh-pret">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nouveau Prêt Employé</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-pret')">×</button>
+    </div>
+    <form onsubmit="enregistrerPret(event)">
+      <div class="form-group"><label>Employé *</label><select class="form-control" id="rhpr-employe" required></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Montant total (FCFA) *</label><input class="form-control" type="number" min="1" id="rhpr-montant" required></div>
+        <div class="form-group"><label>Nombre d'échéances *</label><input class="form-control" type="number" min="1" id="rhpr-echeances" value="3" required></div>
+      </div>
+      <div class="form-group"><label>Mois de début du remboursement *</label><input class="form-control" type="month" id="rhpr-mois" required></div>
+      <div class="form-group"><label>Motif</label><input class="form-control" id="rhpr-motif" placeholder="Ex: Prêt pour..."></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-pret')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-rh-bulletin">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3 id="modal-rh-bulletin-title">Bulletin de paie</h3>
+      <button class="modal-close" onclick="closeModal('modal-rh-bulletin')">×</button>
+    </div>
+    <input type="hidden" id="rhpaie-edit-id">
+    <div id="rh-bulletin-header" style="font-size:12px;color:var(--text-muted);margin-bottom:10px"></div>
+    <table style="width:100%;font-size:14px;margin-bottom:10px" id="rh-bulletin-table"></table>
+    <div class="form-row">
+      <div class="form-group"><label>Prime exceptionnelle — libellé</label><input class="form-control" id="rhpaie-prime-libelle" placeholder="Ex: Prime Tabaski"></div>
+      <div class="form-group"><label>Montant (FCFA)</label><input class="form-control" type="number" min="0" id="rhpaie-prime-montant" value="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Sanction — motif</label><input class="form-control" id="rhpaie-sanction-motif" placeholder="Ex: Retard répété"></div>
+      <div class="form-group"><label>Montant (FCFA)</label><input class="form-control" type="number" min="0" id="rhpaie-sanction-montant" value="0"></div>
+    </div>
+    <div class="modal-footer" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-danger" id="rhpaie-btn-supprimer" style="display:none;margin-right:auto" onclick="supprimerBulletin()">🗑 Supprimer le brouillon</button>
+      <button type="button" class="btn btn-outline" id="rhpaie-btn-annuler-bulletin" style="display:none" onclick="annulerBulletin()">Annuler le bulletin</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-rh-bulletin')">Fermer</button>
+      <button type="button" class="btn btn-primary" id="rhpaie-btn-enregistrer" style="display:none" onclick="enregistrerBulletin()">Enregistrer</button>
+      <button type="button" class="btn btn-success" id="rhpaie-btn-valider" style="display:none" onclick="validerBulletin()">✓ Valider</button>
+      <button type="button" class="btn btn-success" id="rhpaie-btn-payer" style="display:none" onclick="marquerPayeBulletin()">💰 Marquer payé</button>
+    </div>
   </div>
 </div>
 
@@ -3521,6 +3740,12 @@ let rhListenersDemarres = false;
 let rhEmpCompetencesTemp = [], rhEmpDocumentsTemp = [];
 // ── RH (Phase RH-B) ────────────────────────────────────────
 let rhPointages = [], rhAbsences = [], rhPlanning = [];
+// ── RH (Phase RH-C) ────────────────────────────────────────
+let rhParametresPaie = { tauxCnpsSalarie: 6.3, tauxHeureSup: 1.25, heuresContractuellesMois: 173 };
+let rhAvances = [], rhPrets = [];
+let rhAvancesPretsVue = 'avances';
+let rhPaie = [];
+let rhFormations = [];
 
 // ── POS state ──────────────────────────────────────────
 let posClients = [];          // clients_pos
@@ -4605,6 +4830,35 @@ function demarrerListenersRH() {
     rhPlanning = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_planning:', err));
+
+  // Phase RH-C — Paramètres de Paie (document unique 'global')
+  db.collection('rh_parametres_paie').doc('global').onSnapshot(snap => {
+    if (snap.exists) rhParametresPaie = { ...rhParametresPaie, ...snap.data() };
+    rafraichirPageActive();
+  }, err => console.error('rh_parametres_paie:', err));
+
+  // Phase RH-C — Avances & Prêts
+  db.collection('rh_avances').orderBy('dateCreation','desc').onSnapshot(snap => {
+    rhAvances = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_avances:', err));
+
+  db.collection('rh_prets').orderBy('dateCreation','desc').onSnapshot(snap => {
+    rhPrets = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_prets:', err));
+
+  // Phase RH-C — Bulletins de paie
+  db.collection('rh_paie').orderBy('mois','desc').onSnapshot(snap => {
+    rhPaie = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_paie:', err));
+
+  // Phase RH-C — Formations
+  db.collection('rh_formations').orderBy('dateDebut','desc').onSnapshot(snap => {
+    rhFormations = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('rh_formations:', err));
 }
 
 function setConnStatus(status) {
@@ -4659,7 +4913,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
    'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
-   'nav-rh-presences','nav-rh-absences','nav-rh-planning'].forEach(id => {
+   'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -4724,10 +4978,22 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-rh-presences').style.display = 'flex';
     document.getElementById('nav-rh-absences').style.display = 'flex';
     document.getElementById('nav-rh-planning').style.display = 'flex';
+    document.getElementById('nav-rh-formations').style.display = 'flex';
     document.getElementById('nav-rh-dashboard').style.display = 'flex';
+    document.getElementById('nav-rh-avances').style.display = 'flex';
+    document.getElementById('nav-rh-paie').style.display = 'flex';
+    // Paramètres de Paie (Phase RH-C) : visible Admin/Gérant (lecture), modification réservée à l'Admin (cf. page)
+    document.getElementById('nav-rh-parametres').style.display = 'flex';
   } else if (isComptable) {
     document.getElementById('nav-section-rh').style.display = 'block';
     document.getElementById('nav-rh-contrats').style.display = 'flex';
+    // Phase RH-C : lecture étendue Comptable (Employés, Pointages, Absences, Avances&Prêts, Paie, Dashboard) — pas Planning ni Paramètres
+    document.getElementById('nav-rh-employes').style.display = 'flex';
+    document.getElementById('nav-rh-presences').style.display = 'flex';
+    document.getElementById('nav-rh-absences').style.display = 'flex';
+    document.getElementById('nav-rh-avances').style.display = 'flex';
+    document.getElementById('nav-rh-paie').style.display = 'flex';
+    document.getElementById('nav-rh-dashboard').style.display = 'flex';
   }
 }
 
@@ -6150,7 +6416,11 @@ const pageTitles = {
   'rh-employes':'Ressources Humaines — Employés', 'rh-contrats':'Ressources Humaines — Contrats',
   'rh-presences':'Ressources Humaines — Pointages', 'rh-absences':'Ressources Humaines — Congés & Absences',
   'rh-planning':'Ressources Humaines — Planning',
-  'rh-dashboard':'Ressources Humaines — Tableau de Bord'
+  'rh-dashboard':'Ressources Humaines — Tableau de Bord',
+  'rh-parametres':'Administration — Paramètres RH — Paramètres de Paie',
+  'rh-avances':'Ressources Humaines — Avances & Prêts',
+  'rh-paie':'Ressources Humaines — Paie',
+  'rh-formations':'Ressources Humaines — Formations'
 };
 
 function toggleUserMenu(e) {
@@ -6214,6 +6484,10 @@ function rafraichirPage(page) {
   else if (page === 'rh-absences') renderRHAbsences();
   else if (page === 'rh-planning') renderRHPlanning();
   else if (page === 'rh-dashboard') renderRHDashboard();
+  else if (page === 'rh-parametres') renderRHParametres();
+  else if (page === 'rh-avances') renderRHAvancesPrets();
+  else if (page === 'rh-paie') renderRHPaie();
+  else if (page === 'rh-formations') renderRHFormations();
 }
 
 // ===== RAPPORTS (initialisation des dates par défaut) =====
@@ -9248,11 +9522,23 @@ function renderRHDashboard() {
     return diffJours >= 0 && diffJours <= 30;
   });
 
+  // Phase RH-C — Masse salariale du mois courant + avances/prêts en cours
+  const moisCourant = today.toISOString().slice(0,7);
+  const bulletinsMois = rhPaie.filter(b => b.mois === moisCourant);
+  const masseSalariale = bulletinsMois.reduce((s,b) => s + (b.salaireBrut||0), 0);
+  const netAPayer = bulletinsMois.reduce((s,b) => s + (b.salaireNet||0), 0);
+  const avancesEnCours = rhAvances.filter(a => a.statut === 'en cours').length;
+  const pretsEnCours = rhPrets.filter(p => p.statut === 'en cours').length;
+
   kpis.innerHTML = `
     <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${effectifTotal}</h3><p>Effectif total</p></div></div>
     <div class="kpi-card success"><div class="kpi-icon">✅</div><div class="kpi-info"><h3>${actifs}</h3><p>Employés actifs</p></div></div>
     <div class="kpi-card accent"><div class="kpi-icon">📄</div><div class="kpi-info"><h3>${rhContrats.length}</h3><p>Contrats enregistrés</p></div></div>
     <div class="kpi-card danger"><div class="kpi-icon">⏳</div><div class="kpi-info"><h3>${contratsExpirant.length}</h3><p>Contrats expirant ≤ 30j</p></div></div>
+    <div class="kpi-card"><div class="kpi-icon">💴</div><div class="kpi-info"><h3>${FCFA(masseSalariale)}</h3><p>Masse salariale brute (${moisCourant})</p></div></div>
+    <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${FCFA(netAPayer)}</h3><p>Net à payer (${moisCourant})</p></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">💵</div><div class="kpi-info"><h3>${avancesEnCours}</h3><p>Avances/Acomptes en cours</p></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">🏦</div><div class="kpi-info"><h3>${pretsEnCours}</h3><p>Prêts employés en cours</p></div></div>
   `;
 
   const tbody = document.getElementById('tbody-rh-dashboard-contrats'); if (!tbody) return;
@@ -9623,6 +9909,675 @@ function renderRHPlanning() {
     <td>${p.heureFin||'—'}</td>
     ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierAffectation('${p.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
   </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucune affectation pour cette période</td></tr>`;
+}
+
+// ── MODULE RH (Phase RH-C) — Paramètres de Paie ──────────────
+// Modification réservée à l'Admin (paramètres système critiques) ; Gérant = lecture seule ; Comptable = aucun accès.
+function peutModifierParametresPaie() {
+  return !!(currentUser && currentUser.isAdmin);
+}
+
+function renderRHParametres() {
+  const form = document.getElementById('form-rh-parametres'); if (!form) return;
+  document.getElementById('rhparam-cnps').value = rhParametresPaie.tauxCnpsSalarie;
+  document.getElementById('rhparam-heuresup').value = rhParametresPaie.tauxHeureSup;
+  document.getElementById('rhparam-heurescontrat').value = rhParametresPaie.heuresContractuellesMois;
+
+  const peutModifier = peutModifierParametresPaie();
+  ['rhparam-cnps','rhparam-heuresup','rhparam-heurescontrat'].forEach(id => {
+    document.getElementById(id).disabled = !peutModifier;
+  });
+  const actions = document.getElementById('rhparam-actions');
+  if (actions) actions.style.display = peutModifier ? 'flex' : 'none';
+
+  const meta = document.getElementById('rhparam-meta');
+  if (meta) {
+    meta.textContent = rhParametresPaie.modifiePar
+      ? `Dernière modification par ${rhParametresPaie.modifiePar}${rhParametresPaie.dateModification ? ' le ' + new Date(rhParametresPaie.dateModification.seconds ? rhParametresPaie.dateModification.seconds*1000 : rhParametresPaie.dateModification).toLocaleString('fr-FR') : ''}`
+      : '';
+  }
+}
+
+async function enregistrerParametresPaie(event) {
+  event.preventDefault();
+  if (!peutModifierParametresPaie()) {
+    showToast("Seul l'Administrateur peut modifier les paramètres de paie", 'error');
+    return;
+  }
+  const data = {
+    tauxCnpsSalarie: parseFloat(document.getElementById('rhparam-cnps').value),
+    tauxHeureSup: parseFloat(document.getElementById('rhparam-heuresup').value),
+    heuresContractuellesMois: parseInt(document.getElementById('rhparam-heurescontrat').value, 10),
+    modifiePar: currentUser.label,
+    dateModification: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('rh_parametres_paie').doc('global').set(data, { merge: true });
+    consigner('Paramètres de paie modifiés', `CNPS=${data.tauxCnpsSalarie}%, Heure sup=×${data.tauxHeureSup}, Heures/mois=${data.heuresContractuellesMois}`);
+    showToast('Paramètres de paie enregistrés', 'success');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+// ── MODULE RH (Phase RH-C) — Avances & Prêts Employés ────────
+// Lecture : Admin/Gérant/Comptable (peutLireRH()). Création/Annulation : Admin/Gérant uniquement (peutGererRH()).
+// Aucune écriture dans rh_avances/rh_prets lors de la génération d'un brouillon de paie :
+// les échéances ne sont décrémentées qu'au passage Brouillon → Validé du bulletin (cf. module Paie).
+
+function rhAvancesPretsNavigate(vue) {
+  rhAvancesPretsVue = vue;
+  document.getElementById('rh-avances-tab-btn-avances').classList.toggle('active', vue === 'avances');
+  document.getElementById('rh-avances-tab-btn-prets').classList.toggle('active', vue === 'prets');
+  renderRHAvancesPrets();
+}
+
+function ouvrirNouvelleAvance() {
+  if (!requireRH()) return;
+  document.getElementById('rhav-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rhav-type').value = 'acompte';
+  document.getElementById('rhav-echeances-group').style.display = 'none';
+  document.getElementById('rhav-montant').value = '';
+  document.getElementById('rhav-date').value = today();
+  document.getElementById('rhav-mois').value = today().slice(0,7);
+  document.getElementById('rhav-echeances').value = 2;
+  document.getElementById('rhav-motif').value = '';
+  openModal('modal-rh-avance');
+}
+
+async function enregistrerAvance(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const type = document.getElementById('rhav-type').value;
+  const nbEcheances = type === 'avance' ? parseInt(document.getElementById('rhav-echeances').value, 10) || 1 : 1;
+  const data = {
+    employeId: document.getElementById('rhav-employe').value,
+    type,
+    montant: parseFloat(document.getElementById('rhav-montant').value),
+    dateOctroi: document.getElementById('rhav-date').value,
+    moisDeduction: document.getElementById('rhav-mois').value,
+    nbEcheances,
+    echeancesRestantes: nbEcheances,
+    statut: 'en cours',
+    motif: document.getElementById('rhav-motif').value.trim(),
+    creePar: currentUser.label,
+    dateCreation: firebase.firestore.FieldValue.serverTimestamp(),
+    modifiePar: null, dateModification: null,
+    validePar: null, dateValidation: null,
+    payePar: null, datePaiement: null
+  };
+  try {
+    await db.collection('rh_avances').add(data);
+    consigner('Avance/Acompte créé', `${rhNomEmploye(data.employeId)} — ${type} — ${FCFA(data.montant)}`);
+    showToast('Avance enregistrée', 'success');
+    closeModal('modal-rh-avance');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+async function annulerAvance(id) {
+  if (!requireRH()) return;
+  const av = rhAvances.find(a => a.id === id); if (!av) return;
+  if (av.statut !== 'en cours') { showToast('Seule une avance "en cours" peut être annulée', 'error'); return; }
+  if (!confirm('Annuler cette avance/acompte ?')) return;
+  try {
+    await db.collection('rh_avances').doc(id).update({
+      statut: 'annulé', modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Avance/Acompte annulé', `${rhNomEmploye(av.employeId)} — ${FCFA(av.montant)}`);
+    showToast('Avance annulée', 'success');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+function ouvrirNouveauPret() {
+  if (!requireRH()) return;
+  document.getElementById('rhpr-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rhpr-montant').value = '';
+  document.getElementById('rhpr-echeances').value = 3;
+  document.getElementById('rhpr-mois').value = today().slice(0,7);
+  document.getElementById('rhpr-motif').value = '';
+  openModal('modal-rh-pret');
+}
+
+async function enregistrerPret(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const montantTotal = parseFloat(document.getElementById('rhpr-montant').value);
+  const nbEcheances = parseInt(document.getElementById('rhpr-echeances').value, 10) || 1;
+  const data = {
+    employeId: document.getElementById('rhpr-employe').value,
+    montantTotal,
+    nbEcheances,
+    montantEcheance: Math.round(montantTotal / nbEcheances),
+    moisDebut: document.getElementById('rhpr-mois').value,
+    echeancesRemboursees: 0,
+    statut: 'en cours',
+    motif: document.getElementById('rhpr-motif').value.trim(),
+    creePar: currentUser.label,
+    dateCreation: firebase.firestore.FieldValue.serverTimestamp(),
+    modifiePar: null, dateModification: null,
+    validePar: null, dateValidation: null,
+    payePar: null, datePaiement: null
+  };
+  try {
+    await db.collection('rh_prets').add(data);
+    consigner('Prêt employé créé', `${rhNomEmploye(data.employeId)} — ${FCFA(montantTotal)} en ${nbEcheances} échéance(s)`);
+    showToast('Prêt enregistré', 'success');
+    closeModal('modal-rh-pret');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+async function annulerPret(id) {
+  if (!requireRH()) return;
+  const pr = rhPrets.find(p => p.id === id); if (!pr) return;
+  if (pr.statut !== 'en cours') { showToast('Seul un prêt "en cours" peut être annulé', 'error'); return; }
+  if (!confirm('Annuler ce prêt employé ?')) return;
+  try {
+    await db.collection('rh_prets').doc(id).update({
+      statut: 'annulé', modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Prêt employé annulé', `${rhNomEmploye(pr.employeId)} — ${FCFA(pr.montantTotal)}`);
+    showToast('Prêt annulé', 'success');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+function renderRHAvancesPrets() {
+  const peutGerer = peutGererRH();
+  const vueAvances = rhAvancesPretsVue === 'avances';
+  document.getElementById('rh-avances-card-avances').style.display = vueAvances ? '' : 'none';
+  document.getElementById('rh-avances-card-prets').style.display = vueAvances ? 'none' : '';
+  document.getElementById('rh-avances-btn-avance').style.display = (vueAvances && peutGerer) ? '' : 'none';
+  document.getElementById('rh-avances-btn-pret').style.display = (!vueAvances && peutGerer) ? '' : 'none';
+
+  document.getElementById('rh-avances-th-actions').style.display = peutGerer ? '' : 'none';
+  document.getElementById('rh-prets-th-actions').style.display = peutGerer ? '' : 'none';
+
+  const cntAv = document.getElementById('rh-avances-count');
+  if (cntAv) cntAv.textContent = `(${rhAvances.length})`;
+  const tbodyAv = document.getElementById('tbody-rh-avances');
+  if (tbodyAv) {
+    tbodyAv.innerHTML = rhAvances.map(a => `<tr>
+      <td>${rhNomEmploye(a.employeId)}</td>
+      <td>${a.type === 'acompte' ? 'Acompte' : 'Avance'}</td>
+      <td>${FCFA(a.montant)}</td>
+      <td>${a.dateOctroi||'—'}</td>
+      <td>${a.moisDeduction||'—'}</td>
+      <td>${a.echeancesRestantes}/${a.nbEcheances}</td>
+      <td>${a.statut}</td>
+      ${peutGerer ? `<td>${a.statut === 'en cours' ? `<button class="btn btn-sm btn-danger" onclick="annulerAvance('${a.id}')">Annuler</button>` : ''}</td>` : '<td style="display:none"></td>'}
+    </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px">Aucune avance/acompte enregistré</td></tr>`;
+  }
+
+  const cntPr = document.getElementById('rh-prets-count');
+  if (cntPr) cntPr.textContent = `(${rhPrets.length})`;
+  const tbodyPr = document.getElementById('tbody-rh-prets');
+  if (tbodyPr) {
+    tbodyPr.innerHTML = rhPrets.map(p => `<tr>
+      <td>${rhNomEmploye(p.employeId)}</td>
+      <td>${FCFA(p.montantTotal)}</td>
+      <td>${FCFA(p.montantEcheance)}</td>
+      <td>${p.moisDebut||'—'}</td>
+      <td>${p.echeancesRemboursees}/${p.nbEcheances}</td>
+      <td>${p.statut}</td>
+      ${peutGerer ? `<td>${p.statut === 'en cours' ? `<button class="btn btn-sm btn-danger" onclick="annulerPret('${p.id}')">Annuler</button>` : ''}</td>` : '<td style="display:none"></td>'}
+    </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">Aucun prêt enregistré</td></tr>`;
+  }
+}
+
+// ── MODULE RH (Phase RH-C) — Paie ────────────────────────────
+// Préparation (génération brouillon, édition primes/sanctions) : Admin/Gérant/Comptable.
+// Validation, paiement, suppression, annulation : Admin/Gérant uniquement.
+function peutPreparerPaie() {
+  return estGerantOuAdmin() || isComptableReel();
+}
+function peutValiderPaie() {
+  return estGerantOuAdmin();
+}
+
+// Contrat le plus récent de l'employé (rhContrats trié dateDebut desc par le listener)
+function rhContratActuel(employeId) {
+  return rhContrats.find(c => c.employeId === employeId) || {};
+}
+
+// Total des heures travaillées sur le mois (AAAA-MM), depuis rh_pointages
+function rhTotalHeuresMois(employeId, mois) {
+  return rhPointages
+    .filter(p => p.employeId === employeId && (p.date||'').startsWith(mois))
+    .reduce((s,p) => s + (p.heuresTravaillees||0), 0);
+}
+
+// Jours d'absence non payée sur le mois (AAAA-MM), depuis rh_absences (type "Absence injustifiée", statut "validé")
+function rhJoursAbsenceNonPayeeMois(employeId, mois) {
+  const [annee, moisNum] = mois.split('-').map(Number);
+  const debutMois = new Date(annee, moisNum-1, 1);
+  const finMois = new Date(annee, moisNum, 0);
+  let total = 0;
+  rhAbsences.filter(a => a.employeId === employeId && a.type === 'Absence injustifiée' && a.statut === 'validé').forEach(a => {
+    const d1 = new Date(a.dateDebut), d2 = new Date(a.dateFin || a.dateDebut);
+    const start = d1 < debutMois ? debutMois : d1;
+    const end = d2 > finMois ? finMois : d2;
+    if (end >= start) total += Math.round((end - start) / 86400000) + 1;
+  });
+  return total;
+}
+
+// Échéance d'avance/acompte "en cours" prévue pour le mois (somme, pas d'écriture ici — cf. validerBulletin)
+function rhAvanceDeductionPrevue(employeId, mois) {
+  return rhAvances.filter(a => a.employeId === employeId && a.statut === 'en cours' && a.moisDeduction && a.moisDeduction <= mois)
+    .reduce((s,a) => s + Math.round(a.montant / a.nbEcheances), 0);
+}
+
+// Échéance de prêt "en cours" prévue pour le mois (somme, pas d'écriture ici — cf. validerBulletin)
+function rhPretDeductionPrevue(employeId, mois) {
+  return rhPrets.filter(p => p.employeId === employeId && p.statut === 'en cours' && p.moisDebut && p.moisDebut <= mois)
+    .reduce((s,p) => s + (p.montantEcheance||0), 0);
+}
+
+// Calcule les éléments de gain issus du contrat + heures sup + absences (sans primes exceptionnelles/sanctions ni retenues avances/prêts)
+function calculerBulletinPaie(employe, mois) {
+  const contrat = rhContratActuel(employe.id);
+  const salaireBase = contrat.salaireBase || 0;
+  const primeTransport = contrat.primeTransport || 0;
+  const primeLogement = contrat.primeLogement || 0;
+  const primeRendement = contrat.primeRendement || 0;
+  const heuresContractuelles = rhParametresPaie.heuresContractuellesMois || 173;
+  const totalHeures = rhTotalHeuresMois(employe.id, mois);
+  const heuresSupHeures = Math.max(0, totalHeures - heuresContractuelles);
+  const tauxHoraire = heuresContractuelles > 0 ? salaireBase / heuresContractuelles : 0;
+  const heuresSupMontant = Math.round(heuresSupHeures * tauxHoraire * (rhParametresPaie.tauxHeureSup || 1.25));
+  const joursAbsence = rhJoursAbsenceNonPayeeMois(employe.id, mois);
+  const joursOuvrablesMois = 26;
+  const deductionAbsences = Math.round((salaireBase / joursOuvrablesMois) * joursAbsence);
+  return { salaireBase, primeTransport, primeLogement, primeRendement, heuresSupHeures, heuresSupMontant, joursAbsence, deductionAbsences };
+}
+
+// Numéro de bulletin séquentiel par mois : PAY-AAAA-MM-XXXX
+function genererBulletinNumero(mois, offset) {
+  const prefix = `PAY-${mois}-`;
+  const nums = rhPaie.filter(b => (b.bulletinNumero||'').startsWith(prefix))
+    .map(b => parseInt(b.bulletinNumero.slice(prefix.length), 10)).filter(n => !isNaN(n));
+  const max = nums.length ? Math.max(...nums) : 0;
+  return prefix + String(max + 1 + offset).padStart(4, '0');
+}
+
+async function genererBrouillonsDuMois() {
+  if (!peutPreparerPaie()) { showToast('Accès non autorisé', 'error'); return; }
+  const mois = document.getElementById('rh-paie-mois').value;
+  if (!mois) { showToast('Sélectionnez un mois', 'error'); return; }
+  const employesActifs = rhEmployes.filter(e => e.statut === 'actif');
+  let created = 0;
+  for (const emp of employesActifs) {
+    if (rhPaie.find(b => b.employeId === emp.id && b.mois === mois)) continue;
+    const calc = calculerBulletinPaie(emp, mois);
+    const avanceDeduite = rhAvanceDeductionPrevue(emp.id, mois);
+    const pretEcheanceDeduite = rhPretDeductionPrevue(emp.id, mois);
+    const salaireBrut = calc.salaireBase + calc.primeTransport + calc.primeLogement + calc.primeRendement + calc.heuresSupMontant - calc.deductionAbsences;
+    const cnpsSalarie = Math.round(salaireBrut * (rhParametresPaie.tauxCnpsSalarie || 0) / 100);
+    const totalRetenues = cnpsSalarie + avanceDeduite + pretEcheanceDeduite;
+    const salaireNet = salaireBrut - totalRetenues;
+    try {
+      await db.collection('rh_paie').add({
+        employeId: emp.id, mois, bulletinNumero: genererBulletinNumero(mois, created), statut: 'brouillon',
+        salaireBase: calc.salaireBase, primeTransport: calc.primeTransport, primeLogement: calc.primeLogement, primeRendement: calc.primeRendement,
+        heuresSupHeures: calc.heuresSupHeures, heuresSupMontant: calc.heuresSupMontant,
+        joursAbsence: calc.joursAbsence, deductionAbsences: calc.deductionAbsences,
+        primesExceptionnelles: [], sanctions: [],
+        salaireBrut, cnpsSalarie, avanceDeduite, pretEcheanceDeduite, totalRetenues, salaireNet,
+        creePar: currentUser.label, dateCreation: firebase.firestore.FieldValue.serverTimestamp(),
+        modifiePar: null, dateModification: null,
+        validePar: null, dateValidation: null,
+        payePar: null, datePaiement: null
+      });
+      created++;
+    } catch (e) {
+      showToast('Erreur : ' + e.message, 'error');
+      return;
+    }
+  }
+  consigner('Brouillons de paie générés', `${created} bulletin(s) pour ${mois}`);
+  showToast(`${created} brouillon(s) généré(s)`, 'success');
+}
+
+function renderBulletinTable(b) {
+  const totalPrimesExc = (b.primesExceptionnelles||[]).reduce((s,p) => s + (p.montant||0), 0);
+  const totalSanctions = (b.sanctions||[]).reduce((s,p) => s + (p.montant||0), 0);
+  const ligne = (label, montant, negatif) => `<tr><td>${label}</td><td style="text-align:right">${negatif ? '− ' : ''}${FCFA(Math.abs(montant))}</td></tr>`;
+  return `
+    <tr style="background:var(--bg-soft,#eef2f6)"><td colspan="2"><strong>GAINS</strong></td></tr>
+    ${ligne('Salaire de base', b.salaireBase)}
+    ${ligne('Prime de transport', b.primeTransport)}
+    ${ligne('Prime de logement', b.primeLogement)}
+    ${ligne('Prime de rendement', b.primeRendement)}
+    ${ligne(`Heures supplémentaires (${b.heuresSupHeures}h)`, b.heuresSupMontant)}
+    ${totalPrimesExc ? ligne('Primes exceptionnelles', totalPrimesExc) : ''}
+    ${b.deductionAbsences ? ligne(`Absences non payées (${b.joursAbsence}j)`, b.deductionAbsences, true) : ''}
+    <tr style="font-weight:600;border-top:1px solid var(--border,#ddd)"><td>SALAIRE BRUT</td><td style="text-align:right">${FCFA(b.salaireBrut)}</td></tr>
+    <tr style="background:var(--bg-soft,#eef2f6)"><td colspan="2"><strong>RETENUES</strong></td></tr>
+    ${ligne('CNPS (part salariale)', b.cnpsSalarie)}
+    ${b.avanceDeduite ? ligne('Avance / Acompte', b.avanceDeduite) : ''}
+    ${b.pretEcheanceDeduite ? ligne('Échéance prêt employé', b.pretEcheanceDeduite) : ''}
+    ${totalSanctions ? ligne('Sanctions', totalSanctions) : ''}
+    <tr style="font-weight:600;border-top:1px solid var(--border,#ddd)"><td>TOTAL RETENUES</td><td style="text-align:right">${FCFA(b.totalRetenues)}</td></tr>
+    <tr style="font-weight:700;font-size:16px;border-top:2px solid var(--border,#ddd)"><td>NET À PAYER</td><td style="text-align:right">${FCFA(b.salaireNet)}</td></tr>
+  `;
+}
+
+function ouvrirBulletin(id) {
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  document.getElementById('rhpaie-edit-id').value = id;
+  document.getElementById('modal-rh-bulletin-title').textContent = `Bulletin ${b.bulletinNumero} — ${rhNomEmploye(b.employeId)} (${b.mois})`;
+  document.getElementById('rh-bulletin-header').innerHTML = `Statut : <strong>${b.statut}</strong>`
+    + (b.creePar ? ` · Préparé par ${b.creePar}` : '')
+    + (b.validePar ? ` · Validé par ${b.validePar}` : '')
+    + (b.payePar ? ` · Payé par ${b.payePar}` : '');
+  document.getElementById('rh-bulletin-table').innerHTML = renderBulletinTable(b);
+
+  const primeExc = (b.primesExceptionnelles||[])[0] || {libelle:'', montant:0};
+  const sanction = (b.sanctions||[])[0] || {motif:'', montant:0};
+  document.getElementById('rhpaie-prime-libelle').value = primeExc.libelle || '';
+  document.getElementById('rhpaie-prime-montant').value = primeExc.montant || 0;
+  document.getElementById('rhpaie-sanction-motif').value = sanction.motif || '';
+  document.getElementById('rhpaie-sanction-montant').value = sanction.montant || 0;
+
+  const isBrouillon = b.statut === 'brouillon';
+  const isValide = b.statut === 'validé';
+  const isPaye = b.statut === 'payé';
+  const peutPrep = peutPreparerPaie();
+  const peutVal = peutValiderPaie();
+  ['rhpaie-prime-libelle','rhpaie-prime-montant','rhpaie-sanction-motif','rhpaie-sanction-montant'].forEach(elId => {
+    document.getElementById(elId).disabled = !(isBrouillon && peutPrep);
+  });
+  document.getElementById('rhpaie-btn-enregistrer').style.display = (isBrouillon && peutPrep) ? '' : 'none';
+  document.getElementById('rhpaie-btn-valider').style.display = (isBrouillon && peutVal) ? '' : 'none';
+  document.getElementById('rhpaie-btn-payer').style.display = (isValide && peutVal) ? '' : 'none';
+  document.getElementById('rhpaie-btn-supprimer').style.display = (isBrouillon && peutVal) ? '' : 'none';
+  document.getElementById('rhpaie-btn-annuler-bulletin').style.display = ((isValide || isPaye) && peutVal) ? '' : 'none';
+  openModal('modal-rh-bulletin');
+}
+
+async function enregistrerBulletin() {
+  const id = document.getElementById('rhpaie-edit-id').value;
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  if (!peutPreparerPaie()) { showToast('Accès non autorisé', 'error'); return; }
+  if (b.statut !== 'brouillon') { showToast('Seul un brouillon peut être modifié', 'error'); return; }
+  const primeLibelle = document.getElementById('rhpaie-prime-libelle').value.trim();
+  const primeMontant = parseFloat(document.getElementById('rhpaie-prime-montant').value) || 0;
+  const sanctionMotif = document.getElementById('rhpaie-sanction-motif').value.trim();
+  const sanctionMontant = parseFloat(document.getElementById('rhpaie-sanction-montant').value) || 0;
+  const primesExceptionnelles = primeMontant > 0 ? [{libelle: primeLibelle || 'Prime exceptionnelle', montant: primeMontant}] : [];
+  const sanctions = sanctionMontant > 0 ? [{motif: sanctionMotif || 'Sanction', montant: sanctionMontant}] : [];
+  const totalPrimesExc = primesExceptionnelles.reduce((s,p) => s + p.montant, 0);
+  const totalSanctions = sanctions.reduce((s,p) => s + p.montant, 0);
+  const salaireBrut = b.salaireBase + b.primeTransport + b.primeLogement + b.primeRendement + b.heuresSupMontant + totalPrimesExc - b.deductionAbsences;
+  const cnpsSalarie = Math.round(salaireBrut * (rhParametresPaie.tauxCnpsSalarie || 0) / 100);
+  const totalRetenues = cnpsSalarie + b.avanceDeduite + b.pretEcheanceDeduite + totalSanctions;
+  const salaireNet = salaireBrut - totalRetenues;
+  try {
+    await db.collection('rh_paie').doc(id).update({
+      primesExceptionnelles, sanctions, salaireBrut, cnpsSalarie, totalRetenues, salaireNet,
+      modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Bulletin de paie modifié', `${b.bulletinNumero} — ${rhNomEmploye(b.employeId)}`);
+    showToast('Bulletin mis à jour', 'success');
+    closeModal('modal-rh-bulletin');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+// Validation Brouillon → Validé : décompte les échéances d'avances/prêts "en cours" du mois (seul moment d'écriture).
+async function validerBulletin() {
+  const id = document.getElementById('rhpaie-edit-id').value;
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  if (!peutValiderPaie()) { showToast('Validation réservée à Admin/Gérant', 'error'); return; }
+  if (b.statut !== 'brouillon') { showToast('Seul un brouillon peut être validé', 'error'); return; }
+  if (!confirm(`Valider le bulletin ${b.bulletinNumero} ? Les échéances d'avances/prêts en cours seront décomptées.`)) return;
+  try {
+    const batch = db.batch();
+    batch.update(db.collection('rh_paie').doc(id), {
+      statut: 'validé', validePar: currentUser.label, dateValidation: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    rhAvances.filter(a => a.employeId === b.employeId && a.statut === 'en cours' && a.moisDeduction && a.moisDeduction <= b.mois).forEach(a => {
+      const restantes = (a.echeancesRestantes||1) - 1;
+      batch.update(db.collection('rh_avances').doc(a.id), {
+        echeancesRestantes: restantes, statut: restantes <= 0 ? 'remboursé' : 'en cours',
+        modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    rhPrets.filter(p => p.employeId === b.employeId && p.statut === 'en cours' && p.moisDebut && p.moisDebut <= b.mois).forEach(p => {
+      const remboursees = (p.echeancesRemboursees||0) + 1;
+      batch.update(db.collection('rh_prets').doc(p.id), {
+        echeancesRemboursees: remboursees, statut: remboursees >= p.nbEcheances ? 'remboursé' : 'en cours',
+        modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    consigner('Bulletin de paie validé', `${b.bulletinNumero} — ${rhNomEmploye(b.employeId)} — Net ${FCFA(b.salaireNet)}`);
+    showToast('Bulletin validé', 'success');
+    closeModal('modal-rh-bulletin');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+// Validé → Payé : aucune écriture sur les avances/prêts (déjà décomptées à la validation).
+async function marquerPayeBulletin() {
+  const id = document.getElementById('rhpaie-edit-id').value;
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  if (!peutValiderPaie()) { showToast('Action réservée à Admin/Gérant', 'error'); return; }
+  if (b.statut !== 'validé') { showToast('Seul un bulletin validé peut être marqué payé', 'error'); return; }
+  try {
+    await db.collection('rh_paie').doc(id).update({
+      statut: 'payé', payePar: currentUser.label, datePaiement: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Bulletin de paie marqué payé', `${b.bulletinNumero} — ${rhNomEmploye(b.employeId)}`);
+    showToast('Bulletin marqué payé', 'success');
+    closeModal('modal-rh-bulletin');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+async function supprimerBulletin() {
+  const id = document.getElementById('rhpaie-edit-id').value;
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  if (!peutValiderPaie()) { showToast('Suppression réservée à Admin/Gérant', 'error'); return; }
+  if (b.statut !== 'brouillon') { showToast('Seul un brouillon peut être supprimé', 'error'); return; }
+  if (!confirm(`Supprimer le brouillon ${b.bulletinNumero} ?`)) return;
+  try {
+    await db.collection('rh_paie').doc(id).delete();
+    consigner('Brouillon de paie supprimé', `${b.bulletinNumero} — ${rhNomEmploye(b.employeId)}`);
+    showToast('Brouillon supprimé', 'success');
+    closeModal('modal-rh-bulletin');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+// Validé/Payé → Annulé : les échéances d'avances/prêts déjà décomptées à la validation ne sont pas restaurées (limitation V1 documentée).
+async function annulerBulletin() {
+  const id = document.getElementById('rhpaie-edit-id').value;
+  const b = rhPaie.find(x => x.id === id); if (!b) return;
+  if (!peutValiderPaie()) { showToast('Action réservée à Admin/Gérant', 'error'); return; }
+  if (b.statut !== 'validé' && b.statut !== 'payé') { showToast('Seul un bulletin validé ou payé peut être annulé', 'error'); return; }
+  if (!confirm(`Annuler le bulletin ${b.bulletinNumero} ? Les échéances d'avances/prêts déjà décomptées ne seront pas restaurées automatiquement.`)) return;
+  try {
+    await db.collection('rh_paie').doc(id).update({
+      statut: 'annulé', modifiePar: currentUser.label, dateModification: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Bulletin de paie annulé', `${b.bulletinNumero} — ${rhNomEmploye(b.employeId)}`);
+    showToast('Bulletin annulé', 'success');
+    closeModal('modal-rh-bulletin');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+function exporterPaieCSV() {
+  const mois = document.getElementById('rh-paie-mois').value;
+  const bulletins = rhPaie.filter(b => b.mois === mois);
+  const lignes = [['N° Bulletin','Employé','Mois','Salaire brut','CNPS','Avance déduite','Prêt déduit','Total retenues','Net à payer','Statut']];
+  bulletins.forEach(b => lignes.push([b.bulletinNumero, rhNomEmploye(b.employeId), b.mois, b.salaireBrut, b.cnpsSalarie, b.avanceDeduite, b.pretEcheanceDeduite, b.totalRetenues, b.salaireNet, b.statut]));
+  const totalBrut = bulletins.reduce((s,b) => s + (b.salaireBrut||0), 0);
+  const totalNet = bulletins.reduce((s,b) => s + (b.salaireNet||0), 0);
+  lignes.push([]);
+  lignes.push(['Masse salariale brute', '', '', totalBrut]);
+  lignes.push(['Total net à payer', '', '', '', '', '', '', '', totalNet]);
+  telechargerCSV(lignes, `paie_${mois}.csv`);
+}
+
+function renderRHPaie() {
+  const moisInput = document.getElementById('rh-paie-mois');
+  if (!moisInput.value) moisInput.value = today().slice(0,7);
+  const mois = moisInput.value;
+  const bulletins = rhPaie.filter(b => b.mois === mois).slice().sort((a,b) => (a.bulletinNumero||'').localeCompare(b.bulletinNumero||''));
+  document.getElementById('rh-paie-btn-generer').style.display = peutPreparerPaie() ? '' : 'none';
+  const cnt = document.getElementById('rh-paie-count');
+  if (cnt) cnt.textContent = `(${bulletins.length})`;
+  const statutColor = {brouillon:'#C8981A', 'validé':'var(--success)', 'payé':'var(--success)', 'annulé':'var(--danger)'};
+  document.getElementById('tbody-rh-paie').innerHTML = bulletins.map(b => `<tr>
+    <td>${b.bulletinNumero}</td>
+    <td>${rhNomEmploye(b.employeId)}</td>
+    <td>${FCFA(b.salaireBrut)}</td>
+    <td>${FCFA(b.totalRetenues)}</td>
+    <td>${FCFA(b.salaireNet)}</td>
+    <td><span style="color:${statutColor[b.statut]||'var(--text-muted)'};font-weight:600">${b.statut}</span></td>
+    <td><button class="btn btn-sm btn-outline" onclick="ouvrirBulletin('${b.id}')">👁 Détail</button></td>
+  </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">Aucun bulletin pour ce mois${peutPreparerPaie() ? ' — cliquez sur « Générer les brouillons du mois »' : ''}</td></tr>`;
+
+  const totalBrut = bulletins.reduce((s,b) => s + (b.salaireBrut||0), 0);
+  const totalCnps = bulletins.reduce((s,b) => s + (b.cnpsSalarie||0), 0);
+  const totalNet = bulletins.reduce((s,b) => s + (b.salaireNet||0), 0);
+  const kpis = document.getElementById('rh-paie-kpis');
+  if (kpis) kpis.innerHTML = `
+    <div class="kpi-card"><div class="kpi-icon">💴</div><div class="kpi-info"><h3>${FCFA(totalBrut)}</h3><p>Masse salariale brute</p></div></div>
+    <div class="kpi-card accent"><div class="kpi-icon">🏛️</div><div class="kpi-info"><h3>${FCFA(totalCnps)}</h3><p>Total CNPS salarié</p></div></div>
+    <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${FCFA(totalNet)}</h3><p>Total net à payer</p></div></div>
+  `;
+}
+
+// ── MODULE RH (Phase RH-C) — Formations ──────────────────────
+// Accès réservé Admin/Gérant (même périmètre que Planning) — Comptable et autres rôles : aucun accès.
+function ouvrirNouvelleFormation() {
+  if (!requireRH()) return;
+  document.getElementById('modal-rh-formation-title').textContent = 'Nouvelle Formation';
+  document.querySelector('#modal-rh-formation form').reset();
+  document.getElementById('rhf-employe').innerHTML = rhOptionsEmployes();
+  document.getElementById('rhf-statut').value = 'planifiée';
+  document.getElementById('rhf-cout').value = 0;
+  document.getElementById('rhf-cout-paye').checked = false;
+  document.getElementById('rhf-edit-id').value = '';
+  document.getElementById('btn-delete-rhf').style.display = 'none';
+  openModal('modal-rh-formation');
+}
+
+function ouvrirModifierFormation(id) {
+  if (!requireRH()) return;
+  const f = rhFormations.find(x => x.id === id); if (!f) return;
+  document.getElementById('modal-rh-formation-title').textContent = 'Modifier la Formation';
+  document.getElementById('rhf-employe').innerHTML = rhOptionsEmployes(f.employeId);
+  document.getElementById('rhf-intitule').value = f.intitule || '';
+  document.getElementById('rhf-organisme').value = f.organisme || '';
+  document.getElementById('rhf-debut').value = f.dateDebut || '';
+  document.getElementById('rhf-fin').value = f.dateFin || '';
+  document.getElementById('rhf-cout').value = f.cout || 0;
+  document.getElementById('rhf-statut').value = f.statut || 'planifiée';
+  document.getElementById('rhf-cout-paye').checked = !!f.coutPaye;
+  document.getElementById('rhf-notes').value = f.notes || '';
+  document.getElementById('rhf-edit-id').value = id;
+  document.getElementById('btn-delete-rhf').style.display = '';
+  openModal('modal-rh-formation');
+}
+
+async function enregistrerFormation(event) {
+  event.preventDefault();
+  if (!requireRH()) return;
+  const id = document.getElementById('rhf-edit-id').value;
+  const statut = document.getElementById('rhf-statut').value;
+  const coutPaye = document.getElementById('rhf-cout-paye').checked;
+  const data = {
+    employeId: document.getElementById('rhf-employe').value,
+    intitule: document.getElementById('rhf-intitule').value.trim(),
+    organisme: document.getElementById('rhf-organisme').value.trim(),
+    dateDebut: document.getElementById('rhf-debut').value,
+    dateFin: document.getElementById('rhf-fin').value || null,
+    cout: parseFloat(document.getElementById('rhf-cout').value) || 0,
+    statut, coutPaye,
+    notes: document.getElementById('rhf-notes').value.trim()
+  };
+  try {
+    if (id) {
+      const f = rhFormations.find(x => x.id === id);
+      data.modifiePar = currentUser.label;
+      data.dateModification = firebase.firestore.FieldValue.serverTimestamp();
+      if (statut === 'terminée' && f && f.statut !== 'terminée') {
+        data.validePar = currentUser.label;
+        data.dateValidation = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      if (coutPaye && f && !f.coutPaye) {
+        data.payePar = currentUser.label;
+        data.datePaiement = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      await db.collection('rh_formations').doc(id).update(data);
+      consigner('Formation modifiée', `${data.intitule} — ${rhNomEmploye(data.employeId)}`);
+      showToast('Formation mise à jour', 'success');
+    } else {
+      data.creePar = currentUser.label;
+      data.dateCreation = firebase.firestore.FieldValue.serverTimestamp();
+      data.modifiePar = null; data.dateModification = null;
+      data.validePar = statut === 'terminée' ? currentUser.label : null;
+      data.dateValidation = statut === 'terminée' ? firebase.firestore.FieldValue.serverTimestamp() : null;
+      data.payePar = coutPaye ? currentUser.label : null;
+      data.datePaiement = coutPaye ? firebase.firestore.FieldValue.serverTimestamp() : null;
+      await db.collection('rh_formations').add(data);
+      consigner('Formation créée', `${data.intitule} — ${rhNomEmploye(data.employeId)}`);
+      showToast('Formation enregistrée', 'success');
+    }
+    closeModal('modal-rh-formation');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+async function supprimerFormationDepuisModal() {
+  if (!requireRH()) return;
+  const id = document.getElementById('rhf-edit-id').value;
+  const f = rhFormations.find(x => x.id === id); if (!f) return;
+  if (!confirm(`Supprimer la formation "${f.intitule}" ?`)) return;
+  try {
+    await db.collection('rh_formations').doc(id).delete();
+    consigner('Formation supprimée', `${f.intitule} — ${rhNomEmploye(f.employeId)}`);
+    showToast('Formation supprimée', 'success');
+    closeModal('modal-rh-formation');
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+function renderRHFormations() {
+  const peutGerer = peutGererRH();
+  document.getElementById('rh-formations-actions').style.display = peutGerer ? '' : 'none';
+  document.getElementById('rh-formations-th-actions').style.display = peutGerer ? '' : 'none';
+  const cnt = document.getElementById('rh-formations-count');
+  if (cnt) cnt.textContent = `(${rhFormations.length})`;
+  document.getElementById('tbody-rh-formations').innerHTML = rhFormations.map(f => `<tr>
+    <td>${rhNomEmploye(f.employeId)}</td>
+    <td>${f.intitule}</td>
+    <td>${f.organisme || '—'}</td>
+    <td>${f.dateDebut || '—'}</td>
+    <td>${f.dateFin || '—'}</td>
+    <td>${FCFA(f.cout||0)}</td>
+    <td>${f.statut}</td>
+    <td>${f.coutPaye ? '✅' : '—'}</td>
+    ${peutGerer ? `<td><button class="btn btn-sm btn-outline" onclick="ouvrirModifierFormation('${f.id}')">✏ Modifier</button></td>` : '<td style="display:none"></td>'}
+  </tr>`).join('') || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:30px">Aucune formation enregistrée</td></tr>`;
 }
 
 // ===== INIT PAGE =====
