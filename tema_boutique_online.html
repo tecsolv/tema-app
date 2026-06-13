@@ -1305,12 +1305,13 @@
     <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
     <div class="nav-section" id="nav-section-stock">Stock</div>
     <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
-    <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
     <div class="nav-section" id="nav-section-achats">Achats</div>
+    <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
     <div class="nav-item" id="nav-fournisseurs" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
     <div class="nav-item" id="nav-commandes" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
     <div class="nav-section" id="nav-section-ventes">Ventes</div>
     <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
+    <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
     <div class="nav-section">Rapports</div>
     <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
     <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
@@ -1336,7 +1337,6 @@
     <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
     <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
     <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
-    <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
   </div>
   <div class="sidebar-footer">
     <span class="realtime-dot"></span> Synchronisation temps réel<br>
@@ -5568,6 +5568,12 @@ async function confirmerVente() {
       });
     }
     await batch.commit();
+    // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
+    const numPiecesVente = genererNumPieces(posPanier.length);
+    posPanier.forEach((item, idx) => {
+      const zone=item.serviceType?'E':(CAT_ZONE[item.cat]||'D');
+      genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
+    });
     closePosModal('modal-payment');
     afficherTicketPOS({ticketNum, items:[...posPanier], sous, remiseFCFA, total, monnaie, montantRemis, modePaiement:posModePayActuel, client:posClientActuel, heure, date:dateDuJour});
     showToast('✅ Vente enregistrée — ' + posF(total));
@@ -6902,7 +6908,9 @@ async function changerStatutCmd(id, statut) {
     });
     if (statut === 'received' && c.lignes) {
       const fournNom = (fournisseurs.find(f => f.id === c.fournId) || {}).nom || 'Fournisseur';
-      for (const l of c.lignes) {
+      const numPiecesAchat = genererNumPieces(c.lignes.length);
+      for (let i = 0; i < c.lignes.length; i++) {
+        const l = c.lignes[i];
         const p = produits.find(x => x.nom === l.nom);
         if (p) {
           await db.collection('produits').doc(p.id).update({
@@ -6911,7 +6919,7 @@ async function changerStatutCmd(id, statut) {
           });
         }
         // Liaison automatique Comptabilité OHADA : Débit 601 Achats / Crédit 401 Fournisseurs
-        genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom);
+        genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom, numPiecesAchat[i]);
       }
       consigner('Commande reçue', `${c.num||id} — stock mis à jour`);
       showToast('Commande reçue — stock mis à jour ✓');
@@ -7550,13 +7558,22 @@ function genererNumPiece() {
   return `EC-${annee}-${String(n).padStart(4, '0')}`;
 }
 
+// Génère N numéros de pièce séquentiels, pour éviter les doublons quand plusieurs écritures sont créées dans la même boucle (avant que le listener ne mette à jour `ecritures`)
+function genererNumPieces(count) {
+  const annee = new Date().getFullYear();
+  const debut = ecritures.filter(e => (e.numPiece || '').includes(`EC-${annee}-`)).length + 1;
+  const result = [];
+  for (let i = 0; i < count; i++) result.push(`EC-${annee}-${String(debut + i).padStart(4, '0')}`);
+  return result;
+}
+
 // Crée une écriture automatique liée à une vente (Débit Trésorerie / Crédit Produits)
-async function genererEcritureVente(vente) {
+async function genererEcritureVente(vente, numPieceOverride) {
   try {
     const compteDebit = COMPTE_TRESORERIE_PAR_MODE[vente.modePaiement] || '521';
     const compteCredit = COMPTE_PRODUIT_PAR_ZONE[vente.zone] || '701';
     await db.collection('ecritures_comptables').add({
-      numPiece: genererNumPiece(),
+      numPiece: numPieceOverride || genererNumPiece(),
       date: vente.date,
       libelle: `Vente ${vente.article} — ${ZONES_CAISSE[vente.zone]?.label || vente.zone}`,
       compteDebit, montantDebit: vente.montant,
@@ -7570,10 +7587,10 @@ async function genererEcritureVente(vente) {
 }
 
 // Crée une écriture automatique liée à un approvisionnement reçu (Débit Achats / Crédit Fournisseurs)
-async function genererEcritureAchat(article, montant, fournisseurNom) {
+async function genererEcritureAchat(article, montant, fournisseurNom, numPieceOverride) {
   try {
     await db.collection('ecritures_comptables').add({
-      numPiece: genererNumPiece(),
+      numPiece: numPieceOverride || genererNumPiece(),
       date: today(),
       libelle: `Achat ${article} — ${fournisseurNom}`,
       compteDebit: '601', montantDebit: montant,
