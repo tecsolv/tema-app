@@ -155,6 +155,12 @@
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
+  .cpt-perms-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; background: var(--bg-soft,#f5f6fa); border-radius: 10px; padding: 12px; }
+  .cpt-perms-cat-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; }
+  .cpt-perm-item { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: normal; color: var(--text); padding: 3px 0; cursor: pointer; }
+  .cpt-perm-item input { width: 15px; height: 15px; cursor: pointer; }
+  @media (max-width: 600px) { .cpt-perms-grid { grid-template-columns: 1fr; } }
+
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
   .modal { background: #fff; border-radius: 14px; padding: 28px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
@@ -649,6 +655,14 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
   .pos-back-btn:hover { background: rgba(255,255,255,.22); }
+  .btn-fermer-caisse {
+    display: flex; align-items: center; gap: 12px; background: #f4b400; color: #1a1a1a;
+    border: none; border-radius: 10px; padding: 14px 22px; font-size: 14px; font-weight: 800;
+    letter-spacing: 0.5px; line-height: 1.3; text-align: left; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(244,180,0,0.35); transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .btn-fermer-caisse:hover { background: #ffc620; transform: translateY(-1px); }
+  .btn-fermer-caisse-icon { font-size: 24px; }
   .pos-title { color: #fff; font-weight: 700; font-size: 15px; }
   .pos-cashier-info { color: rgba(255,255,255,.5); font-size: 12px; }
   .pos-topbar-right { display: flex; align-items: center; gap: 10px; }
@@ -1342,7 +1356,7 @@
     <div class="nav-group" data-group="rapports">
       <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Rapports</div>
       <div class="nav-group-body">
-        <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
+        <div class="nav-item" id="nav-rapports" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
         <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
         <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
         <div class="nav-item" id="nav-alertes" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
@@ -2604,6 +2618,31 @@
         <label>Mot de passe initial * <span style="text-transform:none;font-weight:400">(8 caractères min., l'employé ne pourra pas le changer lui-même)</span></label>
         <input class="form-control" id="cpt-pass" type="text" placeholder="Définissez un mot de passe">
       </div>
+      <div class="form-group">
+        <label>🔐 Accès système <span style="text-transform:none;font-weight:400">(modules visibles pour cet employé, en plus des règles liées à son rôle)</span></label>
+        <div class="cpt-perms-grid">
+          <div class="cpt-perms-cat">
+            <div class="cpt-perms-cat-title">Ventes</div>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-sales" checked> Ventes / Caisse</label>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-scan" checked> Scan produit</label>
+          </div>
+          <div class="cpt-perms-cat">
+            <div class="cpt-perms-cat-title">Logistique</div>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-stock" checked> Stock</label>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-purchases" checked> Achats</label>
+          </div>
+          <div class="cpt-perms-cat">
+            <div class="cpt-perms-cat-title">Finance</div>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-reports" checked> Rapports</label>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-mobile_money" checked> Mobile Money</label>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-services" checked> Services Numériques</label>
+          </div>
+          <div class="cpt-perms-cat">
+            <div class="cpt-perms-cat-title">Administration</div>
+            <label class="cpt-perm-item"><input type="checkbox" id="cpt-perm-hr" checked> Ressources Humaines</label>
+          </div>
+        </div>
+      </div>
       <input type="hidden" id="cpt-edit-id" value="">
       <div class="modal-footer">
         <button type="button" class="btn btn-danger" id="btn-delete-compte" style="display:none;margin-right:auto" onclick="supprimerCompteDepuisModal()">🗑 Supprimer</button>
@@ -3086,6 +3125,12 @@
     <h2 style="color:#fff;margin-bottom:6px">Sélectionnez votre caisse</h2>
     <p style="color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center;max-width:480px">Votre session démarrera automatiquement dès que vous choisissez une caisse disponible.</p>
     <div id="select-caisse-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;max-width:780px;width:100%"></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;padding:0 30px 30px">
+    <button class="btn-fermer-caisse" onclick="seDeconnecter()" title="Fermer votre caisse">
+      <span class="btn-fermer-caisse-icon">⏻</span>
+      <span>FERMER<br>VOTRE CAISSE</span>
+    </button>
   </div>
 </div>
 
@@ -3974,7 +4019,8 @@ async function seConnecter() {
 
     currentUser = {
       id: userDoc.id, nom: u.nom, role: u.role, username: u.username,
-      isAdmin: !!u.isAdmin, label: u.nom?.includes(`(${u.role})`) ? u.nom : `${u.nom} (${u.role})`
+      isAdmin: !!u.isAdmin, permissions: u.permissions || null,
+      label: u.nom?.includes(`(${u.role})`) ? u.nom : `${u.nom} (${u.role})`
     };
     sessionStorage.setItem('tema_user', JSON.stringify(currentUser));
 
@@ -4966,11 +5012,41 @@ function afficherApp() {
     setConnStatus('online');
     appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier);
     appliquerFiltreActionsRapides(isAdmin, isGerant, isComptable, isMagasinier);
+    appliquerFiltrePermissionsEmployes();
     restaurerNavGroupState();
     checkEtInitialiserDonnees();
     renderDashboard();
     if (peutLireRH()) demarrerListenersRH();
   }
+}
+
+// RBAC dynamique (Phase RBAC-A) : permissions granulaires par employé, additives aux règles de rôle ci-dessous.
+// Si currentUser.permissions est absent (comptes existants), tous les modules restent autorisés (rétrocompatible).
+const MODULES_NAV_IDS = {
+  sales: ['nav-caisse-journal','nav-pos','topbar-action-vente'],
+  stock: ['nav-section-stock','nav-inventaire'],
+  purchases: ['nav-section-achats','nav-categories','nav-fournisseurs','nav-commandes'],
+  reports: ['nav-rapports','nav-comptabilite','nav-rapprochement','nav-alertes','nav-rentabilite'],
+  hr: ['nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-formations','nav-rh-avances','nav-rh-paie','nav-rh-dashboard','nav-rh-parametres'],
+  mobile_money: ['nav-mobilemoney','topbar-action-mm'],
+  services: ['nav-services','topbar-action-services'],
+  scan: ['topbar-action-scan']
+};
+
+function peutAccederModule(module) {
+  if (!currentUser || currentUser.isAdmin) return true;
+  if (!currentUser.permissions) return true;
+  return currentUser.permissions[module] !== false;
+}
+
+function appliquerFiltrePermissionsEmployes() {
+  Object.entries(MODULES_NAV_IDS).forEach(([module, ids]) => {
+    if (peutAccederModule(module)) return;
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  });
 }
 
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
@@ -6511,17 +6587,17 @@ function appliquerFiltreActionsRapides(isAdmin, isGerant, isComptable, isMagasin
   const accesInventaire = !(isComptable && !isGerant && !isAdmin);
   const accesSuiviCaisse = isAdmin;
 
-  document.getElementById('topbar-action-vente').style.display = accesCaisseJournal ? 'inline-flex' : 'none';
-  document.getElementById('topbar-action-scan').style.display = accesInventaire ? 'inline-flex' : 'none';
-  document.getElementById('topbar-action-mm').style.display = accesMobileMoneyServices ? 'inline-flex' : 'none';
-  document.getElementById('topbar-action-services').style.display = accesMobileMoneyServices ? 'inline-flex' : 'none';
+  document.getElementById('topbar-action-vente').style.display = (accesCaisseJournal && peutAccederModule('sales')) ? 'inline-flex' : 'none';
+  document.getElementById('topbar-action-scan').style.display = (accesInventaire && peutAccederModule('scan')) ? 'inline-flex' : 'none';
+  document.getElementById('topbar-action-mm').style.display = (accesMobileMoneyServices && peutAccederModule('mobile_money')) ? 'inline-flex' : 'none';
+  document.getElementById('topbar-action-services').style.display = (accesMobileMoneyServices && peutAccederModule('services')) ? 'inline-flex' : 'none';
 
   // Mémorise les accès pour accederRapide() (raccourcis dashboard)
   window._accesRapideKpi = {
     'nav-alertes': true,
-    'nav-commandes': accesInventaire,
-    'nav-mobilemoney': accesMobileMoneyServices,
-    'nav-services': accesMobileMoneyServices,
+    'nav-commandes': accesInventaire && peutAccederModule('purchases'),
+    'nav-mobilemoney': accesMobileMoneyServices && peutAccederModule('mobile_money'),
+    'nav-services': accesMobileMoneyServices && peutAccederModule('services'),
     'nav-suivicaisse': accesSuiviCaisse
   };
 }
@@ -7273,6 +7349,24 @@ function renderComptes() {
     </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucun compte</td></tr>';
 }
 
+const MODULES_PERMISSIONS = ['sales','stock','purchases','reports','hr','mobile_money','services','scan'];
+
+function lireFormulairePermissions() {
+  const perms = {};
+  MODULES_PERMISSIONS.forEach(m => {
+    const el = document.getElementById('cpt-perm-' + m);
+    perms[m] = el ? el.checked : true;
+  });
+  return perms;
+}
+
+function remplirFormulairePermissions(permissions) {
+  MODULES_PERMISSIONS.forEach(m => {
+    const el = document.getElementById('cpt-perm-' + m);
+    if (el) el.checked = !permissions || permissions[m] !== false;
+  });
+}
+
 function ouvrirNouveauCompte() {
   document.getElementById('modal-compte-title').textContent = 'Nouveau Compte Employé';
   document.getElementById('cpt-edit-id').value = '';
@@ -7285,6 +7379,7 @@ function ouvrirNouveauCompte() {
   document.querySelector('#cpt-pass-group label').innerHTML = "Mot de passe initial * <span style=\"text-transform:none;font-weight:400\">(8 caractères min., l'employé ne pourra pas le changer lui-même)</span>";
   document.getElementById('btn-save-compte').textContent = 'Créer le compte';
   document.getElementById('btn-delete-compte').style.display = 'none';
+  remplirFormulairePermissions(null);
   openModal('modal-compte');
 }
 
@@ -7302,6 +7397,7 @@ function ouvrirEditCompte(id) {
   document.querySelector('#cpt-pass-group label').innerHTML = "Nouveau mot de passe <span style=\"text-transform:none;font-weight:400\">(optionnel — 8 caractères min. si renseigné, laisser vide pour ne pas changer)</span>";
   document.getElementById('btn-save-compte').textContent = 'Enregistrer les modifications';
   document.getElementById('btn-delete-compte').style.display = '';
+  remplirFormulairePermissions(u.permissions);
   openModal('modal-compte');
 }
 
@@ -7316,12 +7412,14 @@ async function saveCompte(e) {
 
   if (password && password.length < 8) { showToast('Le mot de passe doit contenir au moins 8 caractères', 'error'); return; }
 
+  const permissions = lireFormulairePermissions();
+
   const btn = document.getElementById('btn-save-compte');
   const labelOriginal = btn.textContent;
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Enregistrement...';
   try {
     if (editId) {
-      const maj = { nom, role, updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      const maj = { nom, role, permissions, updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
       if (password) maj.passwordHash = await hashPassword(password);
       await db.collection('users').doc(editId).update(maj);
       consigner('Modification de compte', `Identifiant "${username}" — modifié par ${currentUser.label}${password ? ' (mot de passe changé)' : ''}`);
@@ -7335,7 +7433,7 @@ async function saveCompte(e) {
 
       const hash = await hashPassword(password);
       await db.collection('users').add({
-        username, nom, role, passwordHash: hash, isAdmin: false, status: 'active',
+        username, nom, role, permissions, passwordHash: hash, isAdmin: false, status: 'active',
         createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       consigner('Création de compte', `Identifiant "${username}" (${role}) — créé par ${currentUser.label}`);
