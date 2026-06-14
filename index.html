@@ -1801,24 +1801,55 @@
             <form onsubmit="enregistrerEcriture(event)">
               <div class="form-row">
                 <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="ec-date" required></div>
+                <div class="form-group"><label>Journal *</label>
+                  <select class="form-control" id="ec-journal" required>
+                    <option value="">-- Choisir --</option>
+                    <option value="VE">VE — Journal des Ventes</option>
+                    <option value="AC">AC — Journal des Achats</option>
+                    <option value="BQ">BQ — Journal de Banque</option>
+                    <option value="CA">CA — Journal de Caisse</option>
+                    <option value="OD">OD — Opérations Diverses</option>
+                  </select>
+                </div>
                 <div class="form-group"><label>Référence pièce justificative</label><input type="text" class="form-control" id="ec-reference" placeholder="Ex: Facture n°123, Reçu..."></div>
               </div>
-              <div class="form-group"><label>Libellé *</label><input type="text" class="form-control" id="ec-libelle" required placeholder="Ex: Achat fournitures de bureau"></div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Compte Débit *</label>
-                  <select class="form-control" id="ec-compte-debit" required></select>
+              <div class="form-group"><label>Libellé *</label><input type="text" class="form-control" id="ec-libelle" required placeholder="Ex: Vente comptoir du jour"></div>
+
+              <div class="form-row" style="align-items:end">
+                <div class="form-group" style="margin:0;max-width:360px">
+                  <label>Filtrer le plan comptable par classe</label>
+                  <select class="form-control" id="ec-filtre-classe" onchange="peuplerDatalistComptesOhada()">
+                    <option value="">Toutes les classes</option>
+                    <option value="1">Classe 1 — Capitaux et ressources durables</option>
+                    <option value="2">Classe 2 — Immobilisations</option>
+                    <option value="3">Classe 3 — Stocks</option>
+                    <option value="4">Classe 4 — Tiers</option>
+                    <option value="5">Classe 5 — Trésorerie</option>
+                    <option value="6">Classe 6 — Charges</option>
+                    <option value="7">Classe 7 — Produits</option>
+                  </select>
                 </div>
-                <div class="form-group"><label>Montant Débit (FCFA) *</label><input type="number" class="form-control" id="ec-montant-debit" min="0" required placeholder="0" oninput="document.getElementById('ec-montant-credit').value=this.value"></div>
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Compte Crédit *</label>
-                  <select class="form-control" id="ec-compte-credit" required></select>
-                </div>
-                <div class="form-group"><label>Montant Crédit (FCFA) *</label><input type="number" class="form-control" id="ec-montant-credit" min="0" required placeholder="0"></div>
+
+              <label>Lignes comptables *</label>
+              <div class="table-wrap">
+                <table><thead><tr>
+                  <th style="min-width:200px">Compte</th><th>Intitulé</th><th style="text-align:right">Débit (FCFA)</th><th style="text-align:right">Crédit (FCFA)</th><th></th>
+                </tr></thead><tbody id="tbody-ecriture-lignes"></tbody>
+                </table>
               </div>
-              <div id="ec-erreur-equilibre" style="display:none" class="alert alert-danger">⚠️ Le montant Débit doit être strictement égal au montant Crédit pour pouvoir enregistrer l'écriture.</div>
+              <datalist id="ohada-comptes-list"></datalist>
+              <div style="margin:10px 0">
+                <button type="button" class="btn btn-outline btn-sm" onclick="ajouterLigneEcriture()">➕ Ajouter une ligne</button>
+              </div>
+
+              <div class="form-row" style="justify-content:flex-end;gap:24px;flex-wrap:wrap">
+                <div>Total Débit : <strong id="ec-total-debit">0 FCFA</strong></div>
+                <div>Total Crédit : <strong id="ec-total-credit">0 FCFA</strong></div>
+                <div>Écart : <strong id="ec-ecart">0 FCFA</strong></div>
+              </div>
+
+              <div id="ec-erreur-equilibre" style="display:none" class="alert alert-danger">⚠️ Le Total Débit doit être strictement égal au Total Crédit pour pouvoir enregistrer l'écriture.</div>
               <div class="modal-footer" style="border:none;padding:10px 0 0">
                 <button type="submit" class="btn btn-primary" id="btn-save-ecriture">✓ Enregistrer l'écriture</button>
               </div>
@@ -1841,12 +1872,11 @@
           <div class="card-header"><h2>📓 Journal Comptable <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="ej-count"></span></h2></div>
           <div class="card-body table-wrap">
             <table><thead><tr>
-              <th>N° Pièce</th><th>Date</th><th>Libellé</th><th>Compte Débit</th><th style="text-align:right">Montant Débit</th><th>Compte Crédit</th><th style="text-align:right">Montant Crédit</th><th>Référence</th>
+              <th>N° Pièce</th><th>Date</th><th>Journal</th><th>Libellé</th><th>Compte</th><th style="text-align:right">Débit</th><th style="text-align:right">Crédit</th><th>Référence</th>
             </tr></thead><tbody id="tbody-journal-comptable"></tbody>
             <tfoot><tr style="font-weight:800;background:var(--bg-soft,#eef2f6)">
-              <td colspan="4" style="text-align:right;padding:10px">TOTAUX</td>
+              <td colspan="5" style="text-align:right;padding:10px">TOTAUX</td>
               <td style="text-align:right;padding:10px" id="ej-total-debit">0 FCFA</td>
-              <td></td>
               <td style="text-align:right;padding:10px" id="ej-total-credit">0 FCFA</td>
               <td></td>
             </tr></tfoot>
@@ -7755,10 +7785,121 @@ function compteParNumero(numero) {
   }
   return null;
 }
-// Libellé complet "numéro — libellé" d'un compte
+
+// ===================================================================
+// PLAN COMPTABLE OHADA — table de référence (Phase 1 réorganisation comptable)
+// ===================================================================
+const CLASSES_OHADA = {
+  '1': 'Capitaux et ressources durables',
+  '2': 'Immobilisations',
+  '3': 'Stocks',
+  '4': 'Tiers',
+  '5': 'Trésorerie',
+  '6': 'Charges',
+  '7': 'Produits'
+};
+
+const PLAN_COMPTABLE_OHADA = [
+  // CLASSE 1 — Capitaux et ressources durables
+  { numero_compte: '101', intitule_compte: 'Capital social', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '102', intitule_compte: 'Capital personnel', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '1301', intitule_compte: 'Bénéfice', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '1309', intitule_compte: 'Perte', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '162', intitule_compte: 'Emprunts établissements de crédit', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '111', intitule_compte: 'Réserve légale', classe: '1', actif: false, date_creation: '2026-06-14' },
+  { numero_compte: '121', intitule_compte: 'Report à nouveau créditeur', classe: '1', actif: false, date_creation: '2026-06-14' },
+  { numero_compte: '129', intitule_compte: 'Report à nouveau débiteur', classe: '1', actif: false, date_creation: '2026-06-14' },
+  // CLASSE 2 — Immobilisations
+  { numero_compte: '231', intitule_compte: 'Bâtiments', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '234', intitule_compte: 'Aménagements', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '235', intitule_compte: 'Installations générales', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '242', intitule_compte: 'Matériel de transport', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '244', intitule_compte: 'Matériel informatique', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '245', intitule_compte: 'Mobilier', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '283', intitule_compte: 'Amortissements bâtiments', classe: '2', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '284', intitule_compte: 'Amortissements matériel', classe: '2', actif: true, date_creation: '2026-06-14' },
+  // CLASSE 3 — Stocks
+  { numero_compte: '311', intitule_compte: 'Marchandises', classe: '3', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '335', intitule_compte: 'Emballages', classe: '3', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '39', intitule_compte: 'Dépréciation des stocks', classe: '3', actif: true, date_creation: '2026-06-14' },
+  // CLASSE 4 — Tiers
+  { numero_compte: '401', intitule_compte: 'Fournisseurs', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '409', intitule_compte: 'Avances fournisseurs', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '411', intitule_compte: 'Clients', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '421', intitule_compte: 'Personnel', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '422', intitule_compte: 'Avances personnel', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '431', intitule_compte: 'CNPS', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '442', intitule_compte: 'ITS', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '443', intitule_compte: 'TVA collectée', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '444', intitule_compte: 'TVA à décaisser', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '445', intitule_compte: 'TVA récupérable', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '448', intitule_compte: 'Impôt BIC', classe: '4', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '471', intitule_compte: "Compte d'attente", classe: '4', actif: true, date_creation: '2026-06-14' },
+  // CLASSE 5 — Trésorerie
+  { numero_compte: '5211', intitule_compte: 'Banque NSIA', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5212', intitule_compte: 'Banque SGCI', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5213', intitule_compte: 'Banque BNI', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5214', intitule_compte: 'Banque Ecobank', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5215', intitule_compte: 'Banque UBA', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5311', intitule_compte: 'Orange Money', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5312', intitule_compte: 'MTN Money', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5313', intitule_compte: 'Wave', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5314', intitule_compte: 'Moov Money', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5315', intitule_compte: 'Djamo', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '5316', intitule_compte: 'Wave Business', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '571', intitule_compte: 'Caisse Générale', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '585', intitule_compte: 'Virements internes', classe: '5', actif: true, date_creation: '2026-06-14' },
+  // CLASSE 6 — Charges
+  { numero_compte: '601', intitule_compte: 'Achats marchandises', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '622', intitule_compte: 'Loyers', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '624', intitule_compte: 'Entretien', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '625', intitule_compte: 'Assurances', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '631', intitule_compte: 'Eau', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '632', intitule_compte: 'Électricité', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '633', intitule_compte: 'Internet/Téléphone', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '634', intitule_compte: 'Carburant', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '635', intitule_compte: 'Frais bancaires', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '641', intitule_compte: 'Impôts et taxes', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '661', intitule_compte: 'Salaires', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '664', intitule_compte: 'Charges CNPS', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '68', intitule_compte: 'Dotations aux amortissements', classe: '6', actif: true, date_creation: '2026-06-14' },
+  // CLASSE 7 — Produits
+  { numero_compte: '701', intitule_compte: 'Ventes marchandises', classe: '7', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '707', intitule_compte: 'Produits accessoires', classe: '7', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '77', intitule_compte: 'Produits financiers', classe: '7', actif: true, date_creation: '2026-06-14' }
+];
+
+// Recherche d'un compte OHADA par numéro exact
+function compteParNumeroOhada(numero) {
+  return PLAN_COMPTABLE_OHADA.find(c => c.numero_compte === numero) || null;
+}
+// Le compte existe dans le plan OHADA (actif ou masqué) ou dans l'ancien plan (compat données existantes)
+function compteExisteOhada(numero) {
+  return !!compteParNumeroOhada(numero) || !!compteParNumero(numero);
+}
+// Recherche instantanée par numéro ou par nom, avec filtre optionnel par classe
+function rechercherComptesOhada(query, classe) {
+  const q = (query || '').trim().toLowerCase();
+  return PLAN_COMPTABLE_OHADA
+    .filter(c => c.actif !== false)
+    .filter(c => !classe || c.classe === classe)
+    .filter(c => !q || c.numero_compte.toLowerCase().includes(q) || c.intitule_compte.toLowerCase().includes(q));
+}
+// Plan comptable affiché (Balance) : comptes OHADA + anciens comptes (compat données existantes non encore migrées)
+function planComptableAffichage() {
+  const seen = new Set(PLAN_COMPTABLE_OHADA.map(c => c.numero_compte));
+  const legacy = [];
+  PLAN_COMPTABLE.forEach(classe => classe.comptes.forEach(c => {
+    if (!seen.has(c.num)) legacy.push({ numero_compte: c.num, intitule_compte: c.lib, classe: classe.classe, actif: true });
+  }));
+  return [...PLAN_COMPTABLE_OHADA, ...legacy];
+}
+// Libellé complet "numéro — libellé" d'un compte (cherche d'abord dans le plan OHADA, puis l'ancien plan)
 function libelleCompte(numero) {
-  const c = compteParNumero(numero);
-  return c ? `${c.num} — ${c.lib}` : (numero || '—');
+  const c = compteParNumeroOhada(numero);
+  if (c) return `${c.numero_compte} — ${c.intitule_compte}`;
+  const legacy = compteParNumero(numero);
+  return legacy ? `${legacy.num} — ${legacy.lib}` : (numero || '—');
 }
 // Un Gérant ou le Propriétaire/Admin peut créer/modifier des écritures comptables
 function peutGererCompta() {
@@ -7828,10 +7969,30 @@ function estAuteurVenteAujourdHui(vente) {
   return !!vente && vente.createdBy === currentUser?.label && vente.date === today();
 }
 
-// Correspondance Mode de paiement (vente) → Compte de trésorerie OHADA
+// Correspondance Mode de paiement (vente) → Compte de trésorerie OHADA (ancien plan, conservé pour compat données existantes)
 const COMPTE_TRESORERIE_PAR_MODE = { 'Espèces': '521', 'Orange Money': '522', 'MTN MoMo': '523', 'Wave': '524', 'Autre': '521' };
-// Correspondance Zone de vente → Compte de produits OHADA (classe 7)
+// Correspondance Zone de vente → Compte de produits OHADA (ancien plan, conservé pour compat données existantes)
 const COMPTE_PRODUIT_PAR_ZONE = { A: '701', B: '702', C: '703', D: '704', E: '705' };
+
+// Correspondance Mode de paiement (vente) → Compte de trésorerie du plan OHADA (Phase 3)
+const COMPTE_TRESORERIE_PAR_MODE_OHADA = { 'Espèces': '571', 'Orange Money': '5311', 'MTN MoMo': '5312', 'Wave': '5313', 'Moov Money': '5314', 'Autre': '571' };
+// Correspondance Zone de vente → Compte de produits du plan OHADA (Phase 3) — zone "services" → Produits accessoires
+const COMPTE_PRODUIT_PAR_ZONE_OHADA = { A: '701', B: '701', C: '701', D: '701', E: '707' };
+
+// Phase 4 — Préparation rapprochement bancaire : correspondance Canal → Compte de trésorerie OHADA
+const COMPTE_TRESORERIE_PAR_CANAL_OHADA = { 'Espèces': '571', 'Orange Money': '5311', 'MTN MoMo': '5312', 'Wave': '5313', 'Moov Money': '5314' };
+
+// Retourne les lignes comptables d'une écriture, qu'elle soit au nouveau format multi-lignes
+// (champ `lignes`) ou à l'ancien format (compteDebit/montantDebit/compteCredit/montantCredit)
+function lignesEcriture(e) {
+  if (Array.isArray(e.lignes) && e.lignes.length) return e.lignes;
+  return [
+    { compte: e.compteDebit, intitule: libelleCompte(e.compteDebit), debit: e.montantDebit || 0, credit: 0 },
+    { compte: e.compteCredit, intitule: libelleCompte(e.compteCredit), debit: 0, credit: e.montantCredit || 0 }
+  ];
+}
+function totalDebitEcriture(e) { return e.totalDebit != null ? e.totalDebit : (e.montantDebit || 0); }
+function totalCreditEcriture(e) { return e.totalCredit != null ? e.totalCredit : (e.montantCredit || 0); }
 
 // Génère un numéro de pièce auto incrémental pour les écritures comptables
 function genererNumPiece() {
@@ -7849,17 +8010,20 @@ function genererNumPieces(count) {
   return result;
 }
 
-// Crée une écriture automatique liée à une vente (Débit Trésorerie / Crédit Produits)
+// Crée une écriture automatique liée à une vente (Débit Trésorerie / Crédit Produits) — format multi-lignes OHADA
 async function genererEcritureVente(vente, numPieceOverride) {
   try {
-    const compteDebit = COMPTE_TRESORERIE_PAR_MODE[vente.modePaiement] || '521';
-    const compteCredit = COMPTE_PRODUIT_PAR_ZONE[vente.zone] || '701';
+    const compteDebit = COMPTE_TRESORERIE_PAR_MODE_OHADA[vente.modePaiement] || '571';
+    const compteCredit = COMPTE_PRODUIT_PAR_ZONE_OHADA[vente.zone] || '701';
+    const lignes = [
+      { compte: compteDebit, intitule: libelleCompte(compteDebit), debit: vente.montant, credit: 0 },
+      { compte: compteCredit, intitule: libelleCompte(compteCredit), debit: 0, credit: vente.montant }
+    ];
     await db.collection('ecritures_comptables').add({
       numPiece: numPieceOverride || genererNumPiece(),
-      date: vente.date,
+      date: vente.date, journal: 'VE',
       libelle: `Vente ${vente.article} — ${ZONES_CAISSE[vente.zone]?.label || vente.zone}`,
-      compteDebit, montantDebit: vente.montant,
-      compteCredit, montantCredit: vente.montant,
+      lignes, totalDebit: vente.montant, totalCredit: vente.montant,
       reference: '',
       auto: true, source: 'vente',
       createdBy: 'Système (écriture automatique)',
@@ -7868,15 +8032,18 @@ async function genererEcritureVente(vente, numPieceOverride) {
   } catch (err) { console.error('Erreur génération écriture vente:', err); }
 }
 
-// Crée une écriture automatique liée à un approvisionnement reçu (Débit Achats / Crédit Fournisseurs)
+// Crée une écriture automatique liée à un approvisionnement reçu (Débit Achats / Crédit Fournisseurs) — format multi-lignes OHADA
 async function genererEcritureAchat(article, montant, fournisseurNom, numPieceOverride) {
   try {
+    const lignes = [
+      { compte: '601', intitule: libelleCompte('601'), debit: montant, credit: 0 },
+      { compte: '401', intitule: libelleCompte('401'), debit: 0, credit: montant }
+    ];
     await db.collection('ecritures_comptables').add({
       numPiece: numPieceOverride || genererNumPiece(),
-      date: today(),
+      date: today(), journal: 'AC',
       libelle: `Achat ${article} — ${fournisseurNom}`,
-      compteDebit: '601', montantDebit: montant,
-      compteCredit: '401', montantCredit: montant,
+      lignes, totalDebit: montant, totalCredit: montant,
       reference: '',
       auto: true, source: 'achat',
       createdBy: 'Système (écriture automatique)',
@@ -7895,60 +8062,146 @@ function comptaNavigate(tab) {
   renderComptabilite();
 }
 
-// Remplit les sélecteurs de comptes (Débit / Crédit) à partir du plan comptable OHADA
-function peuplerSelecteursComptes() {
-  const options = PLAN_COMPTABLE.map(classe => `<optgroup label="CLASSE ${classe.classe} — ${classe.titre}">
-    ${classe.comptes.map(c => `<option value="${c.num}">${c.num} — ${c.lib}</option>`).join('')}
-  </optgroup>`).join('');
-  ['ec-compte-debit', 'ec-compte-credit'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (sel && !sel.dataset.built) { sel.innerHTML = '<option value="">-- Choisir un compte --</option>' + options; sel.dataset.built = '1'; }
-  });
+// ── Saisie multi-lignes (Phase 2) ──────────────────────────────────────
+let ecritureLignesEnCours = [];
+function ligneEcritureVide() { return { compte: '', debit: '', credit: '' }; }
+
+// Remplit la datalist d'autocomplétion des comptes OHADA, filtrée par classe
+function peuplerDatalistComptesOhada() {
+  const classe = document.getElementById('ec-filtre-classe')?.value || '';
+  const dl = document.getElementById('ohada-comptes-list');
+  if (!dl) return;
+  dl.innerHTML = rechercherComptesOhada('', classe).map(c => `<option value="${c.numero_compte} — ${c.intitule_compte}"></option>`).join('');
+}
+
+// Extrait le numéro de compte saisi dans une ligne (l'utilisateur peut saisir "401" ou "401 — Fournisseurs")
+function numeroCompteSaisi(valeur) {
+  return (valeur || '').split('—')[0].trim();
+}
+
+// Affiche les lignes comptables de l'écriture en cours de saisie
+function renderLignesEcriture() {
+  const tbody = document.getElementById('tbody-ecriture-lignes');
+  if (!tbody) return;
+  tbody.innerHTML = ecritureLignesEnCours.map((l, idx) => {
+    const numero = numeroCompteSaisi(l.compte);
+    const c = compteParNumeroOhada(numero) || compteParNumero(numero);
+    const intitule = c ? (c.intitule_compte || c.lib) : '';
+    return `<tr>
+      <td><input class="form-control" list="ohada-comptes-list" autocomplete="off" value="${l.compte || ''}" oninput="majLigneEcriture(${idx},'compte',this.value)" placeholder="N° ou nom du compte"></td>
+      <td style="font-size:12px;color:var(--text-muted)">${intitule}</td>
+      <td><input type="number" class="form-control" min="0" value="${l.debit || ''}" oninput="majLigneEcriture(${idx},'debit',this.value)" placeholder="0" style="text-align:right"></td>
+      <td><input type="number" class="form-control" min="0" value="${l.credit || ''}" oninput="majLigneEcriture(${idx},'credit',this.value)" placeholder="0" style="text-align:right"></td>
+      <td><button type="button" class="btn btn-sm btn-outline" onclick="supprimerLigneEcriture(${idx})" title="Supprimer la ligne">✕</button></td>
+    </tr>`;
+  }).join('');
+  recalculerTotauxEcriture();
+}
+
+// Met à jour une valeur de ligne ; pour le compte, ne rafraîchit que l'intitulé (pour ne pas perdre le focus pendant la saisie)
+function majLigneEcriture(idx, champ, valeur) {
+  if (!ecritureLignesEnCours[idx]) return;
+  ecritureLignesEnCours[idx][champ] = valeur;
+  if (champ === 'compte') {
+    const numero = numeroCompteSaisi(valeur);
+    const c = compteParNumeroOhada(numero) || compteParNumero(numero);
+    const tr = document.querySelectorAll('#tbody-ecriture-lignes tr')[idx];
+    if (tr) tr.children[1].textContent = c ? (c.intitule_compte || c.lib) : '';
+  } else {
+    recalculerTotauxEcriture();
+  }
+}
+
+function ajouterLigneEcriture() {
+  ecritureLignesEnCours.push(ligneEcritureVide());
+  renderLignesEcriture();
+}
+
+function supprimerLigneEcriture(idx) {
+  if (ecritureLignesEnCours.length <= 2) { showToast('Une écriture doit comporter au moins 2 lignes', 'error'); return; }
+  ecritureLignesEnCours.splice(idx, 1);
+  renderLignesEcriture();
+}
+
+// Recalcule les totaux Débit/Crédit et l'écart, et affiche l'alerte si l'écriture est déséquilibrée
+function recalculerTotauxEcriture() {
+  const totalDebit = ecritureLignesEnCours.reduce((s,l)=>s+(Number(l.debit)||0),0);
+  const totalCredit = ecritureLignesEnCours.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  const ecart = totalDebit - totalCredit;
+  document.getElementById('ec-total-debit').textContent = FCFA(totalDebit);
+  document.getElementById('ec-total-credit').textContent = FCFA(totalCredit);
+  const ecartEl = document.getElementById('ec-ecart');
+  ecartEl.textContent = FCFA(ecart);
+  ecartEl.style.color = ecart === 0 ? '#1E8449' : '#C0392B';
+  const erreurBox = document.getElementById('ec-erreur-equilibre');
+  if (erreurBox) erreurBox.style.display = (totalDebit > 0 && totalDebit === totalCredit) ? 'none' : (totalDebit === 0 && totalCredit === 0 ? 'none' : 'block');
 }
 
 function renderComptabilite() {
   if (!document.getElementById('page-comptabilite').classList.contains('active')) return;
-  peuplerSelecteursComptes();
-  if (!document.getElementById('ec-date').value) document.getElementById('ec-date').value = today();
+  const dateEl = document.getElementById('ec-date');
+  if (!dateEl.dataset.built) {
+    dateEl.dataset.built = '1';
+    peuplerDatalistComptesOhada();
+    ecritureLignesEnCours = [ligneEcritureVide(), ligneEcritureVide()];
+    renderLignesEcriture();
+  }
+  if (!dateEl.value) dateEl.value = today();
   if (comptaOnglet === 'journal') renderJournalComptable();
   else if (comptaOnglet === 'balance') renderBalanceComptes();
 }
 
-// Enregistre une nouvelle écriture comptable manuelle (avec contrôle d'équilibre Débit = Crédit)
+// Enregistre une nouvelle écriture comptable multi-lignes (Phase 2), avec contrôles Phase 5 :
+// date/journal/libellé obligatoires, comptes existants dans le plan OHADA, Total Débit = Total Crédit
 async function enregistrerEcriture(event) {
   event.preventDefault();
   if (!requireFinanceEcriture("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
   const date = document.getElementById('ec-date').value;
+  const journal = document.getElementById('ec-journal').value;
   const libelle = document.getElementById('ec-libelle').value.trim();
-  const compteDebit = document.getElementById('ec-compte-debit').value;
-  const compteCredit = document.getElementById('ec-compte-credit').value;
-  const montantDebit = Number(document.getElementById('ec-montant-debit').value || 0);
-  const montantCredit = Number(document.getElementById('ec-montant-credit').value || 0);
   const reference = document.getElementById('ec-reference').value.trim();
   const erreurBox = document.getElementById('ec-erreur-equilibre');
 
-  // RÈGLE ABSOLUE : le montant Débit doit être strictement égal au montant Crédit
-  if (montantDebit !== montantCredit || montantDebit <= 0) {
+  if (!date) { showToast('La date est obligatoire', 'error'); return; }
+  if (!journal) { showToast('Le journal est obligatoire', 'error'); return; }
+  if (!libelle) { showToast('Le libellé est obligatoire', 'error'); return; }
+
+  const lignesValides = ecritureLignesEnCours
+    .map(l => ({ compte: numeroCompteSaisi(l.compte), debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 }))
+    .filter(l => l.compte && (l.debit > 0 || l.credit > 0));
+
+  if (lignesValides.length < 2) { showToast('Une écriture doit comporter au moins 2 lignes avec un compte et un montant', 'error'); return; }
+  for (const l of lignesValides) {
+    if (!compteExisteOhada(l.compte)) { showToast(`Compte inconnu dans le plan comptable : ${l.compte}`, 'error'); return; }
+    if (l.debit > 0 && l.credit > 0) { showToast('Une ligne ne peut pas être à la fois au Débit et au Crédit', 'error'); return; }
+  }
+
+  const totalDebit = lignesValides.reduce((s,l)=>s+l.debit,0);
+  const totalCredit = lignesValides.reduce((s,l)=>s+l.credit,0);
+
+  // RÈGLE ABSOLUE : Total Débit doit être strictement égal à Total Crédit
+  if (totalDebit !== totalCredit || totalDebit <= 0) {
     erreurBox.style.display = 'block';
-    showToast('Écriture refusée : le montant Débit doit être égal au montant Crédit', 'error');
+    showToast('Écriture refusée : le Total Débit doit être égal au Total Crédit', 'error');
     return;
   }
   erreurBox.style.display = 'none';
-  if (!compteDebit || !compteCredit) { showToast('Veuillez sélectionner les comptes Débit et Crédit', 'error'); return; }
-  if (compteDebit === compteCredit) { showToast('Les comptes Débit et Crédit doivent être différents', 'error'); return; }
+
+  const lignes = lignesValides.map(l => ({ compte: l.compte, intitule: libelleCompte(l.compte), debit: l.debit, credit: l.credit }));
 
   const btn = document.getElementById('btn-save-ecriture');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Enregistrement...';
   try {
     await db.collection('ecritures_comptables').add({
-      numPiece: genererNumPiece(), date, libelle,
-      compteDebit, montantDebit, compteCredit, montantCredit, reference,
+      numPiece: genererNumPiece(), date, journal, libelle, lignes, totalDebit, totalCredit, reference,
       auto: false, source: 'manuel',
       createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    consigner('Écriture comptable enregistrée', `${libelle} — ${FCFA(montantDebit)} (${libelleCompte(compteDebit)} / ${libelleCompte(compteCredit)})`);
+    consigner('Écriture comptable enregistrée', `${libelle} — ${FCFA(totalDebit)} (${lignes.length} lignes, journal ${journal})`);
     showToast('✓ Écriture enregistrée');
     event.target.reset();
+    ecritureLignesEnCours = [ligneEcritureVide(), ligneEcritureVide()];
+    renderLignesEcriture();
     document.getElementById('ec-date').value = today();
   } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
   btn.disabled = false; btn.innerHTML = "✓ Enregistrer l'écriture";
@@ -7966,25 +8219,33 @@ function renderJournalComptable() {
   const tbody = document.getElementById('tbody-journal-comptable');
   if (!tbody) return;
   document.getElementById('ej-count').textContent = `(${liste.length})`;
-  tbody.innerHTML = liste.length ? liste.map(e => `
-    <tr>
-      <td style="font-size:12px">${e.numPiece || '—'}${e.auto ? ' <span class="cat-tag cat-info" title="Écriture générée automatiquement">auto</span>' : ''}</td>
-      <td style="font-size:12px">${e.date || '—'}</td>
-      <td>${e.libelle || ''}</td>
-      <td style="font-size:12px">${libelleCompte(e.compteDebit)}</td>
-      <td style="text-align:right">${FCFA(e.montantDebit||0)}</td>
-      <td style="font-size:12px">${libelleCompte(e.compteCredit)}</td>
-      <td style="text-align:right">${FCFA(e.montantCredit||0)}</td>
-      <td style="font-size:12px">${e.reference || '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture pour cette période</td></tr>';
+  let html = '';
+  liste.forEach(e => {
+    const lignes = lignesEcriture(e);
+    lignes.forEach((l, idx) => {
+      html += '<tr>';
+      if (idx === 0) {
+        html += `<td style="font-size:12px" rowspan="${lignes.length}">${e.numPiece || '—'}${e.auto ? ' <span class="cat-tag cat-info" title="Écriture générée automatiquement">auto</span>' : ''}</td>`;
+        html += `<td style="font-size:12px" rowspan="${lignes.length}">${e.date || '—'}</td>`;
+        html += `<td style="font-size:12px" rowspan="${lignes.length}">${e.journal || '—'}</td>`;
+        html += `<td rowspan="${lignes.length}">${e.libelle || ''}</td>`;
+      }
+      html += `<td style="font-size:12px">${l.compte ? libelleCompte(l.compte) : (l.intitule || '—')}</td>`;
+      html += `<td style="text-align:right">${l.debit ? FCFA(l.debit) : ''}</td>`;
+      html += `<td style="text-align:right">${l.credit ? FCFA(l.credit) : ''}</td>`;
+      if (idx === 0) html += `<td style="font-size:12px" rowspan="${lignes.length}">${e.reference || '—'}</td>`;
+      html += '</tr>';
+    });
+  });
+  tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture pour cette période</td></tr>';
 
-  const totalDebit = liste.reduce((s,e)=>s+(e.montantDebit||0),0);
-  const totalCredit = liste.reduce((s,e)=>s+(e.montantCredit||0),0);
+  const totalDebit = liste.reduce((s,e)=>s+totalDebitEcriture(e),0);
+  const totalCredit = liste.reduce((s,e)=>s+totalCreditEcriture(e),0);
   document.getElementById('ej-total-debit').textContent = FCFA(totalDebit);
   document.getElementById('ej-total-credit').textContent = FCFA(totalCredit);
 }
 
-// Exporte le journal comptable affiché (avec filtre actif) au format CSV
+// Exporte le journal comptable affiché (avec filtre actif) au format CSV — une ligne par ligne d'écriture
 function exporterJournalComptableCSV() {
   const debut = document.getElementById('ej-date-debut')?.value || '';
   const fin = document.getElementById('ej-date-fin')?.value || '';
@@ -7992,30 +8253,39 @@ function exporterJournalComptableCSV() {
   if (debut) liste = liste.filter(e => (e.date || '') >= debut);
   if (fin) liste = liste.filter(e => (e.date || '') <= fin);
   liste.sort((a,b) => (a.date||'').localeCompare(b.date||''));
-  const lignes = [['N° Pièce','Date','Libellé','Compte Débit','Montant Débit','Compte Crédit','Montant Crédit','Référence']];
-  liste.forEach(e => lignes.push([e.numPiece||'', e.date||'', e.libelle||'', libelleCompte(e.compteDebit), e.montantDebit||0, libelleCompte(e.compteCredit), e.montantCredit||0, e.reference||'']));
-  telechargerCSV(lignes, `journal_comptable_${today()}.csv`);
+  const lignesCSV = [['N° Pièce','Date','Journal','Libellé','Compte','Débit','Crédit','Référence']];
+  liste.forEach(e => {
+    lignesEcriture(e).forEach(l => {
+      lignesCSV.push([e.numPiece||'', e.date||'', e.journal||'', e.libelle||'', l.compte ? libelleCompte(l.compte) : (l.intitule||''), l.debit||0, l.credit||0, e.reference||'']);
+    });
+  });
+  telechargerCSV(lignesCSV, `journal_comptable_${today()}.csv`);
 }
 
 // Calcule et affiche la balance des comptes (regroupée par classe OHADA), mise à jour en temps réel
 function renderBalanceComptes() {
   const tbody = document.getElementById('tbody-balance-comptes');
   if (!tbody) return;
+  const planAffichage = planComptableAffichage();
   let html = '';
   let totalDebitGeneral = 0, totalCreditGeneral = 0;
-  PLAN_COMPTABLE.forEach(classe => {
-    const lignesClasse = classe.comptes.map(c => {
-      const totalDebit = ecritures.filter(e=>e.compteDebit===c.num).reduce((s,e)=>s+(e.montantDebit||0),0);
-      const totalCredit = ecritures.filter(e=>e.compteCredit===c.num).reduce((s,e)=>s+(e.montantCredit||0),0);
+  Object.keys(CLASSES_OHADA).forEach(classe => {
+    const lignesClasse = planAffichage.filter(c => c.classe === classe).map(c => {
+      let totalDebit = 0, totalCredit = 0;
+      ecritures.forEach(e => {
+        lignesEcriture(e).forEach(l => {
+          if (l.compte === c.numero_compte) { totalDebit += (l.debit || 0); totalCredit += (l.credit || 0); }
+        });
+      });
       return { ...c, totalDebit, totalCredit, solde: totalDebit - totalCredit };
     }).filter(c => c.totalDebit > 0 || c.totalCredit > 0);
     if (!lignesClasse.length) return;
-    html += `<tr style="background:var(--bg-soft,#eef2f6)"><td colspan="5" style="font-weight:700;padding:8px 10px">CLASSE ${classe.classe} — ${classe.titre}</td></tr>`;
+    html += `<tr style="background:var(--bg-soft,#eef2f6)"><td colspan="5" style="font-weight:700;padding:8px 10px">CLASSE ${classe} — ${CLASSES_OHADA[classe]}</td></tr>`;
     lignesClasse.forEach(c => {
       totalDebitGeneral += c.totalDebit; totalCreditGeneral += c.totalCredit;
       html += `<tr>
-        <td style="font-size:12px">${c.num}</td>
-        <td>${c.lib}</td>
+        <td style="font-size:12px">${c.numero_compte}</td>
+        <td>${c.intitule_compte}</td>
         <td style="text-align:right">${FCFA(c.totalDebit)}</td>
         <td style="text-align:right">${FCFA(c.totalCredit)}</td>
         <td style="text-align:right;font-weight:700;color:${c.solde>=0?'#1E8449':'#C0392B'}">${FCFA(c.solde)}</td>
