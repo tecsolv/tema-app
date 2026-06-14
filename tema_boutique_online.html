@@ -62,6 +62,7 @@
   .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
   .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; border-left-color: var(--accent); font-weight: 600; }
   .nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
+  .nav-item-pinned { padding-bottom: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .sidebar-footer { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 11px; color: rgba(255,255,255,0.45); }
 
   /* SIDEBAR OVERLAY (mobile) */
@@ -1326,49 +1327,37 @@
     <span class="logout-btn" onclick="event.stopPropagation();seDeconnecter()">🚪 Se déconnecter</span>
   </div>
   <div class="sidebar-nav">
-    <div class="nav-group" data-group="principal">
-      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Principal</div>
+    <div class="nav-item active nav-item-pinned" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
+    <div class="nav-group" data-group="ventes">
+      <div class="nav-section" id="nav-section-ventes" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Ventes</div>
       <div class="nav-group-body">
-        <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
-      </div>
-    </div>
-    <div class="nav-group" data-group="stock">
-      <div class="nav-section" id="nav-section-stock" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Stock</div>
-      <div class="nav-group-body">
-        <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
+        <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
+        <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
       </div>
     </div>
     <div class="nav-group" data-group="achats">
-      <div class="nav-section" id="nav-section-achats" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Achats</div>
+      <div class="nav-section" id="nav-section-achats" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Approvisionnement</div>
       <div class="nav-group-body">
         <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
         <div class="nav-item" id="nav-fournisseurs" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
         <div class="nav-item" id="nav-commandes" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
-      </div>
-    </div>
-    <div class="nav-group" data-group="ventes">
-      <div class="nav-section" id="nav-section-ventes" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Ventes</div>
-      <div class="nav-group-body">
-        <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
-        <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
-      </div>
-    </div>
-    <div class="nav-group" data-group="rapports">
-      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Rapports</div>
-      <div class="nav-group-body">
-        <div class="nav-item" id="nav-rapports" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
-        <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
-        <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
+        <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
         <div class="nav-item" id="nav-alertes" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
       </div>
     </div>
-    <div class="nav-group" data-group="services-finance">
-      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Services & Finance</div>
+    <div class="nav-group" data-group="finance">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Finance</div>
       <div class="nav-group-body">
+        <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
+        <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
         <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
-        <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
         <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
-        <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Suivi des Présences</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="services-finance">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Services</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
       </div>
     </div>
     <div class="nav-group" data-group="rh">
@@ -1377,6 +1366,7 @@
         <div class="nav-item" id="nav-rh-employes" onclick="navigate('rh-employes')" style="display:none"><span class="icon">👤</span> Employés</div>
         <div class="nav-item" id="nav-rh-contrats" onclick="navigate('rh-contrats')" style="display:none"><span class="icon">📄</span> Contrats</div>
         <div class="nav-item" id="nav-rh-presences" onclick="navigate('rh-presences')" style="display:none"><span class="icon">🕑</span> Pointages</div>
+        <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Présences (Caisses)</div>
         <div class="nav-item" id="nav-rh-absences" onclick="navigate('rh-absences')" style="display:none"><span class="icon">🌴</span> Congés & Absences</div>
         <div class="nav-item" id="nav-rh-planning" onclick="navigate('rh-planning')" style="display:none"><span class="icon">🗓️</span> Planning</div>
         <div class="nav-item" id="nav-rh-formations" onclick="navigate('rh-formations')" style="display:none"><span class="icon">🎓</span> Formations</div>
@@ -1384,6 +1374,12 @@
         <div class="nav-item" id="nav-rh-paie" onclick="navigate('rh-paie')" style="display:none"><span class="icon">💴</span> Paie</div>
         <div class="nav-item" id="nav-rh-dashboard" onclick="navigate('rh-dashboard')" style="display:none"><span class="icon">📊</span> Tableau RH</div>
         <div class="nav-item" id="nav-rh-parametres" onclick="navigate('rh-parametres')" style="display:none"><span class="icon">⚙️</span> Paramètres de Paie</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="rapports">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Analyse & Reporting</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-rapports" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
       </div>
     </div>
     <div class="nav-group" data-group="administration">
@@ -2595,7 +2591,8 @@
     <form onsubmit="saveCompte(event)">
       <div class="form-group">
         <label>Nom affiché *</label>
-        <input class="form-control" id="cpt-nom" required placeholder="Ex: Marie Ondo">
+        <input class="form-control" id="cpt-nom" required placeholder="Ex: Marie Ondo" list="cpt-nom-list" autocomplete="off">
+        <datalist id="cpt-nom-list"></datalist>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -4917,6 +4914,7 @@ function demarrerListenersRH() {
   db.collection('rh_employes').orderBy('nom').onSnapshot(snap => {
     rhEmployes = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
+    remplirDatalistEmployes();
   }, err => console.error('rh_employes:', err));
 
   db.collection('rh_contrats').orderBy('dateDebut','desc').onSnapshot(snap => {
@@ -5024,10 +5022,10 @@ function afficherApp() {
 // Si currentUser.permissions est absent (comptes existants), tous les modules restent autorisés (rétrocompatible).
 const MODULES_NAV_IDS = {
   sales: ['nav-caisse-journal','nav-pos','topbar-action-vente'],
-  stock: ['nav-section-stock','nav-inventaire'],
+  stock: ['nav-inventaire'],
   purchases: ['nav-section-achats','nav-categories','nav-fournisseurs','nav-commandes'],
   reports: ['nav-rapports','nav-comptabilite','nav-rapprochement','nav-alertes','nav-rentabilite'],
-  hr: ['nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-formations','nav-rh-avances','nav-rh-paie','nav-rh-dashboard','nav-rh-parametres'],
+  hr: ['nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-presences','nav-presences','nav-rh-absences','nav-rh-planning','nav-rh-formations','nav-rh-avances','nav-rh-paie','nav-rh-dashboard','nav-rh-parametres'],
   mobile_money: ['nav-mobilemoney','topbar-action-mm'],
   services: ['nav-services','topbar-action-services'],
   scan: ['topbar-action-scan']
@@ -5094,7 +5092,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
 
   // Comptable externe (rôle Finance-only, READ ONLY opérationnel) : masquer les modules
   // strictement opérationnels (Stock, Achats, Journal de Caisse) — Phase 3A Comptable Correctif
-  const navOperationnels = ['nav-section-stock','nav-inventaire','nav-categories',
+  const navOperationnels = ['nav-inventaire','nav-categories',
    'nav-section-achats','nav-fournisseurs','nav-commandes',
    'nav-section-ventes','nav-caisse-journal','nav-alertes'];
   if (isComptable && !isGerant && !isAdmin) {
@@ -6560,7 +6558,7 @@ const pageTitles = {
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
   caisse:'Journal de Caisse', suivicaisse:'Suivi de Caisse (Admin)',
-  presences:'Suivi des Présences & Caisses',
+  presences:'Historique des Caisses',
   'rh-employes':'Ressources Humaines — Employés', 'rh-contrats':'Ressources Humaines — Contrats',
   'rh-presences':'Ressources Humaines — Pointages', 'rh-absences':'Ressources Humaines — Congés & Absences',
   'rh-planning':'Ressources Humaines — Planning',
@@ -6630,10 +6628,37 @@ function navigate(page) {
 
 const NAV_GROUP_STATE_KEY = 'tema_nav_group_state';
 
+const NAV_GROUP_MAX_OPEN = 2;
+
+// Menu accordéon intelligent : au plus NAV_GROUP_MAX_OPEN groupes ouverts simultanément.
+// Si l'ouverture d'un groupe dépasse la limite, le groupe ouvert le plus ancien se replie.
+function appliquerLimiteAccordeon(keyJusteOuvert) {
+  if (!window._navGroupOpenOrder) window._navGroupOpenOrder = [];
+  window._navGroupOpenOrder = window._navGroupOpenOrder.filter(k => k !== keyJusteOuvert);
+  window._navGroupOpenOrder.push(keyJusteOuvert);
+
+  let openGroups = Array.from(document.querySelectorAll('.nav-group')).filter(g => !g.classList.contains('collapsed'));
+  while (openGroups.length > NAV_GROUP_MAX_OPEN) {
+    const oldestKey = window._navGroupOpenOrder.find(k => k !== keyJusteOuvert || window._navGroupOpenOrder.length === 1);
+    if (!oldestKey) break;
+    const oldestGroup = document.querySelector(`.nav-group[data-group="${oldestKey}"]`);
+    window._navGroupOpenOrder = window._navGroupOpenOrder.filter(k => k !== oldestKey);
+    if (!oldestGroup || oldestGroup.classList.contains('collapsed')) continue;
+    oldestGroup.classList.add('collapsed');
+    openGroups = Array.from(document.querySelectorAll('.nav-group')).filter(g => !g.classList.contains('collapsed'));
+  }
+}
+
 function toggleNavGroup(el) {
   const group = el.closest('.nav-group');
   if (!group) return;
+  const wasCollapsed = group.classList.contains('collapsed');
   group.classList.toggle('collapsed');
+  if (wasCollapsed) {
+    appliquerLimiteAccordeon(group.dataset.group);
+  } else if (window._navGroupOpenOrder) {
+    window._navGroupOpenOrder = window._navGroupOpenOrder.filter(k => k !== group.dataset.group);
+  }
   saveNavGroupState();
 }
 
@@ -6648,6 +6673,7 @@ function saveNavGroupState() {
 function restaurerNavGroupState() {
   let state = {};
   try { state = JSON.parse(localStorage.getItem(NAV_GROUP_STATE_KEY)) || {}; } catch(e) {}
+  window._navGroupOpenOrder = [];
   document.querySelectorAll('.nav-group').forEach(g => {
     const key = g.dataset.group;
     if (Object.prototype.hasOwnProperty.call(state, key)) {
@@ -6655,8 +6681,16 @@ function restaurerNavGroupState() {
     } else {
       g.classList.remove('collapsed');
     }
+    if (!g.classList.contains('collapsed')) window._navGroupOpenOrder.push(key);
   });
+  // Applique la limite "max 2 groupes ouverts" sur l'état restauré
+  while (window._navGroupOpenOrder.length > NAV_GROUP_MAX_OPEN) {
+    const oldestKey = window._navGroupOpenOrder.shift();
+    const oldestGroup = document.querySelector(`.nav-group[data-group="${oldestKey}"]`);
+    if (oldestGroup) oldestGroup.classList.add('collapsed');
+  }
   ouvrirGroupeActif();
+  saveNavGroupState();
 }
 
 function ouvrirGroupeActif() {
@@ -6665,6 +6699,7 @@ function ouvrirGroupeActif() {
   const group = activeItem.closest('.nav-group');
   if (group && group.classList.contains('collapsed')) {
     group.classList.remove('collapsed');
+    appliquerLimiteAccordeon(group.dataset.group);
     saveNavGroupState();
   }
 }
@@ -7347,6 +7382,16 @@ function renderComptes() {
         `}
       </td>
     </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucun compte</td></tr>';
+}
+
+// Liaison RH ↔ Gestion des Comptes : auto-complétion du "Nom affiché" depuis le registre des employés (rh_employes)
+function remplirDatalistEmployes() {
+  const dl = document.getElementById('cpt-nom-list');
+  if (!dl) return;
+  dl.innerHTML = rhEmployes.map(e => {
+    const nomComplet = `${e.nom || ''} ${e.prenom || ''}`.trim();
+    return nomComplet ? `<option value="${nomComplet.replace(/"/g,'&quot;')}">` : '';
+  }).join('');
 }
 
 const MODULES_PERMISSIONS = ['sales','stock','purchases','reports','hr','mobile_money','services','scan'];
