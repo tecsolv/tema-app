@@ -52,7 +52,12 @@
   .user-badge:hover .logout-btn, .user-badge.open .logout-btn { display: flex; align-items: center; gap: 6px; }
   .user-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; flex-shrink: 0; }
   .sidebar-nav { flex: 1; padding: 14px 0; overflow-y: auto; }
-  .nav-section { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 10px 20px 5px; letter-spacing: 1.5px; }
+  .nav-section { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 10px 20px 5px; letter-spacing: 1.5px; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 6px; user-select: none; }
+  .nav-section:hover { color: rgba(255,255,255,0.7); }
+  .nav-group-arrow { display: inline-block; font-size: 9px; transition: transform 0.2s ease; }
+  .nav-group:not(.collapsed) .nav-group-arrow { transform: rotate(90deg); }
+  .nav-group-body { overflow: hidden; max-height: 1000px; opacity: 1; transition: max-height 0.25s ease-in-out, opacity 0.2s ease-in-out; }
+  .nav-group.collapsed .nav-group-body { max-height: 0; opacity: 0; }
   .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; cursor: pointer; color: rgba(255,255,255,0.78); font-size: 13.5px; transition: all 0.2s; border-left: 3px solid transparent; }
   .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
   .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; border-left-color: var(--accent); font-weight: 600; }
@@ -1301,42 +1306,74 @@
     <span class="logout-btn" onclick="event.stopPropagation();seDeconnecter()">🚪 Se déconnecter</span>
   </div>
   <div class="sidebar-nav">
-    <div class="nav-section">Principal</div>
-    <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
-    <div class="nav-section" id="nav-section-stock">Stock</div>
-    <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
-    <div class="nav-section" id="nav-section-achats">Achats</div>
-    <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
-    <div class="nav-item" id="nav-fournisseurs" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
-    <div class="nav-item" id="nav-commandes" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
-    <div class="nav-section" id="nav-section-ventes">Ventes</div>
-    <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
-    <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
-    <div class="nav-section">Rapports</div>
-    <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
-    <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
-    <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
-    <div class="nav-item" id="nav-alertes" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
-    <div class="nav-section">Services & Finance</div>
-    <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
-    <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
-    <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
-    <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Suivi des Présences</div>
-    <div class="nav-section" id="nav-section-rh" style="display:none">Ressources Humaines</div>
-    <div class="nav-item" id="nav-rh-employes" onclick="navigate('rh-employes')" style="display:none"><span class="icon">👤</span> Employés</div>
-    <div class="nav-item" id="nav-rh-contrats" onclick="navigate('rh-contrats')" style="display:none"><span class="icon">📄</span> Contrats</div>
-    <div class="nav-item" id="nav-rh-presences" onclick="navigate('rh-presences')" style="display:none"><span class="icon">🕑</span> Pointages</div>
-    <div class="nav-item" id="nav-rh-absences" onclick="navigate('rh-absences')" style="display:none"><span class="icon">🌴</span> Congés & Absences</div>
-    <div class="nav-item" id="nav-rh-planning" onclick="navigate('rh-planning')" style="display:none"><span class="icon">🗓️</span> Planning</div>
-    <div class="nav-item" id="nav-rh-formations" onclick="navigate('rh-formations')" style="display:none"><span class="icon">🎓</span> Formations</div>
-    <div class="nav-item" id="nav-rh-avances" onclick="navigate('rh-avances')" style="display:none"><span class="icon">💰</span> Avances & Prêts</div>
-    <div class="nav-item" id="nav-rh-paie" onclick="navigate('rh-paie')" style="display:none"><span class="icon">💴</span> Paie</div>
-    <div class="nav-item" id="nav-rh-dashboard" onclick="navigate('rh-dashboard')" style="display:none"><span class="icon">📊</span> Tableau RH</div>
-    <div class="nav-item" id="nav-rh-parametres" onclick="navigate('rh-parametres')" style="display:none"><span class="icon">⚙️</span> Paramètres de Paie</div>
-    <div class="nav-section" id="nav-admin-section" style="display:none">Administration</div>
-    <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
-    <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
-    <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
+    <div class="nav-group" data-group="principal">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Principal</div>
+      <div class="nav-group-body">
+        <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> Tableau de Bord</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="stock">
+      <div class="nav-section" id="nav-section-stock" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Stock</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-inventaire" onclick="navigate('inventaire')"><span class="icon">📦</span> Inventaire</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="achats">
+      <div class="nav-section" id="nav-section-achats" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Achats</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Catégories</div>
+        <div class="nav-item" id="nav-fournisseurs" onclick="navigate('fournisseurs')"><span class="icon">🏭</span> Fournisseurs</div>
+        <div class="nav-item" id="nav-commandes" onclick="navigate('commandes')"><span class="icon">🛒</span> Commandes</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="ventes">
+      <div class="nav-section" id="nav-section-ventes" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Ventes</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-caisse-journal" onclick="navigate('caisse')"><span class="icon">💵</span> Journal de Caisse</div>
+        <div class="nav-item" id="nav-pos" onclick="ouvrirPOSAvecSession()" style="display:none"><span class="icon">🖥️</span> Caisse POS</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="rapports">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Rapports</div>
+      <div class="nav-group-body">
+        <div class="nav-item" onclick="navigate('rapports')"><span class="icon">📄</span> Rapports</div>
+        <div class="nav-item" id="nav-comptabilite" onclick="navigate('comptabilite')" style="display:none"><span class="icon">📒</span> Comptabilité</div>
+        <div class="nav-item" id="nav-rapprochement" onclick="navigate('rapprochement')" style="display:none"><span class="icon">💰</span> Trésorerie</div>
+        <div class="nav-item" id="nav-alertes" onclick="navigate('alertes')"><span class="icon">🔔</span> Alertes Stock</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="services-finance">
+      <div class="nav-section" onclick="toggleNavGroup(this)"><span class="nav-group-arrow">▶</span>Services & Finance</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-mobilemoney" onclick="navigate('mobilemoney')"><span class="icon">📱</span> Mobile Money</div>
+        <div class="nav-item" id="nav-services" onclick="navigate('services')"><span class="icon">🖨️</span> Services Numériques</div>
+        <div class="nav-item" id="nav-rentabilite" onclick="navigate('rentabilite')" style="display:none"><span class="icon">📈</span> Rentabilité</div>
+        <div class="nav-item" id="nav-presences" onclick="navigate('presences')" style="display:none"><span class="icon">🪪</span> Suivi des Présences</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="rh">
+      <div class="nav-section" id="nav-section-rh" onclick="toggleNavGroup(this)" style="display:none"><span class="nav-group-arrow">▶</span>Ressources Humaines</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-rh-employes" onclick="navigate('rh-employes')" style="display:none"><span class="icon">👤</span> Employés</div>
+        <div class="nav-item" id="nav-rh-contrats" onclick="navigate('rh-contrats')" style="display:none"><span class="icon">📄</span> Contrats</div>
+        <div class="nav-item" id="nav-rh-presences" onclick="navigate('rh-presences')" style="display:none"><span class="icon">🕑</span> Pointages</div>
+        <div class="nav-item" id="nav-rh-absences" onclick="navigate('rh-absences')" style="display:none"><span class="icon">🌴</span> Congés & Absences</div>
+        <div class="nav-item" id="nav-rh-planning" onclick="navigate('rh-planning')" style="display:none"><span class="icon">🗓️</span> Planning</div>
+        <div class="nav-item" id="nav-rh-formations" onclick="navigate('rh-formations')" style="display:none"><span class="icon">🎓</span> Formations</div>
+        <div class="nav-item" id="nav-rh-avances" onclick="navigate('rh-avances')" style="display:none"><span class="icon">💰</span> Avances & Prêts</div>
+        <div class="nav-item" id="nav-rh-paie" onclick="navigate('rh-paie')" style="display:none"><span class="icon">💴</span> Paie</div>
+        <div class="nav-item" id="nav-rh-dashboard" onclick="navigate('rh-dashboard')" style="display:none"><span class="icon">📊</span> Tableau RH</div>
+        <div class="nav-item" id="nav-rh-parametres" onclick="navigate('rh-parametres')" style="display:none"><span class="icon">⚙️</span> Paramètres de Paie</div>
+      </div>
+    </div>
+    <div class="nav-group" data-group="administration">
+      <div class="nav-section" id="nav-admin-section" onclick="toggleNavGroup(this)" style="display:none"><span class="nav-group-arrow">▶</span>Administration</div>
+      <div class="nav-group-body">
+        <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
+        <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
+        <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
+      </div>
+    </div>
   </div>
   <div class="sidebar-footer">
     <span class="realtime-dot"></span> Synchronisation temps réel<br>
@@ -4916,6 +4953,7 @@ function afficherApp() {
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', {weekday:'short',year:'numeric',month:'short',day:'numeric'});
     setConnStatus('online');
     appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier);
+    restaurerNavGroupState();
     checkEtInitialiserDonnees();
     renderDashboard();
     if (peutLireRH()) demarrerListenersRH();
@@ -4948,7 +4986,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
 
   // Section Administration : Admin uniquement
   if (isAdmin) {
-    document.getElementById('nav-admin-section').style.display = 'block';
+    document.getElementById('nav-admin-section').style.display = 'flex';
     document.getElementById('nav-comptes').style.display = 'flex';
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
@@ -4986,7 +5024,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
   // Menu Ressources Humaines (Phase RH-A)
   // Admin/Gérant : accès complet. Comptable seul : Contrats en lecture uniquement. Autres : aucun accès.
   if (estGerantOuAdmin()) {
-    document.getElementById('nav-section-rh').style.display = 'block';
+    document.getElementById('nav-section-rh').style.display = 'flex';
     document.getElementById('nav-rh-employes').style.display = 'flex';
     document.getElementById('nav-rh-contrats').style.display = 'flex';
     document.getElementById('nav-rh-presences').style.display = 'flex';
@@ -4999,7 +5037,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     // Paramètres de Paie (Phase RH-C) : visible Admin/Gérant (lecture), modification réservée à l'Admin (cf. page)
     document.getElementById('nav-rh-parametres').style.display = 'flex';
   } else if (isComptable) {
-    document.getElementById('nav-section-rh').style.display = 'block';
+    document.getElementById('nav-section-rh').style.display = 'flex';
     document.getElementById('nav-rh-contrats').style.display = 'flex';
     // Phase RH-C : lecture étendue Comptable (Employés, Pointages, Absences, Avances&Prêts, Paie, Dashboard) — pas Planning ni Paramètres
     document.getElementById('nav-rh-employes').style.display = 'flex';
@@ -6467,6 +6505,48 @@ function navigate(page) {
   document.getElementById('page-title').textContent = pageTitles[page];
   rafraichirPage(page);
   toggleSidebar(false);
+  ouvrirGroupeActif();
+}
+
+const NAV_GROUP_STATE_KEY = 'tema_nav_group_state';
+
+function toggleNavGroup(el) {
+  const group = el.closest('.nav-group');
+  if (!group) return;
+  group.classList.toggle('collapsed');
+  saveNavGroupState();
+}
+
+function saveNavGroupState() {
+  const state = {};
+  document.querySelectorAll('.nav-group').forEach(g => {
+    if (g.dataset.group) state[g.dataset.group] = !g.classList.contains('collapsed');
+  });
+  try { localStorage.setItem(NAV_GROUP_STATE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function restaurerNavGroupState() {
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(NAV_GROUP_STATE_KEY)) || {}; } catch(e) {}
+  document.querySelectorAll('.nav-group').forEach(g => {
+    const key = g.dataset.group;
+    if (Object.prototype.hasOwnProperty.call(state, key)) {
+      g.classList.toggle('collapsed', !state[key]);
+    } else {
+      g.classList.remove('collapsed');
+    }
+  });
+  ouvrirGroupeActif();
+}
+
+function ouvrirGroupeActif() {
+  const activeItem = document.querySelector('.nav-item.active');
+  if (!activeItem) return;
+  const group = activeItem.closest('.nav-group');
+  if (group && group.classList.contains('collapsed')) {
+    group.classList.remove('collapsed');
+    saveNavGroupState();
+  }
 }
 
 function rafraichirPageActive() {
