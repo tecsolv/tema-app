@@ -1811,12 +1811,15 @@
                     <option value="OD">OD — Opérations Diverses</option>
                   </select>
                 </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Libellé *</label><input type="text" class="form-control" id="ec-libelle" required placeholder="Ex: Vente comptoir du jour"></div>
                 <div class="form-group"><label>Référence pièce justificative</label><input type="text" class="form-control" id="ec-reference" placeholder="Ex: Facture n°123, Reçu..."></div>
               </div>
-              <div class="form-group"><label>Libellé *</label><input type="text" class="form-control" id="ec-libelle" required placeholder="Ex: Vente comptoir du jour"></div>
 
               <div class="form-row" style="align-items:end">
-                <div class="form-group" style="margin:0;max-width:360px">
+                <div></div>
+                <div class="form-group" style="margin:0;max-width:360px;justify-self:end;width:100%">
                   <label>Filtrer le plan comptable par classe</label>
                   <select class="form-control" id="ec-filtre-classe" onchange="peuplerDatalistComptesOhada()">
                     <option value="">Toutes les classes</option>
@@ -1918,8 +1921,8 @@
       <!-- ONGLET 1 : RELEVÉS MOBILE MONEY -->
       <div class="caisse-tab active" id="rappro-tab-releves">
         <div class="card" style="margin-bottom:16px">
-          <div class="card-header"><h2>➕ Saisir un relevé</h2></div>
-          <div class="card-body">
+          <div class="card-header" style="cursor:pointer" onclick="toggleSaisieReleve()"><h2>➕ Saisir un relevé <span id="rl-form-toggle-icon" style="font-size:13px;font-weight:400;color:var(--text-muted)">(afficher)</span></h2></div>
+          <div class="card-body" id="rl-form-body" style="display:none">
             <form onsubmit="enregistrerReleve(event)">
               <div class="form-row">
                 <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="rl-date" required></div>
@@ -2892,8 +2895,8 @@
       <div class="form-group"><label>Employé *</label><select class="form-control" id="rhp-employe" required></select></div>
       <div class="form-group"><label>Date *</label><input class="form-control" type="date" id="rhp-date" required></div>
       <div class="form-row">
-        <div class="form-group"><label>Heure d'arrivée *</label><input class="form-control" type="time" id="rhp-arrivee" required></div>
-        <div class="form-group"><label>Heure de départ</label><input class="form-control" type="time" id="rhp-depart"></div>
+        <div class="form-group"><label>Heure d'arrivée *</label><input class="form-control" type="text" id="rhp-arrivee" placeholder="13:30" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" maxlength="5" inputmode="numeric" oninput="formatHeureSaisie(this)" required></div>
+        <div class="form-group"><label>Heure de départ</label><input class="form-control" type="text" id="rhp-depart" placeholder="18:00" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" maxlength="5" inputmode="numeric" oninput="formatHeureSaisie(this)"></div>
       </div>
       <div class="form-group"><label>Pause (minutes)</label><input class="form-control" type="number" min="0" id="rhp-pause" value="0"></div>
       <input type="hidden" id="rhp-edit-id" value="">
@@ -2951,8 +2954,8 @@
       <div class="form-group"><label>Poste / Tâche</label><input class="form-control" id="rhpl-poste" placeholder="Ex: Caisse, Magasin, Livraison..."></div>
       <div class="form-group"><label>Date *</label><input class="form-control" type="date" id="rhpl-date" required></div>
       <div class="form-row">
-        <div class="form-group"><label>Heure de début *</label><input class="form-control" type="time" id="rhpl-debut" required></div>
-        <div class="form-group"><label>Heure de fin *</label><input class="form-control" type="time" id="rhpl-fin" required></div>
+        <div class="form-group"><label>Heure de début *</label><input class="form-control" type="text" id="rhpl-debut" placeholder="08:00" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" maxlength="5" inputmode="numeric" oninput="formatHeureSaisie(this)" required></div>
+        <div class="form-group"><label>Heure de fin *</label><input class="form-control" type="text" id="rhpl-fin" placeholder="17:00" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" maxlength="5" inputmode="numeric" oninput="formatHeureSaisie(this)" required></div>
       </div>
       <input type="hidden" id="rhpl-edit-id" value="">
       <div class="modal-footer">
@@ -8320,6 +8323,14 @@ function renderRapprochement() {
 }
 
 // Enregistre un relevé Mobile Money / Espèces saisi manuellement
+function toggleSaisieReleve() {
+  const body = document.getElementById('rl-form-body');
+  const icon = document.getElementById('rl-form-toggle-icon');
+  const show = body.style.display === 'none';
+  body.style.display = show ? '' : 'none';
+  icon.textContent = show ? '(masquer)' : '(afficher)';
+}
+
 async function enregistrerReleve(event) {
   event.preventDefault();
   if (!requireFinanceEcriture("Vous n'avez pas l'autorisation de saisir un relevé de trésorerie")) return;
@@ -8339,6 +8350,7 @@ async function enregistrerReleve(event) {
     showToast('✓ Relevé enregistré');
     event.target.reset();
     document.getElementById('rl-date').value = today();
+    toggleSaisieReleve();
   } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
 }
 
@@ -10143,6 +10155,12 @@ function calculerHeuresTravaillees(heureArrivee, heureDepart, pauseMinutes) {
   if (minutes < 0) minutes += 24*60; // pointage traversant minuit
   minutes -= (pauseMinutes || 0);
   return Math.max(0, Math.round((minutes/60) * 100) / 100);
+}
+
+function formatHeureSaisie(el) {
+  let v = el.value.replace(/[^0-9]/g, '').slice(0, 4);
+  if (v.length >= 3) v = v.slice(0, 2) + ':' + v.slice(2);
+  el.value = v;
 }
 
 function ouvrirNouveauPointage() {
