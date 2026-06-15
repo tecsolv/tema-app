@@ -3897,6 +3897,30 @@ function estGerantOuAdmin() {
   const role = (currentUser.role || '').toLowerCase();
   return role.includes('gérant') || role.includes('gerant') || role.includes('propriétaire') || role.includes('proprietaire');
 }
+
+// Sécurité P0 : un(e) caissier(ère) sans session de caisse active (caisse non sélectionnée)
+// ne doit jamais pouvoir accéder à l'ERP / aux pages métier (Admin, Comptabilité, RH, etc.)
+function caissierSansCaisseSelectionnee() {
+  if (!currentUser) return false;
+  if (estGerantOuAdmin()) return false;
+  const role = (currentUser.role || '').toLowerCase();
+  const isComptable = role.includes('comptable');
+  const isCaissier = !isComptable && (role.includes('caissier') || role.includes('vendeur') || role.includes('caissière'));
+  return isCaissier && !posSessionActive;
+}
+
+// Force la redirection vers l'écran "Sélectionnez votre caisse" et bloque tout accès ERP
+function forcerSelectionCaisse() {
+  document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => {
+    s.classList.remove('active');
+    if (s.id === 'screen-erp') s.style.display = 'none';
+  });
+  const backBtn = document.getElementById('sc-back-btn');
+  if (backBtn) backBtn.style.display = 'none';
+  const sc = document.getElementById('screen-select-caisse');
+  if (sc) sc.classList.add('active');
+  renderSelectCaisseGrid();
+}
 let posPanier = [];
 let posCategorieActive = '';
 let posClientActuel = null;
@@ -5302,6 +5326,7 @@ document.addEventListener('keydown', e => {
 });
 
 function goScreen(id) {
+  if (id === 'screen-erp' && caissierSansCaisseSelectionnee()) { forcerSelectionCaisse(); return; }
   document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => {
     s.classList.remove('active');
     if (s.id === 'screen-erp') s.style.display = 'none';
@@ -5893,6 +5918,10 @@ function majBadgeSessionPOS() {
 async function demarrerSessionCaissier() {
   const lbl = document.getElementById('sc-user-name');
   if (lbl) lbl.textContent = currentUser.label;
+  // Sécurité P0 : le bouton Retour ne doit jamais être visible lors de la connexion
+  // initiale (avant sélection de caisse), même si un état précédent l'avait affiché.
+  const backBtn = document.getElementById('sc-back-btn');
+  if (backBtn) backBtn.style.display = 'none';
   if (posSessionActive) { ouvrirEcranPOS(); return; }
   try {
     const snap = await db.collection('sessions_caisse').where('utilisateurId','==', currentUser.id).get();
@@ -5933,7 +5962,15 @@ async function ouvrirPOSAvecSession() {
 }
 
 // Retour vers l'ERP depuis l'écran de sélection de caisse (Gérant/Admin uniquement)
+// Sécurité P0 : même en cas d'appel direct (URL, console, manipulation JS), seul un
+// Gérant/Admin/Propriétaire ayant explicitement choisi de changer de caisse peut revenir
+// à l'ERP depuis cet écran. Tout autre rôle reste bloqué sur la sélection de caisse.
 function retourErpDepuisSelectCaisse() {
+  if (!estGerantOuAdmin()) {
+    const backBtn = document.getElementById('sc-back-btn');
+    if (backBtn) backBtn.style.display = 'none';
+    return;
+  }
   document.querySelectorAll('.app-screen, .secondary-screen').forEach(s => {
     s.classList.remove('active');
     if (s.id === 'screen-erp') s.style.display = '';
@@ -6649,6 +6686,7 @@ function toggleSidebar(force) {
 }
 
 function navigate(page) {
+  if (caissierSansCaisseSelectionnee()) { forcerSelectionCaisse(); return; }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
