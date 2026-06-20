@@ -909,8 +909,8 @@ let panierEnAttente = [];
 
 const CAT_ZONE = {
   'Accessoires Informatiques': 'A',
-  'Habits Enfants': 'B',
-  'Fournitures Scolaires': 'C',
+  'Fournitures Scolaires': 'B',
+  'Habits Enfants': 'C',
   'Épicerie': 'D',
   'Toutes catégories': 'D',
   'Services': 'E'
@@ -1200,7 +1200,7 @@ function ajouterServiceDirectPOS(nom, prix) {
   if (!prix) { ouvrirModalService(nom); return; }
   const exist = panier.find(i => i.serviceType && i.nom===nom);
   if (exist) { exist.qte++; exist.total = exist.qte * exist.prix; }
-  else panier.push({ id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'E' });
+  else panier.push({ id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'A' });
   renderPanier();
   showToast('✅ ' + nom + ' ajouté');
 }
@@ -1238,7 +1238,7 @@ function ajouterServiceAuPanier() {
   const nom  = val.split('|')[0];
   const qte  = parseInt(document.getElementById('svc-pos-qte').value)||1;
   const prix = parseFloat(document.getElementById('svc-pos-prix').value)||0;
-  panier.push({ id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'E' });
+  panier.push({ id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'A' });
   renderPanier();
   closeModal('modal-service');
   showToast('✅ Service ajouté au ticket');
@@ -1402,7 +1402,7 @@ async function confirmerVente() {
     // Enregistrer chaque ligne comme vente dans ventesCaisse (ERP-compatible)
     const batch = db.batch();
     for (const item of panier) {
-      const zone = item.serviceType ? 'E' : (CAT_ZONE[item.cat]||'D');
+      const zone = item.serviceType ? 'A' : (CAT_ZONE[item.cat]||'D');
       const ref = db.collection('ventesCaisse').doc();
       batch.set(ref, {
         date: dateDuJour, heure, zone,

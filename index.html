@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeMa Boutique — Gestion en Ligne</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a5276">
+<link rel="icon" href="/assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -7781,8 +7785,8 @@ function exportTresorerieCSV() {
 // ===== JOURNAL DE CAISSE (ventes au comptoir, par zone & mode de paiement) =====
 const ZONES_CAISSE = {
   A: { label: 'Informatique', emoji: '🖥️', color: '#7D3C98' },
-  B: { label: 'Fournitures Scolaires', emoji: '📚', color: '#2471A3' },
-  C: { label: 'Vêtements Enfants', emoji: '👶', color: '#1E8449' },
+  B: { label: 'Univers École', emoji: '📚', color: '#2471A3' },
+  C: { label: 'Univers Enfants', emoji: '👶', color: '#1E8449' },
   D: { label: 'Épicerie', emoji: '🛒', color: '#E67E22' },
   E: { label: 'Magasinage', emoji: '📦', color: '#34495E' }
 };
@@ -11282,5 +11286,13 @@ document.addEventListener('DOMContentLoaded', () => {
     → Chaque employé l'ouvre dans Chrome sur son téléphone
 
   ================================================== -->
+<script>
+  // Installation en application de bureau (PWA) — voir manifest.json
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW non enregistré:', err));
+    });
+  }
+</script>
 </body>
 </html>

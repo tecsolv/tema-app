@@ -1,0 +1,16 @@
+{
+  "name": "TeMa Boutique — Gestion en Ligne",
+  "short_name": "TeMa Boutique",
+  "description": "TeMa Boutique Multiservices — Caisse, Gestion, Comptabilité OHADA et Administration",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1e2e",
+  "theme_color": "#1a5276",
+  "lang": "fr",
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
