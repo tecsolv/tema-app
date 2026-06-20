@@ -1392,6 +1392,7 @@
         <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
         <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
         <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
+        <div class="nav-item" id="nav-reinitialisation" onclick="navigate('reinitialisation')" style="display:none"><span class="icon">🔄</span> Réinitialisation</div>
       </div>
     </div>
   </div>
@@ -2235,6 +2236,36 @@
           <table><thead><tr>
             <th>Date</th><th>Utilisateur</th><th>Rôle</th><th>Action</th><th>Détails</th>
           </tr></thead><tbody id="tbody-journal"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE ADMIN — RÉINITIALISATION AVANT OUVERTURE -->
+    <div class="page" id="page-reinitialisation">
+      <div class="alert alert-danger">⚠️ <strong>Action irréversible.</strong> Cet outil efface définitivement les enregistrements de test (ventes, caisses, comptabilité, RH, etc.) pour repartir avec une base propre avant l'ouverture réelle de la boutique. Le catalogue produits, les comptes employés, les caisses, les fournisseurs et les paramètres RH ne sont jamais supprimés. Réservé à l'Administrateur.</div>
+      <div class="card">
+        <div class="card-header"><h2>🔄 Catégories à réinitialiser</h2></div>
+        <div class="card-body">
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-ventes" checked style="margin-top:3px"> <span><strong>Ventes &amp; Caisse</strong><br><span style="font-size:12px;color:var(--text-muted)">Tickets de caisse, ventes de services, sessions de caisse, audit des caisses</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-compta" checked style="margin-top:3px"> <span><strong>Comptabilité OHADA</strong><br><span style="font-size:12px;color:var(--text-muted)">Écritures comptables (journal, balance)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-mm" checked style="margin-top:3px"> <span><strong>Mobile Money &amp; Transactions</strong><br><span style="font-size:12px;color:var(--text-muted)">Dépôts, retraits, commissions</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-tresorerie" checked style="margin-top:3px"> <span><strong>Trésorerie &amp; Rapprochement</strong><br><span style="font-size:12px;color:var(--text-muted)">Relevés de trésorerie, rapprochements bancaires</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-rh" checked style="margin-top:3px"> <span><strong>RH — Pointages, Planning, Absences</strong><br><span style="font-size:12px;color:var(--text-muted)">Pointages journaliers, affectations planning, congés/absences</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-achats" checked style="margin-top:3px"> <span><strong>Achats Fournisseurs</strong><br><span style="font-size:12px;color:var(--text-muted)">Commandes fournisseurs, paiements</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité</strong><br><span style="font-size:12px;color:var(--text-muted)">Historique des connexions et actions admin (Journal d'Activité)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (pour ressaisir l'inventaire réel)</span></span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>✅ Confirmation</h2></div>
+        <div class="card-body">
+          <p style="margin-bottom:10px">Ce qui est <strong>conservé</strong> : catalogue produits, comptes employés, caisses (Caisse 1/2), fournisseurs, fiches employés RH, contrats, paramètres de paie, clients.</p>
+          <div class="form-group" style="max-width:420px">
+            <label>Pour confirmer, tapez <strong>REINITIALISER</strong> ci-dessous</label>
+            <input type="text" class="form-control" id="reinit-confirm-text" placeholder="REINITIALISER" oninput="verifierConfirmationReinit()" autocomplete="off">
+          </div>
+          <button class="btn btn-danger" id="btn-reinit-confirmer" disabled onclick="purgerDonneesAvantOuverture()">🗑 Réinitialiser maintenant</button>
+          <div id="reinit-resultat" style="margin-top:16px;display:none"></div>
         </div>
       </div>
     </div>
@@ -5111,7 +5142,7 @@ function appliquerFiltrePermissionsEmployes() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences',
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-reinitialisation','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
    'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
@@ -5138,6 +5169,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-comptes').style.display = 'flex';
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
+    document.getElementById('nav-reinitialisation').style.display = 'flex';
   }
 
   // Accès POS : Admin et Gérant (Phase P3A-Correctif — via session caisse réelle)
@@ -6628,6 +6660,7 @@ const pageTitles = {
   dashboard:'Tableau de Bord', inventaire:'Inventaire des Articles', categories:'Catégories de Produits',
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
+  reinitialisation:'Réinitialisation avant Ouverture (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
@@ -6800,6 +6833,7 @@ function rafraichirPage(page) {
   else if (page === 'alertes') renderAlertes();
   else if (page === 'comptes') renderComptes();
   else if (page === 'journal') renderJournal();
+  else if (page === 'reinitialisation') renderReinitialisation();
   else if (page === 'caisse') renderCaissePage();
   else if (page === 'suivicaisse') renderSuiviCaisse();
   else if (page === 'comptabilite') renderComptabilite();
@@ -7644,6 +7678,105 @@ function renderJournal() {
       <td><span style="font-weight:600;color:${actionColor(j.action)}">${j.action}</span></td>
       <td style="font-size:12px;color:var(--text-muted)">${j.details||''}</td>
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">Aucune activité enregistrée pour le moment</td></tr>';
+}
+
+// ===== RÉINITIALISATION AVANT OUVERTURE (Admin uniquement) =====
+// Purge les enregistrements de test (ventes, caisses, comptabilité, RH...) avant le
+// lancement réel de la boutique. Ne touche jamais au catalogue produits (sauf remise à
+// zéro du stock si demandé), aux comptes utilisateurs, caisses, fournisseurs ou paramètres RH.
+const REINIT_CATEGORIES = {
+  ventes:      { label: 'Ventes & Caisse',               collections: ['ventesCaisse','ventes_services','sessions_caisse','audit_caisses'] },
+  compta:      { label: 'Comptabilité OHADA',            collections: ['ecritures_comptables'] },
+  mm:          { label: 'Mobile Money & Transactions',   collections: ['transactions_mm','transactions_mobile_money'] },
+  tresorerie:  { label: 'Trésorerie & Rapprochement',    collections: ['releves_tresorerie','rapprochements'] },
+  rh:          { label: 'RH — Pointages, Planning, Absences', collections: ['rh_pointages','rh_planning','rh_absences'] },
+  achats:      { label: 'Achats Fournisseurs',           collections: ['commandes','paiements'] },
+  journal:     { label: "Journal d'activité",            collections: ['journal','audit_trail'] }
+};
+
+function renderReinitialisation() {
+  if (!currentUser.isAdmin) return;
+  const txt = document.getElementById('reinit-confirm-text');
+  if (txt) txt.value = '';
+  verifierConfirmationReinit();
+  const res = document.getElementById('reinit-resultat');
+  if (res) { res.style.display = 'none'; res.innerHTML = ''; }
+}
+
+function verifierConfirmationReinit() {
+  const txt = document.getElementById('reinit-confirm-text');
+  const btn = document.getElementById('btn-reinit-confirmer');
+  if (!txt || !btn) return;
+  btn.disabled = txt.value.trim() !== 'REINITIALISER';
+}
+
+async function purgerCollectionFirestore(nom) {
+  let total = 0;
+  while (true) {
+    const snap = await db.collection(nom).limit(400).get();
+    if (snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    total += snap.docs.length;
+    if (snap.docs.length < 400) break;
+  }
+  return total;
+}
+
+async function remettreStockProduitsAZero() {
+  const snap = await db.collection('produits').get();
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 400) {
+    const chunk = docs.slice(i, i + 400);
+    const batch = db.batch();
+    chunk.forEach(d => batch.update(d.ref, { stock: 0 }));
+    await batch.commit();
+  }
+  return docs.length;
+}
+
+async function purgerDonneesAvantOuverture() {
+  if (!currentUser.isAdmin) { showToast("Seul l'Administrateur peut effectuer cette opération", 'error'); return; }
+  const txt = document.getElementById('reinit-confirm-text');
+  if (!txt || txt.value.trim() !== 'REINITIALISER') { showToast('Veuillez taper REINITIALISER pour confirmer', 'error'); return; }
+
+  const categoriesChoisies = Object.entries(REINIT_CATEGORIES).filter(([cle]) => document.getElementById(`reinit-cat-${cle}`)?.checked);
+  const resetStock = !!document.getElementById('reinit-stock')?.checked;
+  if (!categoriesChoisies.length && !resetStock) { showToast('Sélectionnez au moins une catégorie à réinitialiser', 'error'); return; }
+
+  const collectionsAEffacer = categoriesChoisies.flatMap(([, cat]) => cat.collections);
+  const labelsChoisis = categoriesChoisies.map(([, cat]) => cat.label);
+
+  if (!confirm(`⚠️ Cette action est IRRÉVERSIBLE.\n\nVous allez effacer définitivement :\n${labelsChoisis.map(l=>'• '+l).join('\n')}${resetStock?'\n• Stock produits (remis à 0)':''}\n\nConfirmer la réinitialisation avant ouverture ?`)) return;
+
+  const btn = document.getElementById('btn-reinit-confirmer');
+  const res = document.getElementById('reinit-resultat');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Réinitialisation en cours...';
+  res.style.display = 'block'; res.innerHTML = '';
+  const lignesResultat = [];
+
+  try {
+    for (const nom of collectionsAEffacer) {
+      const n = await purgerCollectionFirestore(nom);
+      lignesResultat.push(`✓ ${nom} — ${n} document(s) supprimé(s)`);
+      res.innerHTML = `<div class="alert alert-info">${lignesResultat.join('<br>')}</div>`;
+    }
+    if (resetStock) {
+      const n = await remettreStockProduitsAZero();
+      lignesResultat.push(`✓ Stock produits — ${n} article(s) remis à 0`);
+      res.innerHTML = `<div class="alert alert-info">${lignesResultat.join('<br>')}</div>`;
+    }
+    consigner('Réinitialisation avant ouverture', `Catégories effacées : ${labelsChoisis.join(', ') || 'aucune'}${resetStock ? ' + Stock produits remis à 0' : ''} — par ${currentUser.label}`);
+    res.innerHTML = `<div class="alert alert-success">✅ Réinitialisation terminée — la boutique est prête à ouvrir.<br><br>${lignesResultat.join('<br>')}</div>`;
+    showToast('✅ Réinitialisation terminée');
+    txt.value = '';
+  } catch (err) {
+    res.innerHTML = `<div class="alert alert-danger">❌ Erreur pendant la réinitialisation : ${err.message}<br><br>${lignesResultat.join('<br>')}</div>`;
+    showToast('Erreur : ' + err.message, 'error');
+  }
+  btn.innerHTML = '🗑 Réinitialiser maintenant';
+  verifierConfirmationReinit();
 }
 
 // ===== TRÉSORERIE & COMPTABILITÉ FOURNISSEURS (admin uniquement) =====
