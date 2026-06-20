@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeMa Boutique — Gestion en Ligne</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a5276">
+<link rel="icon" href="/assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -40,8 +44,8 @@
 
   /* SIDEBAR */
   .sidebar { width: var(--sidebar-w); background: var(--primary); color: #fff; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; box-shadow: 3px 0 15px rgba(0,0,0,0.2); }
-  .sidebar-logo { padding: 20px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.12); }
-  .sidebar-logo h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
+  .sidebar-logo { padding: 16px 20px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .sidebar-logo-img { display: block; width: 140px; height: auto; margin-bottom: 2px; }
   .sidebar-logo p { font-size: 10px; color: rgba(255,255,255,0.55); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
   .user-badge { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px; margin: 10px 12px 0; font-size: 12px; color: rgba(255,255,255,0.85); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; cursor: pointer; transition: background .2s; }
   .user-badge:hover, .user-badge.open { background: rgba(255,255,255,0.2); }
@@ -746,9 +750,9 @@
   }
   .cart-totals { margin-bottom: 14px; }
   .cart-line { display: flex; justify-content: space-between; color: rgba(255,255,255,.5); font-size: 12px; margin-bottom: 4px; }
-  .cart-total-line { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.1); }
-  .cart-total-label { color: #fff; font-size: 16px; font-weight: 700; }
-  .cart-total-value { color: var(--accent); font-size: 22px; font-weight: 800; }
+  .cart-total-line { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+  .cart-total-label { color: #fff; font-size: 18px; font-weight: 800; letter-spacing: .5px; }
+  .cart-total-value { color: var(--accent); font-size: 34px; font-weight: 800; line-height: 1; }
   .cart-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
   .btn-cart {
     padding: 10px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700;
@@ -1317,8 +1321,7 @@
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar" style="display:flex;flex-direction:column">
   <div class="sidebar-logo">
-    <h1>TeMa</h1>
-    <p>Gestion de Boutique</p>
+    <img src="assets/logo_tema_sidebar_v2.png" alt="TeMa Boutique" class="sidebar-logo-img">
   </div>
   <div class="user-badge" id="user-badge" onclick="toggleUserMenu(event)">
     <div class="user-dot"></div>
@@ -1388,6 +1391,8 @@
         <div class="nav-item" id="nav-suivicaisse" onclick="navigate('suivicaisse')" style="display:none"><span class="icon">📊</span> Suivi de Caisse</div>
         <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
         <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
+        <div class="nav-item" id="nav-support" onclick="navigate('support')" style="display:none"><span class="icon">💬</span> Support <span class="badge" id="support-badge" style="display:none">0</span></div>
+        <div class="nav-item" id="nav-reinitialisation" onclick="navigate('reinitialisation')" style="display:none"><span class="icon">🔄</span> Réinitialisation</div>
       </div>
     </div>
   </div>
@@ -1410,6 +1415,7 @@
         <button class="btn btn-outline btn-sm" id="topbar-action-mm" onclick="navigate('mobilemoney')" title="Mobile Money" style="display:none">📲<span class="qa-label"> Mobile Money</span></button>
         <button class="btn btn-outline btn-sm" id="topbar-action-services" onclick="navigate('services')" title="Services Numériques" style="display:none">🖨️<span class="qa-label"> Services</span></button>
       </div>
+      <button class="btn btn-outline btn-sm" onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="white-space:nowrap">💬<span class="qa-label"> Support</span></button>
       <span style="font-size:12px;color:var(--text-muted)" id="sync-status"></span>
       <span style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer" onclick="navigate('alertes')">
         🔔 <span class="badge" id="alert-badge">0</span>
@@ -2231,6 +2237,55 @@
           <table><thead><tr>
             <th>Date</th><th>Utilisateur</th><th>Rôle</th><th>Action</th><th>Détails</th>
           </tr></thead><tbody id="tbody-journal"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE ADMIN — SUPPORT (messages internes employés → admin) -->
+    <div class="page" id="page-support">
+      <div class="alert alert-info no-print">💬 Messages envoyés par les employés depuis leur espace, avec capture d'écran éventuelle. Répondez et marquez comme résolu une fois traité.</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+          <div class="form-group" style="margin:0"><label>Statut</label>
+            <select class="form-control" id="support-filtre-statut" onchange="renderSupportAdmin()">
+              <option value="">Tous</option>
+              <option value="nouveau">Nouveau</option>
+              <option value="lu">Lu</option>
+              <option value="resolu">Résolu</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="support-admin-liste"></div>
+    </div>
+
+    <!-- MODULE ADMIN — RÉINITIALISATION AVANT OUVERTURE -->
+    <div class="page" id="page-reinitialisation">
+      <div class="alert alert-danger">⚠️ <strong>Action irréversible.</strong> Cet outil efface définitivement les enregistrements de test (ventes, caisses, comptabilité, RH, etc.) pour repartir avec une base propre avant l'ouverture réelle de la boutique. Le catalogue produits, les comptes employés, les caisses, les fournisseurs et les paramètres RH ne sont jamais supprimés. Réservé à l'Administrateur.</div>
+      <div class="card">
+        <div class="card-header"><h2>🔄 Catégories à réinitialiser</h2></div>
+        <div class="card-body">
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-ventes" checked style="margin-top:3px"> <span><strong>Ventes &amp; Caisse</strong><br><span style="font-size:12px;color:var(--text-muted)">Tickets de caisse, ventes de services, sessions de caisse, audit des caisses</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-compta" checked style="margin-top:3px"> <span><strong>Comptabilité OHADA</strong><br><span style="font-size:12px;color:var(--text-muted)">Écritures comptables (journal, balance)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-mm" checked style="margin-top:3px"> <span><strong>Mobile Money &amp; Transactions</strong><br><span style="font-size:12px;color:var(--text-muted)">Dépôts, retraits, commissions</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-tresorerie" checked style="margin-top:3px"> <span><strong>Trésorerie &amp; Rapprochement</strong><br><span style="font-size:12px;color:var(--text-muted)">Relevés de trésorerie, rapprochements bancaires</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-rh" checked style="margin-top:3px"> <span><strong>RH — Pointages, Planning, Absences</strong><br><span style="font-size:12px;color:var(--text-muted)">Pointages journaliers, affectations planning, congés/absences</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-achats" checked style="margin-top:3px"> <span><strong>Achats Fournisseurs</strong><br><span style="font-size:12px;color:var(--text-muted)">Commandes fournisseurs, paiements</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité</strong><br><span style="font-size:12px;color:var(--text-muted)">Historique des connexions et actions admin (Journal d'Activité)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-support" checked style="margin-top:3px"> <span><strong>Messages de support</strong><br><span style="font-size:12px;color:var(--text-muted)">Messages de test envoyés par les employés à l'Administrateur</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (pour ressaisir l'inventaire réel)</span></span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>✅ Confirmation</h2></div>
+        <div class="card-body">
+          <p style="margin-bottom:10px">Ce qui est <strong>conservé</strong> : catalogue produits, comptes employés, caisses (Caisse 1/2), fournisseurs, fiches employés RH, contrats, paramètres de paie, clients.</p>
+          <div class="form-group" style="max-width:420px">
+            <label>Pour confirmer, tapez <strong>REINITIALISER</strong> ci-dessous</label>
+            <input type="text" class="form-control" id="reinit-confirm-text" placeholder="REINITIALISER" oninput="verifierConfirmationReinit()" autocomplete="off">
+          </div>
+          <button class="btn btn-danger" id="btn-reinit-confirmer" disabled onclick="purgerDonneesAvantOuverture()">🗑 Réinitialiser maintenant</button>
+          <div id="reinit-resultat" style="margin-top:16px;display:none"></div>
         </div>
       </div>
     </div>
@@ -3164,6 +3219,55 @@
   </div>
 </div>
 
+<!-- Modale : Support — message interne employé → Administrateur (avec capture d'écran) -->
+<div class="modal-overlay" id="modal-support">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3>💬 Contacter l'Administrateur</h3>
+      <button class="modal-close" onclick="closeModal('modal-support')">×</button>
+    </div>
+    <form onsubmit="envoyerMessageSupport(event)">
+      <div class="form-group">
+        <label>Votre message *</label>
+        <textarea class="form-control" id="support-message" rows="4" required placeholder="Décrivez le problème ou votre question..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Capture d'écran (optionnel)</label>
+        <div id="support-paste-zone" tabindex="0" onpaste="gererCollerCaptureSupport(event)"
+             style="border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;outline:none"
+             onclick="document.getElementById('support-screenshot-file').click()">
+          <div id="support-screenshot-placeholder" style="color:var(--text-muted);font-size:13px">
+            📋 Cliquez ici puis collez (Ctrl+V / Cmd+V) une capture d'écran<br>
+            <span style="font-size:11px">— ou cliquez pour choisir un fichier image —</span>
+          </div>
+          <img id="support-screenshot-preview" style="display:none;max-width:100%;max-height:180px;border-radius:8px;margin-top:6px">
+        </div>
+        <input type="file" id="support-screenshot-file" accept="image/*" style="display:none" onchange="gererFichierCaptureSupport(event)">
+        <button type="button" id="btn-supprimer-capture-support" style="display:none;margin-top:6px" class="btn btn-outline btn-sm" onclick="supprimerCaptureSupport()">🗑 Retirer la capture</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-support')">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="btn-envoyer-support">📤 Envoyer à l'Administrateur</button>
+      </div>
+    </form>
+    <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:12px">
+      <h4 style="font-size:13px;color:var(--text-muted);margin-bottom:8px">VOS MESSAGES RÉCENTS</h4>
+      <div id="support-mes-messages" style="max-height:220px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : capture support en grand -->
+<div class="modal-overlay" id="modal-support-image">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3>📷 Capture d'écran</h3>
+      <button class="modal-close" onclick="closeModal('modal-support-image')">×</button>
+    </div>
+    <img id="support-image-agrandie" style="width:100%;border-radius:8px">
+  </div>
+</div>
+
 <!-- Modale : caisse occupée (exclusivité) -->
 <div class="pos-modal-overlay" id="modal-caisse-occupee">
   <div class="pos-modal" style="max-width:420px">
@@ -3237,6 +3341,7 @@
       <button class="pos-back-btn" onclick="ouvrirEcranStats()" title="Statistiques" style="font-size:18px">📊</button>
       <button class="pos-back-btn" onclick="ouvrirEcranStock()" title="Stock" style="font-size:18px">📦</button>
       <button class="pos-back-btn" onclick="ouvrirEcranJournal()" title="Caisse Journalière" style="font-size:18px">💰</button>
+      <button class="pos-back-btn" onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="font-size:18px">💬</button>
       <button class="pos-back-btn" onclick="seDeconnecter()" title="Déconnexion" style="font-size:18px">🚪</button>
     </div>
   </div>
@@ -3558,6 +3663,7 @@
     <div class="dig-topbar">
       <div class="dig-topbar-title" id="dig-page-title">📊 <span>Tableau de Bord Digital</span></div>
       <div class="dig-topbar-right">
+        <button onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="background:rgba(255,255,255,.08);border:none;color:inherit;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px">💬 Support</button>
         <span id="dig-topbar-date">—</span>
         <span id="dig-session-status" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#ef4444">⚫ Hors session</span>
       </div>
@@ -3869,7 +3975,7 @@ const FIREBASE_CONFIG = {
 const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
-let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [];
+let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [], supportMessages = [];
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
 // ── RH (Phase RH-A) ────────────────────────────────────────
@@ -3933,7 +4039,7 @@ const posF  = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F
 const posF0 = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0));
 const posNow = () => new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const posDateHeure = () => new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-const CAT_ZONE = {'Accessoires Informatiques':'A','Habits Enfants':'B','Fournitures Scolaires':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
+const CAT_ZONE = {'Accessoires Informatiques':'A','Fournitures Scolaires':'B','Habits Enfants':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
 const CAT_EMOJI = {'Accessoires Informatiques':'🖥️','Habits Enfants':'👕','Fournitures Scolaires':'📚','Épicerie':'🛒','Services':'🖨️'};
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
@@ -4945,6 +5051,13 @@ function demarrerListeners() {
       rafraichirPageActive();
     }, err => console.error('paiements:', err));
     unsubscribers.push(u6);
+
+    const u6b = db.collection('support_messages').orderBy('date', 'desc').onSnapshot(snap => {
+      supportMessages = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      majBadgeSupport();
+      rafraichirPageActive();
+    }, err => console.error('support_messages:', err));
+    unsubscribers.push(u6b);
   } else if (estGerantOuAdmin()) {
     // Gérant non-admin : besoin de la liste des utilisateurs pour le transfert de caisse
     const u4b = db.collection('users').onSnapshot(snap => {
@@ -5107,7 +5220,7 @@ function appliquerFiltrePermissionsEmployes() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-pos','nav-presences',
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-reinitialisation','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
    'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
@@ -5134,6 +5247,8 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-comptes').style.display = 'flex';
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
+    document.getElementById('nav-support').style.display = 'flex';
+    document.getElementById('nav-reinitialisation').style.display = 'flex';
   }
 
   // Accès POS : Admin et Gérant (Phase P3A-Correctif — via session caisse réelle)
@@ -5495,7 +5610,7 @@ function ajouterServiceDirectPOS(nom, prix) {
   if (!prix) { ouvrirModalServicePOS(nom); return; }
   const exist = posPanier.find(i => i.serviceType && i.nom===nom);
   if (exist) { exist.qte++; exist.total = exist.qte * exist.prix; }
-  else posPanier.push({id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'E'});
+  else posPanier.push({id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'A'});
   renderPanier(); showToast('✅ ' + nom + ' ajouté');
 }
 
@@ -5523,7 +5638,7 @@ function ajouterServiceAuPanier() {
   if (!val) { showToast('Choisissez un service','error'); return; }
   const nom=val.split('|')[0], qte=parseInt(document.getElementById('svc-pos-qte').value)||1;
   const prix=parseFloat(document.getElementById('svc-pos-prix').value)||0;
-  posPanier.push({id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'E'});
+  posPanier.push({id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'A'});
   renderPanier(); closePosModal('modal-service-pos'); showToast('✅ Service ajouté au ticket');
 }
 
@@ -5727,7 +5842,7 @@ async function confirmerVente() {
   try {
     const batch=db.batch();
     for (const item of posPanier) {
-      const zone=item.serviceType?'E':(CAT_ZONE[item.cat]||'D');
+      const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
       const ref=db.collection('ventesCaisse').doc();
       batch.set(ref,{
         date:dateDuJour, heure, zone, article:item.nom, quantite:item.qte,
@@ -5769,7 +5884,7 @@ async function confirmerVente() {
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
     const numPiecesVente = genererNumPieces(posPanier.length);
     posPanier.forEach((item, idx) => {
-      const zone=item.serviceType?'E':(CAT_ZONE[item.cat]||'D');
+      const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
       genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
     });
     closePosModal('modal-payment');
@@ -6624,6 +6739,7 @@ const pageTitles = {
   dashboard:'Tableau de Bord', inventaire:'Inventaire des Articles', categories:'Catégories de Produits',
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
+  reinitialisation:'Réinitialisation avant Ouverture (Admin)', support:'Support — Messages des Employés (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
@@ -6796,6 +6912,8 @@ function rafraichirPage(page) {
   else if (page === 'alertes') renderAlertes();
   else if (page === 'comptes') renderComptes();
   else if (page === 'journal') renderJournal();
+  else if (page === 'reinitialisation') renderReinitialisation();
+  else if (page === 'support') renderSupportAdmin();
   else if (page === 'caisse') renderCaissePage();
   else if (page === 'suivicaisse') renderSuiviCaisse();
   else if (page === 'comptabilite') renderComptabilite();
@@ -6863,8 +6981,11 @@ function renderDashboard() {
   if (elComm) elComm.textContent = new Intl.NumberFormat('fr-FR').format(commMM);
   if (elSvc)  elSvc.textContent  = new Intl.NumberFormat('fr-FR').format(caSvc);
 
-  const cats = ['Accessoires Informatiques','Habits Enfants','Fournitures Scolaires','Épicerie'];
-  const catsShort = ['Informatique','Habits','Fournitures','Épicerie'];
+  // Ordre aligné sur les zones A-D (cf. ZONES_CAISSE / CAT_ZONE) pour que les couleurs du
+  // graphique correspondent aux couleurs officielles de zone.
+  const cats = ['Accessoires Informatiques','Fournitures Scolaires','Habits Enfants','Épicerie'];
+  const catsShort = ['Informatique','Fournitures','Habits','Épicerie'];
+  const couleursZonesABCD = [ZONES_CAISSE.A.color, ZONES_CAISSE.B.color, ZONES_CAISSE.C.color, ZONES_CAISSE.D.color];
   const stockByCat = cats.map(c => produits.filter(p=>p.cat===c).reduce((s,p)=>s+(p.stock||0),0));
   const valByCat = cats.map(c => produits.filter(p=>p.cat===c).reduce((s,p)=>s+(p.stock||0)*(p.pachat||0),0));
 
@@ -6872,7 +6993,7 @@ function renderDashboard() {
   const ctxC = document.getElementById('chartCateg');
   if (ctxC) {
     chartCateg = new Chart(ctxC, {
-      type:'bar', data:{labels:catsShort,datasets:[{label:'Unités',data:stockByCat,backgroundColor:['#2e86c1','#8e44ad','#27ae60','#f39c12'],borderRadius:6}]},
+      type:'bar', data:{labels:catsShort,datasets:[{label:'Unités',data:stockByCat,backgroundColor:couleursZonesABCD,borderRadius:6}]},
       options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
     });
   }
@@ -6880,7 +7001,7 @@ function renderDashboard() {
   const ctxV = document.getElementById('chartValeur');
   if (ctxV) {
     chartValeur = new Chart(ctxV, {
-      type:'doughnut', data:{labels:catsShort,datasets:[{data:valByCat,backgroundColor:['#2e86c1','#8e44ad','#27ae60','#f39c12'],borderWidth:2}]},
+      type:'doughnut', data:{labels:catsShort,datasets:[{data:valByCat,backgroundColor:couleursZonesABCD,borderWidth:2}]},
       options:{responsive:true,plugins:{legend:{position:'bottom'}}}
     });
   }
@@ -7639,6 +7760,296 @@ function renderJournal() {
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">Aucune activité enregistrée pour le moment</td></tr>';
 }
 
+// ===== SUPPORT — message interne employé → Administrateur (avec capture d'écran) =====
+let supportScreenshotData = null;
+
+function ouvrirSupportModal() {
+  if (!currentUser) return;
+  document.getElementById('support-message').value = '';
+  supprimerCaptureSupport();
+  openModal('modal-support');
+  chargerMesMessagesSupport();
+}
+
+function comprimerImageDataUrl(dataUrl, maxWidth, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const ratio = Math.min(1, maxWidth / img.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.width * ratio));
+    canvas.height = Math.max(1, Math.round(img.height * ratio));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataUrl;
+}
+
+function afficherApercuCaptureSupport(dataUrl) {
+  supportScreenshotData = dataUrl;
+  const img = document.getElementById('support-screenshot-preview');
+  img.src = dataUrl; img.style.display = 'block';
+  document.getElementById('support-screenshot-placeholder').style.display = 'none';
+  document.getElementById('btn-supprimer-capture-support').style.display = 'inline-flex';
+}
+
+function gererCollerCaptureSupport(event) {
+  const items = (event.clipboardData || window.clipboardData)?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.indexOf('image') !== -1) {
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = e => comprimerImageDataUrl(e.target.result, 900, 0.6, afficherApercuCaptureSupport);
+      reader.readAsDataURL(blob);
+      event.preventDefault();
+      return;
+    }
+  }
+  showToast('Aucune image trouvée dans le presse-papiers', 'error');
+}
+
+function gererFichierCaptureSupport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => comprimerImageDataUrl(e.target.result, 900, 0.6, afficherApercuCaptureSupport);
+  reader.readAsDataURL(file);
+}
+
+function supprimerCaptureSupport() {
+  supportScreenshotData = null;
+  const img = document.getElementById('support-screenshot-preview');
+  if (img) { img.src = ''; img.style.display = 'none'; }
+  const ph = document.getElementById('support-screenshot-placeholder');
+  if (ph) ph.style.display = 'block';
+  const btn = document.getElementById('btn-supprimer-capture-support');
+  if (btn) btn.style.display = 'none';
+  const file = document.getElementById('support-screenshot-file');
+  if (file) file.value = '';
+}
+
+async function envoyerMessageSupport(event) {
+  event.preventDefault();
+  const message = document.getElementById('support-message').value.trim();
+  if (!message) { showToast('Veuillez écrire un message', 'error'); return; }
+  const btn = document.getElementById('btn-envoyer-support');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Envoi...';
+  try {
+    await db.collection('support_messages').add({
+      employeId: currentUser.id || currentUser.uid || '',
+      employeNom: currentUser.label, role: currentUser.role,
+      message, screenshot: supportScreenshotData || null,
+      statut: 'nouveau', reponseAdmin: '',
+      dateAffichage: new Date().toLocaleString('fr-FR'),
+      date: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Message envoyé au support', `${currentUser.label} a contacté l'administrateur`);
+    showToast("✓ Message envoyé à l'Administrateur");
+    document.getElementById('support-message').value = '';
+    supprimerCaptureSupport();
+    chargerMesMessagesSupport();
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = "📤 Envoyer à l'Administrateur";
+}
+
+function statutBadgeSupport(s) {
+  const statut = s || 'nouveau';
+  if (statut === 'resolu') return '<span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Résolu</span>';
+  if (statut === 'lu') return '<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Lu</span>';
+  return '<span style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Nouveau</span>';
+}
+
+async function chargerMesMessagesSupport() {
+  const list = document.getElementById('support-mes-messages');
+  if (!list || !currentUser) return;
+  list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:10px;font-size:12px">Chargement...</p>';
+  try {
+    const myId = currentUser.id || currentUser.uid || '';
+    const snap = await db.collection('support_messages').where('employeId', '==', myId).get();
+    const msgs = snap.docs.map(d => ({id: d.id, ...d.data()}))
+      .sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0))
+      .slice(0, 5);
+    list.innerHTML = msgs.length ? msgs.map(m => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;gap:8px">
+          <span style="color:var(--text-muted)">${m.dateAffichage || ''}</span>
+          ${statutBadgeSupport(m.statut)}
+        </div>
+        <div style="margin-bottom:4px">${(m.message || '').replace(/</g, '&lt;')}</div>
+        ${m.reponseAdmin ? `<div style="background:var(--bg-soft,#eef2f6);border-radius:8px;padding:6px 8px;margin-top:4px"><strong>Réponse :</strong> ${m.reponseAdmin}</div>` : ''}
+      </div>`).join('') : '<p style="color:var(--text-muted);text-align:center;padding:10px;font-size:12px">Aucun message envoyé</p>';
+  } catch (err) {
+    list.innerHTML = '<p style="color:var(--danger);font-size:12px">Erreur de chargement</p>';
+    console.error('chargerMesMessagesSupport:', err);
+  }
+}
+
+function majBadgeSupport() {
+  const badge = document.getElementById('support-badge');
+  if (!badge) return;
+  const n = supportMessages.filter(m => (m.statut || 'nouveau') === 'nouveau').length;
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'flex' : 'none';
+}
+
+function agrandirCaptureSupport(id) {
+  const m = supportMessages.find(x => x.id === id);
+  if (!m || !m.screenshot) return;
+  document.getElementById('support-image-agrandie').src = m.screenshot;
+  openModal('modal-support-image');
+}
+
+async function marquerStatutSupport(id, statut) {
+  try {
+    await db.collection('support_messages').doc(id).update({ statut, dateReponse: firebase.firestore.FieldValue.serverTimestamp() });
+    consigner('Message support — statut modifié', `${statut} — par ${currentUser.label}`);
+    showToast('✓ Statut mis à jour');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function envoyerReponseSupport(id) {
+  const txt = document.getElementById(`support-reponse-${id}`);
+  if (!txt) return;
+  try {
+    await db.collection('support_messages').doc(id).update({
+      reponseAdmin: txt.value.trim(), statut: 'lu',
+      dateReponse: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Réponse au message support', `par ${currentUser.label}`);
+    showToast('✓ Réponse enregistrée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function renderSupportAdmin() {
+  if (!currentUser.isAdmin) return;
+  const cont = document.getElementById('support-admin-liste');
+  if (!cont) return;
+  const filtre = document.getElementById('support-filtre-statut')?.value || '';
+  const liste = supportMessages.filter(m => !filtre || (m.statut || 'nouveau') === filtre);
+  if (!liste.length) { cont.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun message</div></div>'; return; }
+  cont.innerHTML = liste.map(m => {
+    const statut = m.statut || 'nouveau';
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div><strong>${m.employeNom || '—'}</strong> <span style="font-size:12px;color:var(--text-muted)">(${m.role || '—'})</span><br>
+          <span style="font-size:12px;color:var(--text-muted)">${m.dateAffichage || '—'}</span></div>
+          ${statutBadgeSupport(statut)}
+        </div>
+        <p style="margin-bottom:10px;white-space:pre-wrap">${(m.message || '').replace(/</g, '&lt;')}</p>
+        ${m.screenshot ? `<img src="${m.screenshot}" style="max-width:220px;max-height:140px;border-radius:8px;cursor:pointer;border:1px solid var(--border);margin-bottom:10px" onclick="agrandirCaptureSupport('${m.id}')">` : ''}
+        <div class="form-group" style="margin-bottom:8px"><label>Réponse</label>
+          <textarea class="form-control" id="support-reponse-${m.id}" rows="2" placeholder="Votre réponse...">${m.reponseAdmin || ''}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="envoyerReponseSupport('${m.id}')">💾 Enregistrer la réponse</button>
+          ${statut !== 'resolu' ? `<button class="btn btn-primary btn-sm" onclick="marquerStatutSupport('${m.id}','resolu')">✓ Marquer résolu</button>` : `<button class="btn btn-outline btn-sm" onclick="marquerStatutSupport('${m.id}','lu')">↺ Réouvrir</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RÉINITIALISATION AVANT OUVERTURE (Admin uniquement) =====
+// Purge les enregistrements de test (ventes, caisses, comptabilité, RH...) avant le
+// lancement réel de la boutique. Ne touche jamais au catalogue produits (sauf remise à
+// zéro du stock si demandé), aux comptes utilisateurs, caisses, fournisseurs ou paramètres RH.
+const REINIT_CATEGORIES = {
+  ventes:      { label: 'Ventes & Caisse',               collections: ['ventesCaisse','ventes_services','sessions_caisse','audit_caisses'] },
+  compta:      { label: 'Comptabilité OHADA',            collections: ['ecritures_comptables'] },
+  mm:          { label: 'Mobile Money & Transactions',   collections: ['transactions_mm','transactions_mobile_money'] },
+  tresorerie:  { label: 'Trésorerie & Rapprochement',    collections: ['releves_tresorerie','rapprochements'] },
+  rh:          { label: 'RH — Pointages, Planning, Absences', collections: ['rh_pointages','rh_planning','rh_absences'] },
+  achats:      { label: 'Achats Fournisseurs',           collections: ['commandes','paiements'] },
+  journal:     { label: "Journal d'activité",            collections: ['journal','audit_trail'] },
+  support:     { label: 'Messages de support',           collections: ['support_messages'] }
+};
+
+function renderReinitialisation() {
+  if (!currentUser.isAdmin) return;
+  const txt = document.getElementById('reinit-confirm-text');
+  if (txt) txt.value = '';
+  verifierConfirmationReinit();
+  const res = document.getElementById('reinit-resultat');
+  if (res) { res.style.display = 'none'; res.innerHTML = ''; }
+}
+
+function verifierConfirmationReinit() {
+  const txt = document.getElementById('reinit-confirm-text');
+  const btn = document.getElementById('btn-reinit-confirmer');
+  if (!txt || !btn) return;
+  btn.disabled = txt.value.trim() !== 'REINITIALISER';
+}
+
+async function purgerCollectionFirestore(nom) {
+  let total = 0;
+  while (true) {
+    const snap = await db.collection(nom).limit(400).get();
+    if (snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    total += snap.docs.length;
+    if (snap.docs.length < 400) break;
+  }
+  return total;
+}
+
+async function remettreStockProduitsAZero() {
+  const snap = await db.collection('produits').get();
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 400) {
+    const chunk = docs.slice(i, i + 400);
+    const batch = db.batch();
+    chunk.forEach(d => batch.update(d.ref, { stock: 0 }));
+    await batch.commit();
+  }
+  return docs.length;
+}
+
+async function purgerDonneesAvantOuverture() {
+  if (!currentUser.isAdmin) { showToast("Seul l'Administrateur peut effectuer cette opération", 'error'); return; }
+  const txt = document.getElementById('reinit-confirm-text');
+  if (!txt || txt.value.trim() !== 'REINITIALISER') { showToast('Veuillez taper REINITIALISER pour confirmer', 'error'); return; }
+
+  const categoriesChoisies = Object.entries(REINIT_CATEGORIES).filter(([cle]) => document.getElementById(`reinit-cat-${cle}`)?.checked);
+  const resetStock = !!document.getElementById('reinit-stock')?.checked;
+  if (!categoriesChoisies.length && !resetStock) { showToast('Sélectionnez au moins une catégorie à réinitialiser', 'error'); return; }
+
+  const collectionsAEffacer = categoriesChoisies.flatMap(([, cat]) => cat.collections);
+  const labelsChoisis = categoriesChoisies.map(([, cat]) => cat.label);
+
+  if (!confirm(`⚠️ Cette action est IRRÉVERSIBLE.\n\nVous allez effacer définitivement :\n${labelsChoisis.map(l=>'• '+l).join('\n')}${resetStock?'\n• Stock produits (remis à 0)':''}\n\nConfirmer la réinitialisation avant ouverture ?`)) return;
+
+  const btn = document.getElementById('btn-reinit-confirmer');
+  const res = document.getElementById('reinit-resultat');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Réinitialisation en cours...';
+  res.style.display = 'block'; res.innerHTML = '';
+  const lignesResultat = [];
+
+  try {
+    for (const nom of collectionsAEffacer) {
+      const n = await purgerCollectionFirestore(nom);
+      lignesResultat.push(`✓ ${nom} — ${n} document(s) supprimé(s)`);
+      res.innerHTML = `<div class="alert alert-info">${lignesResultat.join('<br>')}</div>`;
+    }
+    if (resetStock) {
+      const n = await remettreStockProduitsAZero();
+      lignesResultat.push(`✓ Stock produits — ${n} article(s) remis à 0`);
+      res.innerHTML = `<div class="alert alert-info">${lignesResultat.join('<br>')}</div>`;
+    }
+    consigner('Réinitialisation avant ouverture', `Catégories effacées : ${labelsChoisis.join(', ') || 'aucune'}${resetStock ? ' + Stock produits remis à 0' : ''} — par ${currentUser.label}`);
+    res.innerHTML = `<div class="alert alert-success">✅ Réinitialisation terminée — la boutique est prête à ouvrir.<br><br>${lignesResultat.join('<br>')}</div>`;
+    showToast('✅ Réinitialisation terminée');
+    txt.value = '';
+  } catch (err) {
+    res.innerHTML = `<div class="alert alert-danger">❌ Erreur pendant la réinitialisation : ${err.message}<br><br>${lignesResultat.join('<br>')}</div>`;
+    showToast('Erreur : ' + err.message, 'error');
+  }
+  btn.innerHTML = '🗑 Réinitialiser maintenant';
+  verifierConfirmationReinit();
+}
+
 // ===== TRÉSORERIE & COMPTABILITÉ FOURNISSEURS (admin uniquement) =====
 function renderTresorerie() {
   if (!currentUser.isAdmin) return;
@@ -7777,11 +8188,11 @@ function exportTresorerieCSV() {
 
 // ===== JOURNAL DE CAISSE (ventes au comptoir, par zone & mode de paiement) =====
 const ZONES_CAISSE = {
-  A: { label: 'Informatique', emoji: '🖥️', color: '#2471A3' },
-  B: { label: 'Vêtements Enfants', emoji: '👶', color: '#1A7A6E' },
-  C: { label: 'Fournitures Scolaires', emoji: '📚', color: '#C8981A' },
-  D: { label: 'Épicerie', emoji: '🛒', color: '#1E8449' },
-  E: { label: 'Services B2B', emoji: '🏢', color: '#7D3C98' }
+  A: { label: 'Informatique', emoji: '🖥️', color: '#7D3C98' },
+  B: { label: 'Univers École', emoji: '📚', color: '#2471A3' },
+  C: { label: 'Univers Enfants', emoji: '👶', color: '#1E8449' },
+  D: { label: 'Épicerie', emoji: '🛒', color: '#E67E22' },
+  E: { label: 'Magasinage', emoji: '📦', color: '#34495E' }
 };
 // ===================================================================
 // MODULE COMPTABILITÉ OHADA — plan comptable simplifié (liste fixe)
@@ -9343,7 +9754,8 @@ function ouvrirVenteModal() {
   if (!document.getElementById('cs-date').value) document.getElementById('cs-date').value = today();
   const zoneSel = document.getElementById('caisse-zones-select');
   if (zoneSel && !zoneSel.dataset.built) {
-    zoneSel.innerHTML = Object.entries(ZONES_CAISSE).map(([k,z]) => `<button type="button" class="caisse-zone-btn ${k==='A'?'active':''}" data-zone="${k}" onclick="choisirZoneCaisse('${k}')">${z.emoji}<div>${k}</div></button>`).join('');
+    // Zone E (Magasinage) exclue : ce n'est pas une zone de vente.
+    zoneSel.innerHTML = Object.entries(ZONES_CAISSE).filter(([k]) => k !== 'E').map(([k,z]) => `<button type="button" class="caisse-zone-btn ${k==='A'?'active':''}" data-zone="${k}" onclick="choisirZoneCaisse('${k}')">${z.emoji}<div>${k}</div></button>`).join('');
     zoneSel.dataset.built = '1';
     document.getElementById('caisse-zone-label').textContent = `${ZONES_CAISSE.A.emoji} ${ZONES_CAISSE.A.label}`;
   }
@@ -11278,5 +11690,13 @@ document.addEventListener('DOMContentLoaded', () => {
     → Chaque employé l'ouvre dans Chrome sur son téléphone
 
   ================================================== -->
+<script>
+  // Installation en application de bureau (PWA) — voir manifest.json
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW non enregistré:', err));
+    });
+  }
+</script>
 </body>
 </html>
