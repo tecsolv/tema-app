@@ -3933,7 +3933,7 @@ const posF  = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F
 const posF0 = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0));
 const posNow = () => new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const posDateHeure = () => new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-const CAT_ZONE = {'Accessoires Informatiques':'A','Habits Enfants':'B','Fournitures Scolaires':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
+const CAT_ZONE = {'Accessoires Informatiques':'A','Fournitures Scolaires':'B','Habits Enfants':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
 const CAT_EMOJI = {'Accessoires Informatiques':'🖥️','Habits Enfants':'👕','Fournitures Scolaires':'📚','Épicerie':'🛒','Services':'🖨️'};
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
@@ -5495,7 +5495,7 @@ function ajouterServiceDirectPOS(nom, prix) {
   if (!prix) { ouvrirModalServicePOS(nom); return; }
   const exist = posPanier.find(i => i.serviceType && i.nom===nom);
   if (exist) { exist.qte++; exist.total = exist.qte * exist.prix; }
-  else posPanier.push({id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'E'});
+  else posPanier.push({id:'svc-'+Date.now(), nom, prix, qte:1, total:prix, serviceType:true, zone:'A'});
   renderPanier(); showToast('✅ ' + nom + ' ajouté');
 }
 
@@ -5523,7 +5523,7 @@ function ajouterServiceAuPanier() {
   if (!val) { showToast('Choisissez un service','error'); return; }
   const nom=val.split('|')[0], qte=parseInt(document.getElementById('svc-pos-qte').value)||1;
   const prix=parseFloat(document.getElementById('svc-pos-prix').value)||0;
-  posPanier.push({id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'E'});
+  posPanier.push({id:'svc-'+Date.now(), nom, prix, qte, total:qte*prix, serviceType:true, zone:'A'});
   renderPanier(); closePosModal('modal-service-pos'); showToast('✅ Service ajouté au ticket');
 }
 
@@ -5727,7 +5727,7 @@ async function confirmerVente() {
   try {
     const batch=db.batch();
     for (const item of posPanier) {
-      const zone=item.serviceType?'E':(CAT_ZONE[item.cat]||'D');
+      const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
       const ref=db.collection('ventesCaisse').doc();
       batch.set(ref,{
         date:dateDuJour, heure, zone, article:item.nom, quantite:item.qte,
@@ -5769,7 +5769,7 @@ async function confirmerVente() {
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
     const numPiecesVente = genererNumPieces(posPanier.length);
     posPanier.forEach((item, idx) => {
-      const zone=item.serviceType?'E':(CAT_ZONE[item.cat]||'D');
+      const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
       genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
     });
     closePosModal('modal-payment');
@@ -6863,8 +6863,11 @@ function renderDashboard() {
   if (elComm) elComm.textContent = new Intl.NumberFormat('fr-FR').format(commMM);
   if (elSvc)  elSvc.textContent  = new Intl.NumberFormat('fr-FR').format(caSvc);
 
-  const cats = ['Accessoires Informatiques','Habits Enfants','Fournitures Scolaires','Épicerie'];
-  const catsShort = ['Informatique','Habits','Fournitures','Épicerie'];
+  // Ordre aligné sur les zones A-D (cf. ZONES_CAISSE / CAT_ZONE) pour que les couleurs du
+  // graphique correspondent aux couleurs officielles de zone.
+  const cats = ['Accessoires Informatiques','Fournitures Scolaires','Habits Enfants','Épicerie'];
+  const catsShort = ['Informatique','Fournitures','Habits','Épicerie'];
+  const couleursZonesABCD = [ZONES_CAISSE.A.color, ZONES_CAISSE.B.color, ZONES_CAISSE.C.color, ZONES_CAISSE.D.color];
   const stockByCat = cats.map(c => produits.filter(p=>p.cat===c).reduce((s,p)=>s+(p.stock||0),0));
   const valByCat = cats.map(c => produits.filter(p=>p.cat===c).reduce((s,p)=>s+(p.stock||0)*(p.pachat||0),0));
 
@@ -6872,7 +6875,7 @@ function renderDashboard() {
   const ctxC = document.getElementById('chartCateg');
   if (ctxC) {
     chartCateg = new Chart(ctxC, {
-      type:'bar', data:{labels:catsShort,datasets:[{label:'Unités',data:stockByCat,backgroundColor:['#2e86c1','#8e44ad','#27ae60','#f39c12'],borderRadius:6}]},
+      type:'bar', data:{labels:catsShort,datasets:[{label:'Unités',data:stockByCat,backgroundColor:couleursZonesABCD,borderRadius:6}]},
       options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
     });
   }
@@ -6880,7 +6883,7 @@ function renderDashboard() {
   const ctxV = document.getElementById('chartValeur');
   if (ctxV) {
     chartValeur = new Chart(ctxV, {
-      type:'doughnut', data:{labels:catsShort,datasets:[{data:valByCat,backgroundColor:['#2e86c1','#8e44ad','#27ae60','#f39c12'],borderWidth:2}]},
+      type:'doughnut', data:{labels:catsShort,datasets:[{data:valByCat,backgroundColor:couleursZonesABCD,borderWidth:2}]},
       options:{responsive:true,plugins:{legend:{position:'bottom'}}}
     });
   }
@@ -7777,11 +7780,11 @@ function exportTresorerieCSV() {
 
 // ===== JOURNAL DE CAISSE (ventes au comptoir, par zone & mode de paiement) =====
 const ZONES_CAISSE = {
-  A: { label: 'Informatique', emoji: '🖥️', color: '#2471A3' },
-  B: { label: 'Vêtements Enfants', emoji: '👶', color: '#1A7A6E' },
-  C: { label: 'Fournitures Scolaires', emoji: '📚', color: '#C8981A' },
-  D: { label: 'Épicerie', emoji: '🛒', color: '#1E8449' },
-  E: { label: 'Services B2B', emoji: '🏢', color: '#7D3C98' }
+  A: { label: 'Informatique', emoji: '🖥️', color: '#7D3C98' },
+  B: { label: 'Fournitures Scolaires', emoji: '📚', color: '#2471A3' },
+  C: { label: 'Vêtements Enfants', emoji: '👶', color: '#1E8449' },
+  D: { label: 'Épicerie', emoji: '🛒', color: '#E67E22' },
+  E: { label: 'Magasinage', emoji: '📦', color: '#34495E' }
 };
 // ===================================================================
 // MODULE COMPTABILITÉ OHADA — plan comptable simplifié (liste fixe)
@@ -9343,7 +9346,8 @@ function ouvrirVenteModal() {
   if (!document.getElementById('cs-date').value) document.getElementById('cs-date').value = today();
   const zoneSel = document.getElementById('caisse-zones-select');
   if (zoneSel && !zoneSel.dataset.built) {
-    zoneSel.innerHTML = Object.entries(ZONES_CAISSE).map(([k,z]) => `<button type="button" class="caisse-zone-btn ${k==='A'?'active':''}" data-zone="${k}" onclick="choisirZoneCaisse('${k}')">${z.emoji}<div>${k}</div></button>`).join('');
+    // Zone E (Magasinage) exclue : ce n'est pas une zone de vente.
+    zoneSel.innerHTML = Object.entries(ZONES_CAISSE).filter(([k]) => k !== 'E').map(([k,z]) => `<button type="button" class="caisse-zone-btn ${k==='A'?'active':''}" data-zone="${k}" onclick="choisirZoneCaisse('${k}')">${z.emoji}<div>${k}</div></button>`).join('');
     zoneSel.dataset.built = '1';
     document.getElementById('caisse-zone-label').textContent = `${ZONES_CAISSE.A.emoji} ${ZONES_CAISSE.A.label}`;
   }
