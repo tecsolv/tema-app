@@ -3540,19 +3540,21 @@
 
 <!-- Modale : DEBUG AUDIO — diagnostic des pistes de la bibliothèque TeMa Smart Radio -->
 <div class="modal-overlay" id="modal-radio-debug">
-  <div class="modal" style="max-width:760px">
+  <div class="modal" style="max-width:900px">
     <div class="modal-header">
-      <h3>🐞 Debug Audio — Bibliothèque</h3>
+      <h3>🩺 Diagnostic Audio — Bibliothèque</h3>
       <button class="modal-close" onclick="closeModal('modal-radio-debug')">×</button>
     </div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Cliquez "Vérifier" sur une piste pour tester son URL en HTTP réel (sans lancer la lecture).</p>
-    <div class="table-wrap" style="max-height:60vh;overflow-y:auto">
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Cliquez "🔬 Tester cette piste" pour un diagnostic complet (fetch HTTP + lecteur HTML5 Audio). Aucune supposition — uniquement des faits mesurés en direct.</p>
+    <div class="table-wrap" style="max-height:40vh;overflow-y:auto;margin-bottom:14px">
       <table style="font-size:12px"><thead><tr>
-        <th>Titre</th><th>storagePath</th><th>mimeType</th><th>Taille</th><th>downloadURL</th><th>Statut</th><th></th>
+        <th>ID Firestore</th><th>Titre</th><th>URL Storage</th><th>storagePath</th><th>MIME</th><th>Taille</th><th></th>
       </tr></thead><tbody id="tbody-radio-debug"></tbody></table>
     </div>
+    <div id="radio-diag-resultats" style="display:none;border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.7"></div>
   </div>
 </div>
+<audio id="radio-diag-audio" preload="auto" crossorigin="anonymous" style="display:none"></audio>
 
 <!-- Modale : caisse occupée (exclusivité) -->
 <div class="pos-modal-overlay" id="modal-caisse-occupee">
@@ -8579,35 +8581,136 @@ function ouvrirDebugAudioRadio() {
   const tbody = document.getElementById('tbody-radio-debug');
   tbody.innerHTML = radioBibliotheque.length ? radioBibliotheque.map(p => `
     <tr id="debug-radio-row-${p.id}">
+      <td style="font-size:11px;color:var(--text-muted)">${p.id}</td>
       <td>${p.titre}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${p.url||'#'}" target="_blank" rel="noopener">${p.url ? p.url.slice(0,36)+'...' : '<span style="color:var(--danger)">absent</span>'}</a></td>
       <td style="word-break:break-all">${p.storagePath || '<span style="color:var(--danger)">absent</span>'}</td>
       <td>${p.mimeType || '<span style="color:var(--danger)">absent</span>'}</td>
       <td>${p.taille ? Math.round(p.taille/1024)+' Ko' : '—'}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${p.url}" target="_blank" rel="noopener">${p.url ? p.url.slice(0,40)+'...' : '<span style="color:var(--danger)">absent</span>'}</a></td>
-      <td id="debug-radio-statut-${p.id}">—</td>
-      <td><button class="btn btn-outline btn-sm" onclick="verifierPisteRadioDebug('${p.id}')">Vérifier</button></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary btn-sm" onclick="testerPisteDiagnostic('${p.id}')">🔬 Tester</button>
+        <button class="btn btn-outline btn-sm" onclick="ouvrirPisteNouvelOnglet('${p.id}')">↗ Onglet</button>
+      </td>
     </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
+  document.getElementById('radio-diag-resultats').style.display = 'none';
   openModal('modal-radio-debug');
 }
 
-async function verifierPisteRadioDebug(id) {
+function ouvrirPisteNouvelOnglet(id) {
   const piste = radioBibliotheque.find(p => p.id === id);
-  const cell = document.getElementById(`debug-radio-statut-${id}`);
-  if (!piste || !cell) return;
-  if (!piste.url) { cell.innerHTML = '<span style="color:var(--danger)">Pas d\'URL</span>'; return; }
-  cell.textContent = 'Test en cours...';
-  console.log('Piste sélectionnée', piste);
+  if (!piste?.url) { showToast('Aucune URL enregistrée pour cette piste', 'error'); return; }
+  window.open(piste.url, '_blank', 'noopener');
+}
+
+// Diagnostic complet d'une piste : fetch(url) brut + comportement réel du lecteur HTML5
+// <audio> (onerror/oncanplay/onloadedmetadata/onloadeddata). Faits mesurés uniquement,
+// aucune supposition — la conclusion en bas de panneau est dérivée directement des résultats.
+async function testerPisteDiagnostic(id) {
+  const piste = radioBibliotheque.find(p => p.id === id);
+  const panel = document.getElementById('radio-diag-resultats');
+  if (!piste || !panel) return;
+  panel.style.display = 'block';
+  console.log('=== DIAGNOSTIC AUDIO — piste sélectionnée ===', piste);
   console.log('URL utilisée', piste.url);
-  try {
-    const resp = await fetch(piste.url, { method: 'GET', headers: { Range: 'bytes=0-1' } });
-    console.log('Réponse HTTP', resp.status, resp.headers.get('content-type'));
-    cell.innerHTML = resp.ok
-      ? `<span style="color:var(--success)">✓ HTTP ${resp.status} — ${resp.headers.get('content-type') || '?'}</span>`
-      : `<span style="color:var(--danger)">✗ HTTP ${resp.status}</span>`;
-  } catch (err) {
-    console.error('Erreur réseau', err);
-    cell.innerHTML = `<span style="color:var(--danger)">✗ ${err.message}</span>`;
+
+  if (!piste.url) {
+    panel.innerHTML = `<strong>Piste testée :</strong> ${piste.titre} (ID: ${piste.id})<br><span style="color:var(--danger)">❌ Aucune URL Firebase Storage enregistrée pour cette piste — le champ "url" est vide en base.</span>`;
+    return;
   }
+
+  panel.innerHTML = `<strong>Piste testée :</strong> ${piste.titre} (ID: ${piste.id})<br><strong>URL utilisée :</strong> <span style="word-break:break-all">${piste.url}</span><br><br>⏳ Test fetch(url) en cours...`;
+
+  const resultats = { fetchOk: null, fetchStatus: null, contentType: null, contentLength: null, fetchErreur: null,
+    audioErreur: null, audioDuree: null, audioCanplay: false, audioLoadedData: false };
+
+  // 1) Test brut fetch(url) — vérifie Firebase Storage + règles Firebase + champ URL
+  try {
+    const resp = await fetch(piste.url);
+    resultats.fetchOk = resp.ok;
+    resultats.fetchStatus = resp.status;
+    resultats.contentType = resp.headers.get('content-type');
+    resultats.contentLength = resp.headers.get('content-length');
+    console.log('response.status', resp.status);
+    console.log('response.ok', resp.ok);
+    console.log('content-type', resultats.contentType);
+    console.log('content-length', resultats.contentLength);
+  } catch (err) {
+    resultats.fetchErreur = err.message;
+    console.error('Erreur fetch(url)', err);
+  }
+
+  // 2) Test réel du lecteur HTML5 <audio> — vérifie si CE navigateur peut décoder le fichier
+  const audio = document.getElementById('radio-diag-audio');
+  audio.onerror = null; audio.oncanplay = null; audio.onloadedmetadata = null; audio.onloadeddata = null;
+
+  await new Promise(resolve => {
+    let resolu = false;
+    const finir = () => { if (!resolu) { resolu = true; resolve(); } };
+    audio.onerror = () => {
+      const err = audio.error;
+      const codes = { 1: 'MEDIA_ERR_ABORTED', 2: 'MEDIA_ERR_NETWORK', 3: 'MEDIA_ERR_DECODE', 4: 'MEDIA_ERR_SRC_NOT_SUPPORTED' };
+      resultats.audioErreur = err ? `${codes[err.code] || err.code}${err.message ? ' — ' + err.message : ''}` : 'erreur inconnue';
+      console.error('audio.onerror', err, resultats.audioErreur);
+      finir();
+    };
+    audio.onloadedmetadata = () => {
+      resultats.audioDuree = audio.duration;
+      console.log('audio.onloadedmetadata — durée détectée :', audio.duration);
+    };
+    audio.onloadeddata = () => {
+      resultats.audioLoadedData = true;
+      console.log('audio.onloadeddata — premières données chargées');
+    };
+    audio.oncanplay = () => {
+      resultats.audioCanplay = true;
+      console.log('audio.oncanplay — le navigateur peut lire ce fichier');
+      finir();
+    };
+    audio.src = piste.url;
+    audio.load();
+    setTimeout(finir, 6000); // garde-fou si aucun évènement ne se déclenche
+  });
+
+  // 3) Conclusion dérivée directement des faits mesurés ci-dessus
+  let conclusion;
+  if (resultats.fetchErreur) {
+    conclusion = `❌ <strong>Échec réseau sur fetch(url)</strong> : ${resultats.fetchErreur}. Cause probable : règles Firebase Storage (CORS/permissions) ou URL inaccessible — pas un problème du lecteur HTML5.`;
+  } else if (resultats.fetchStatus === 404) {
+    conclusion = `❌ <strong>HTTP 404</strong> — le fichier n'existe pas (ou plus) à cet emplacement sur Firebase Storage. Cause probable : champ URL invalide ou fichier supprimé côté Storage.`;
+  } else if (!resultats.fetchOk) {
+    conclusion = `❌ <strong>HTTP ${resultats.fetchStatus}</strong> sur fetch(url) — problème côté Firebase Storage ou règles Firebase, pas le lecteur HTML5.`;
+  } else if (resultats.contentType && !resultats.contentType.startsWith('audio/') && !resultats.contentType.startsWith('video/') && resultats.contentType !== 'application/octet-stream') {
+    conclusion = `⚠️ Le fichier répond (HTTP ${resultats.fetchStatus}) mais son Content-Type est "${resultats.contentType}", pas un type audio reconnu.`;
+  } else if (resultats.contentType === 'application/octet-stream') {
+    conclusion = `⚠️ <strong>Content-Type = application/octet-stream</strong> — le fichier répond bien sur Firebase Storage, mais sans type audio déclaré, certains navigateurs refusent de le lire. Utilisez "🔧 Réparer automatiquement" dans la Bibliothèque.`;
+  } else if (resultats.audioErreur) {
+    conclusion = `❌ <strong>Le lecteur HTML5 &lt;audio&gt; refuse ce fichier</strong> (${resultats.audioErreur}), alors que le fichier est bien accessible (HTTP ${resultats.fetchStatus}, ${resultats.contentType}). Cause probable : fichier corrompu, ou codec non supporté par ce navigateur — pas un problème Firebase.`;
+  } else if (resultats.audioCanplay) {
+    conclusion = `✅ <strong>Aucun problème détecté</strong> — Firebase Storage répond correctement, le Content-Type est valide, et ce navigateur peut lire le fichier (oncanplay déclenché).`;
+  } else {
+    conclusion = `⚠️ Le fichier est accessible (HTTP ${resultats.fetchStatus}) mais le lecteur HTML5 n'a déclenché aucun évènement de succès ni d'erreur dans le délai imparti (6s) — fichier volumineux, réseau lent, ou téléchargement incomplet.`;
+  }
+
+  panel.innerHTML = `
+    <strong>Piste testée :</strong> ${piste.titre} (ID: ${piste.id})<br>
+    <strong>URL utilisée :</strong> <span style="word-break:break-all">${piste.url}</span><br><br>
+    <div style="padding:10px;background:${resultats.fetchOk ? '#eafaf1' : '#fdecea'};border-radius:8px;margin-bottom:8px">
+      <strong>Test fetch(url) :</strong><br>
+      response.status : ${resultats.fetchStatus ?? '—'}<br>
+      response.ok : ${resultats.fetchOk ?? '—'}<br>
+      content-type : ${resultats.contentType || '—'}<br>
+      content-length : ${resultats.contentLength ? Math.round(resultats.contentLength/1024)+' Ko' : '—'}<br>
+      ${resultats.fetchErreur ? `erreur : ${resultats.fetchErreur}` : ''}
+    </div>
+    <div style="padding:10px;background:${resultats.audioErreur ? '#fdecea' : '#eafaf1'};border-radius:8px;margin-bottom:8px">
+      <strong>Test lecteur HTML5 &lt;audio&gt; :</strong><br>
+      durée détectée : ${resultats.audioDuree ? formaterDureeRadio(resultats.audioDuree) : '—'}<br>
+      onloadeddata déclenché : ${resultats.audioLoadedData ? 'oui' : 'non'}<br>
+      oncanplay déclenché : ${resultats.audioCanplay ? 'oui' : 'non'}<br>
+      erreur exacte du navigateur : ${resultats.audioErreur || 'aucune'}
+    </div>
+    <div style="padding:10px;background:var(--bg-soft,#eef2f6);border-radius:8px">${conclusion}</div>
+  `;
 }
 
 // Répare les pistes existantes dont les métadonnées Storage sont manquantes/incorrectes —
