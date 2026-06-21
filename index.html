@@ -1417,6 +1417,7 @@
         <button class="btn btn-outline btn-sm" id="topbar-action-mm" onclick="navigate('mobilemoney')" title="Mobile Money" style="display:none">📲<span class="qa-label"> Mobile Money</span></button>
         <button class="btn btn-outline btn-sm" id="topbar-action-services" onclick="navigate('services')" title="Services Numériques" style="display:none">🖨️<span class="qa-label"> Services</span></button>
       </div>
+      <button class="btn btn-outline btn-sm" onclick="ouvrirModaleAudioMode()" title="Mode Audio de ce poste (TeMa Smart Radio)" style="white-space:nowrap">🔊<span class="qa-label"> Audio</span></button>
       <button class="btn btn-outline btn-sm" onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="white-space:nowrap">💬<span class="qa-label"> Support</span></button>
       <span style="font-size:12px;color:var(--text-muted)" id="sync-status"></span>
       <span style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer" onclick="navigate('alertes')">
@@ -3512,6 +3513,25 @@
 <audio id="radio-audio" preload="auto" playsinline crossorigin="anonymous" onended="radioPisteTermine()"></audio>
 <audio id="radio-preview-audio" preload="auto" playsinline crossorigin="anonymous"></audio>
 
+<!-- Modale : Mode Audio de ce poste — accessible depuis n'importe quel rôle, n'importe quel écran.
+     Sépare le rôle Contrôleur (Admin, pilote playlists/volume/pubs) du rôle Récepteur Audio
+     (n'importe quel poste, fait sortir physiquement le son de SES haut-parleurs). -->
+<div class="modal-overlay" id="modal-audio-mode">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🔊 Mode Audio de ce poste</h3>
+      <button class="modal-close" onclick="closeModal('modal-audio-mode')">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">TeMa Smart Radio distingue deux rôles : le <strong>Contrôleur</strong> (espace Admin, pilote playlists/volume/publicités à distance) et le <strong>Récepteur Audio</strong> (n'importe quel poste branché aux enceintes, qui fait réellement sortir le son). Un poste peut être l'un, l'autre, les deux, ou aucun.</p>
+    <div style="background:var(--bg-soft,#eef2f6);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-weight:700;margin-bottom:4px" id="audio-mode-statut-recepteur">⚪ Récepteur Audio : inactif sur ce poste</div>
+      <div style="font-size:12px;color:var(--text-muted)" id="audio-mode-statut-controleur">—</div>
+    </div>
+    <button class="btn btn-primary" id="btn-audio-mode-activer" onclick="activerRecepteurAudioPoste()" style="width:100%;margin-bottom:8px">🔴 Faire de ce poste un Récepteur Audio</button>
+    <button class="btn btn-outline" id="btn-audio-mode-desactiver" onclick="desactiverRecepteurAudioPoste()" style="width:100%;display:none">⚪ Désactiver le Récepteur Audio sur ce poste</button>
+  </div>
+</div>
+
 <!-- Modale : caisse occupée (exclusivité) -->
 <div class="pos-modal-overlay" id="modal-caisse-occupee">
   <div class="pos-modal" style="max-width:420px">
@@ -3585,6 +3605,7 @@
       <button class="pos-back-btn" onclick="ouvrirEcranStats()" title="Statistiques" style="font-size:18px">📊</button>
       <button class="pos-back-btn" onclick="ouvrirEcranStock()" title="Stock" style="font-size:18px">📦</button>
       <button class="pos-back-btn" onclick="ouvrirEcranJournal()" title="Caisse Journalière" style="font-size:18px">💰</button>
+      <button class="pos-back-btn" onclick="ouvrirModaleAudioMode()" title="Mode Audio de ce poste" style="font-size:18px">🔊</button>
       <button class="pos-back-btn" onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="font-size:18px">💬</button>
       <button class="pos-back-btn" onclick="seDeconnecter()" title="Déconnexion" style="font-size:18px">🚪</button>
     </div>
@@ -3907,6 +3928,7 @@
     <div class="dig-topbar">
       <div class="dig-topbar-title" id="dig-page-title">📊 <span>Tableau de Bord Digital</span></div>
       <div class="dig-topbar-right">
+        <button onclick="ouvrirModaleAudioMode()" title="Mode Audio de ce poste" style="background:rgba(255,255,255,.08);border:none;color:inherit;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px">🔊 Audio</button>
         <button onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="background:rgba(255,255,255,.08);border:none;color:inherit;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px">💬 Support</button>
         <span id="dig-topbar-date">—</span>
         <span id="dig-session-status" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#ef4444">⚫ Hors session</span>
@@ -8114,6 +8136,37 @@ function arreterDiffusionRadioPosteLocal() {
   if (radioPubTimer) { clearInterval(radioPubTimer); radioPubTimer = null; }
   consignerRadio('poste_arrete', `${currentUser?.label || '—'} a retiré ce poste de la diffusion`);
   renderRadioAdmin();
+}
+
+// ── Modale globale "Mode Audio de ce poste" — accessible à tous les rôles, sur tous les
+// écrans (ERP, POS, Digital). Permet à n'importe quel poste (ex: Caisse 2 branchée aux
+// enceintes) de devenir Récepteur Audio, sans avoir besoin d'accéder à l'espace Admin.
+function ouvrirModaleAudioMode() {
+  majModaleAudioMode();
+  openModal('modal-audio-mode');
+}
+
+function majModaleAudioMode() {
+  const statutRecepteur = document.getElementById('audio-mode-statut-recepteur');
+  const statutControleur = document.getElementById('audio-mode-statut-controleur');
+  const btnActiver = document.getElementById('btn-audio-mode-activer');
+  const btnDesactiver = document.getElementById('btn-audio-mode-desactiver');
+  if (statutRecepteur) statutRecepteur.textContent = radioPosteActif ? '🔴 Récepteur Audio : actif sur ce poste — le son sort ici' : '⚪ Récepteur Audio : inactif sur ce poste';
+  if (statutControleur) statutControleur.textContent = currentUser?.isAdmin ? '🎛️ Vous êtes Contrôleur — gérez playlists, volume et publicités dans Administration → TeMa Smart Radio.' : 'Le rôle Contrôleur est réservé à l\'Administrateur.';
+  if (btnActiver) btnActiver.style.display = radioPosteActif ? 'none' : 'block';
+  if (btnDesactiver) btnDesactiver.style.display = radioPosteActif ? 'block' : 'none';
+}
+
+function activerRecepteurAudioPoste() {
+  demarrerDiffusionRadioPoste();
+  majModaleAudioMode();
+  showToast('🔴 Ce poste est maintenant Récepteur Audio — le son sortira ici');
+}
+
+function desactiverRecepteurAudioPoste() {
+  arreterDiffusionRadioPosteLocal();
+  majModaleAudioMode();
+  showToast('⚪ Récepteur Audio désactivé sur ce poste');
 }
 
 function demarrerMinuteurPubRadio() {
