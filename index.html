@@ -1392,6 +1392,7 @@
         <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
         <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
         <div class="nav-item" id="nav-support" onclick="navigate('support')" style="display:none"><span class="icon">💬</span> Support <span class="badge" id="support-badge" style="display:none">0</span></div>
+        <div class="nav-item" id="nav-ambiance" onclick="navigate('ambiance')" style="display:none"><span class="icon">🎵</span> Ambiance Boutique</div>
         <div class="nav-item" id="nav-reinitialisation" onclick="navigate('reinitialisation')" style="display:none"><span class="icon">🔄</span> Réinitialisation</div>
       </div>
     </div>
@@ -2257,6 +2258,75 @@
         </div>
       </div>
       <div id="support-admin-liste"></div>
+    </div>
+
+    <!-- MODULE ADMIN — AMBIANCE BOUTIQUE (musique + annonces) -->
+    <div class="page" id="page-ambiance">
+      <div class="alert alert-info no-print">🎵 Musique d'ambiance + annonces vocales, jouée automatiquement sur chaque poste de caisse dès qu'une session est active — la pause d'un(e) caissier(ère) ne l'interrompt pas. Tout se règle ici.</div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><h2>⚙️ Réglages</h2></div>
+        <div class="card-body">
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer">
+            <input type="checkbox" id="ambiance-actif"> <strong>Activer la musique d'ambiance en caisse</strong>
+          </label>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Volume — <span id="ambiance-volume-val">60%</span></label>
+              <input type="range" id="ambiance-volume" min="0" max="100" value="60" oninput="document.getElementById('ambiance-volume-val').textContent=this.value+'%'" style="width:100%">
+            </div>
+            <div class="form-group">
+              <label>Mode de lecture</label>
+              <select class="form-control" id="ambiance-mode">
+                <option value="sequentiel">Séquentiel (dans l'ordre)</option>
+                <option value="aleatoire">Aléatoire</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="max-width:320px">
+            <label>Insérer une annonce vocale toutes les <span id="ambiance-intervalle-val">4</span> pistes</label>
+            <input type="number" class="form-control" id="ambiance-intervalle" min="1" value="4" oninput="document.getElementById('ambiance-intervalle-val').textContent=this.value||1">
+          </div>
+          <button class="btn btn-primary" onclick="enregistrerReglagesAmbiance()">💾 Enregistrer les réglages</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><h2>🎵 Ajouter une piste musicale</h2></div>
+        <div class="card-body">
+          <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="ambiance-titre" placeholder="Ex: Musique d'ambiance 1"></div>
+
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">Option 1 — Depuis cet ordinateur</label>
+          <input type="file" id="ambiance-fichier" accept="audio/*" class="form-control" onchange="televerserPisteAmbiance(event)" style="margin-bottom:6px">
+          <div id="ambiance-upload-status" style="display:none;font-size:13px;color:var(--primary);margin-bottom:14px"></div>
+
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">Option 2 — Lien direct vers un fichier audio</label>
+          <div class="alert alert-info" style="font-size:12px;margin-bottom:10px;align-items:flex-start">
+            <span>⚠️</span>
+            <div>
+              Un lien YouTube ne fonctionne pas ici — il faut un lien <strong>direct</strong> vers un fichier .mp3/.ogg/.wav, pas une page de lecture.<br><br>
+              <strong>Comment obtenir un lien direct gratuit avec Google Drive :</strong><br>
+              1. Déposez le fichier audio sur Google Drive, clic-droit → "Partager" → "Toute personne disposant du lien" (lecteur).<br>
+              2. Copiez l'ID dans le lien de partage (la suite de lettres/chiffres entre <code>/d/</code> et <code>/view</code>).<br>
+              3. Collez ici un lien de cette forme : <code>https://drive.google.com/uc?export=download&id=VOTRE_ID</code>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="margin:0"><input type="text" class="form-control" id="ambiance-url" placeholder="https://drive.google.com/uc?export=download&id=..."></div>
+            <div class="form-group" style="margin:0"><button class="btn btn-outline" style="width:100%" onclick="ajouterPisteAmbiance()">➕ Ajouter ce lien</button></div>
+          </div>
+
+          <button class="btn btn-outline" onclick="openModal('modal-ambiance-annonce')" style="margin-top:14px">🎤 Enregistrer une annonce vocale</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>📋 Playlist <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="ambiance-count"></span></h2></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr><th>Titre</th><th>Type</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="tbody-ambiance-playlist"></tbody></table>
+        </div>
+      </div>
     </div>
 
     <!-- MODULE ADMIN — RÉINITIALISATION AVANT OUVERTURE -->
@@ -3268,6 +3338,33 @@
   </div>
 </div>
 
+<!-- Lecteur global Ambiance Boutique — joue tant qu'une caisse a une session active -->
+<audio id="ambiance-audio" preload="auto" playsinline onended="passerPisteAmbianceSuivante()"></audio>
+<audio id="ambiance-preview-audio" preload="auto" playsinline></audio>
+
+<!-- Modale : enregistrer une annonce vocale (Ambiance Boutique) -->
+<div class="modal-overlay" id="modal-ambiance-annonce">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🎤 Nouvelle annonce vocale</h3>
+      <button class="modal-close" onclick="closeModal('modal-ambiance-annonce')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Titre de l'annonce</label>
+      <input type="text" class="form-control" id="annonce-titre" placeholder="Ex: Promo riz 25kg">
+    </div>
+    <div style="text-align:center;margin:14px 0">
+      <button class="btn btn-primary" id="btn-demarrer-enregistrement" onclick="demarrerEnregistrementAnnonce()">🔴 Démarrer l'enregistrement</button>
+      <button class="btn btn-danger" id="btn-arreter-enregistrement" onclick="arreterEnregistrementAnnonce()" style="display:none">⏹ Arrêter (<span id="annonce-chrono">30</span>s)</button>
+    </div>
+    <audio id="annonce-preview-audio" controls style="display:none;width:100%;margin-bottom:12px"></audio>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-ambiance-annonce')">Annuler</button>
+      <button type="button" class="btn btn-primary" id="btn-sauvegarder-annonce" disabled onclick="sauvegarderAnnonceVocale()">💾 Enregistrer l'annonce</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modale : caisse occupée (exclusivité) -->
 <div class="pos-modal-overlay" id="modal-caisse-occupee">
   <div class="pos-modal" style="max-width:420px">
@@ -3940,6 +4037,7 @@
 <!-- Firebase SDK v9 compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
 // ============================================================
@@ -3976,6 +4074,8 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [], supportMessages = [];
+let ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4 };
+let ambiancePlaylist = [], ambianceQueue = [], ambianceQueueIndex = 0;
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
 // ── RH (Phase RH-A) ────────────────────────────────────────
@@ -4897,6 +4997,7 @@ function seDeconnecter() {
   sessionStorage.removeItem('tema_user');
   // Reset POS state
   posPanier = []; posSessionActive = null; posClientActuel = null;
+  arreterMusiqueAmbiance();
   // Nettoyage Digital
   clearInterval(window._digClock);
   if (window._digUnsub1) { window._digUnsub1(); window._digUnsub1 = null; }
@@ -5031,6 +5132,19 @@ function demarrerListeners() {
     }, err => console.error('audit_caisses:', err));
     unsubscribers.push(u16, u17);
   }
+
+  // Listeners Ambiance Boutique (musique + annonces) — pour tous les rôles : la lecture
+  // se fait sur chaque poste de caisse, les réglages ne sont modifiables que par l'Admin.
+  const uAmbCfg = db.collection('ambiance_config').doc('config').onSnapshot(doc => {
+    ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, ...(doc.exists ? doc.data() : {}) };
+    gererAmbianceMusicale();
+    rafraichirPageActive();
+  }, err => console.error('ambiance_config:', err));
+  const uAmbList = db.collection('ambiance_playlist').onSnapshot(snap => {
+    ambiancePlaylist = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('ambiance_playlist:', err));
+  unsubscribers.push(uAmbCfg, uAmbList);
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -5220,7 +5334,7 @@ function appliquerFiltrePermissionsEmployes() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-reinitialisation','nav-pos','nav-presences',
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-ambiance','nav-reinitialisation','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
    'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
@@ -5248,6 +5362,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
     document.getElementById('nav-support').style.display = 'flex';
+    document.getElementById('nav-ambiance').style.display = 'flex';
     document.getElementById('nav-reinitialisation').style.display = 'flex';
   }
 
@@ -6025,6 +6140,7 @@ function majBadgeSessionPOS() {
   if (btnReprendre) btnReprendre.style.display = (hasCaisse && st === 'en_pause') ? 'flex' : 'none';
   if (btnFin) btnFin.style.display = hasCaisse ? 'flex' : 'none';
   if (typeof renderPanier === 'function') renderPanier();
+  gererAmbianceMusicale();
 }
 
 // Données initiales du registre des caisses → voir CAISSES_INITIALES / assurerCaissesInitiales()
@@ -6740,6 +6856,7 @@ const pageTitles = {
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   reinitialisation:'Réinitialisation avant Ouverture (Admin)', support:'Support — Messages des Employés (Admin)',
+  ambiance:'Ambiance Boutique — Musique & Annonces (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
@@ -6914,6 +7031,7 @@ function rafraichirPage(page) {
   else if (page === 'journal') renderJournal();
   else if (page === 'reinitialisation') renderReinitialisation();
   else if (page === 'support') renderSupportAdmin();
+  else if (page === 'ambiance') renderAmbianceAdmin();
   else if (page === 'caisse') renderCaissePage();
   else if (page === 'suivicaisse') renderSuiviCaisse();
   else if (page === 'comptabilite') renderComptabilite();
@@ -7758,6 +7876,250 @@ function renderJournal() {
       <td><span style="font-weight:600;color:${actionColor(j.action)}">${j.action}</span></td>
       <td style="font-size:12px;color:var(--text-muted)">${j.details||''}</td>
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">Aucune activité enregistrée pour le moment</td></tr>';
+}
+
+// ===== AMBIANCE BOUTIQUE — musique + annonces vocales en caisse (Admin uniquement pour les réglages) =====
+// Joue tant que CE poste a une session de caisse active (ouverte ou en pause) — la pause
+// d'un(e) caissier(ère) ne doit pas interrompre la musique, seule la fin de service le fait.
+function construireFileAmbiance() {
+  const musiques = ambiancePlaylist.filter(p => p.type !== 'annonce');
+  const annonces = ambiancePlaylist.filter(p => p.type === 'annonce');
+  let liste = ambianceConfig.mode === 'aleatoire' ? [...musiques].sort(() => Math.random() - 0.5) : musiques;
+  if (!liste.length) liste = annonces;
+  const intervalle = Math.max(1, ambianceConfig.intervalleAnnonces || 4);
+  const file = [];
+  liste.forEach((piste, i) => {
+    file.push(piste);
+    if (annonces.length && liste !== annonces && (i + 1) % intervalle === 0) {
+      file.push(annonces[Math.floor(Math.random() * annonces.length)]);
+    }
+  });
+  return file;
+}
+
+function jouerPisteAmbianceCourante() {
+  const audio = document.getElementById('ambiance-audio');
+  if (!audio || !ambianceQueue.length) return;
+  const piste = ambianceQueue[ambianceQueueIndex % ambianceQueue.length];
+  const src = piste.type === 'annonce' ? piste.audioData : piste.url;
+  if (!src) { passerPisteAmbianceSuivante(); return; }
+  audio.src = src;
+  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
+  audio.play().catch(err => console.warn('Lecture ambiance bloquée (geste utilisateur requis) :', err));
+}
+
+function passerPisteAmbianceSuivante() {
+  if (!ambianceQueue.length) return;
+  ambianceQueueIndex++;
+  if (ambianceQueueIndex >= ambianceQueue.length) {
+    ambianceQueue = construireFileAmbiance();
+    ambianceQueueIndex = 0;
+  }
+  jouerPisteAmbianceCourante();
+}
+
+function demarrerLecturePlaylist() {
+  ambianceQueue = construireFileAmbiance();
+  ambianceQueueIndex = 0;
+  jouerPisteAmbianceCourante();
+}
+
+function arreterMusiqueAmbiance() {
+  const audio = document.getElementById('ambiance-audio');
+  if (audio) { audio.pause(); audio.removeAttribute('src'); }
+  ambianceQueue = []; ambianceQueueIndex = 0;
+}
+
+// Point d'entrée appelé à chaque changement d'état de session caisse (ouverture, pause,
+// reprise, fin de service) et à chaque mise à jour des réglages/playlist par l'Admin.
+function gererAmbianceMusicale() {
+  const audio = document.getElementById('ambiance-audio');
+  if (!audio) return;
+  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
+  const doitJouer = !!posSessionActive && ambianceConfig.actif && ambiancePlaylist.length > 0;
+  if (doitJouer) {
+    if (audio.paused) demarrerLecturePlaylist();
+  } else if (!audio.paused) {
+    audio.pause();
+  }
+}
+
+// ── Réglages (Admin) ──
+async function enregistrerReglagesAmbiance() {
+  if (!currentUser.isAdmin) return;
+  const actif = document.getElementById('ambiance-actif').checked;
+  const volume = Number(document.getElementById('ambiance-volume').value) / 100;
+  const mode = document.getElementById('ambiance-mode').value;
+  const intervalleAnnonces = Math.max(1, Number(document.getElementById('ambiance-intervalle').value) || 4);
+  try {
+    await db.collection('ambiance_config').doc('config').set({ actif, volume, mode, intervalleAnnonces }, { merge: true });
+    consigner('Réglages Ambiance Boutique modifiés', `Actif: ${actif ? 'oui' : 'non'} — Volume: ${Math.round(volume * 100)}% — Mode: ${mode} — par ${currentUser.label}`);
+    showToast('✓ Réglages enregistrés');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+// ── Playlist : import d'un fichier audio depuis l'ordinateur (Firebase Storage) ──
+async function televerserPisteAmbiance(event) {
+  if (!currentUser.isAdmin) return;
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) { showToast('Fichier trop volumineux (max 20 Mo)', 'error'); event.target.value = ''; return; }
+  const titre = document.getElementById('ambiance-titre').value.trim() || file.name.replace(/\.[^.]+$/, '');
+  const statusEl = document.getElementById('ambiance-upload-status');
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Téléversement... 0%';
+  try {
+    const storageRef = firebase.storage().ref(`ambiance/${Date.now()}_${file.name}`);
+    const task = storageRef.put(file);
+    task.on('state_changed', snap => {
+      const pct = snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0;
+      statusEl.textContent = `Téléversement... ${pct}%`;
+    });
+    await task;
+    const url = await storageRef.getDownloadURL();
+    await db.collection('ambiance_playlist').add({
+      type: 'musique', titre, url, ordre: ambiancePlaylist.length,
+      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Piste Ambiance Boutique importée', titre);
+    showToast('✓ Piste importée et ajoutée à la playlist');
+    statusEl.style.display = 'none';
+    document.getElementById('ambiance-titre').value = '';
+    event.target.value = '';
+  } catch (err) {
+    statusEl.style.display = 'none';
+    showToast('Erreur de téléversement : ' + err.message, 'error');
+  }
+}
+
+// ── Playlist : ajout d'une piste musicale par lien ──
+async function ajouterPisteAmbiance() {
+  if (!currentUser.isAdmin) return;
+  const titre = document.getElementById('ambiance-titre').value.trim();
+  const url = document.getElementById('ambiance-url').value.trim();
+  if (!titre || !url) { showToast('Titre et lien audio requis', 'error'); return; }
+  try {
+    await db.collection('ambiance_playlist').add({
+      type: 'musique', titre, url, ordre: ambiancePlaylist.length,
+      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    consigner('Piste Ambiance Boutique ajoutée', titre);
+    showToast('✓ Piste ajoutée à la playlist');
+    document.getElementById('ambiance-titre').value = '';
+    document.getElementById('ambiance-url').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function supprimerPisteAmbiance(id) {
+  if (!currentUser.isAdmin) return;
+  if (!confirm('Supprimer cette piste de la playlist ?')) return;
+  const piste = ambiancePlaylist.find(p => p.id === id);
+  try {
+    await db.collection('ambiance_playlist').doc(id).delete();
+    consigner('Piste Ambiance Boutique supprimée', id);
+    showToast('✓ Supprimée');
+    // Nettoyage best-effort du fichier dans Firebase Storage si la piste y a été importée
+    // (ignoré silencieusement pour un lien externe, qui n'est pas une URL Storage).
+    if (piste?.url) {
+      try { await firebase.storage().refFromURL(piste.url).delete(); } catch (e) { /* lien externe ou déjà supprimé */ }
+    }
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function testerPisteAmbiance(id) {
+  const p = ambiancePlaylist.find(x => x.id === id);
+  if (!p) return;
+  const audio = document.getElementById('ambiance-preview-audio');
+  audio.src = p.type === 'annonce' ? p.audioData : p.url;
+  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
+  audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
+}
+
+// ── Enregistrement d'une annonce vocale (MediaRecorder — aucune API externe) ──
+let mediaRecorderAmbiance = null, chunksAmbiance = [], blobAmbianceEnregistre = null, chronoAmbianceInterval = null;
+
+async function demarrerEnregistrementAnnonce() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    chunksAmbiance = []; blobAmbianceEnregistre = null;
+    mediaRecorderAmbiance = new MediaRecorder(stream);
+    mediaRecorderAmbiance.ondataavailable = e => chunksAmbiance.push(e.data);
+    mediaRecorderAmbiance.onstop = () => {
+      blobAmbianceEnregistre = new Blob(chunksAmbiance, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blobAmbianceEnregistre);
+      const prev = document.getElementById('annonce-preview-audio');
+      prev.src = url; prev.style.display = 'block';
+      document.getElementById('btn-sauvegarder-annonce').disabled = false;
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorderAmbiance.start();
+    document.getElementById('btn-demarrer-enregistrement').style.display = 'none';
+    document.getElementById('btn-arreter-enregistrement').style.display = 'inline-flex';
+    let restant = 30;
+    document.getElementById('annonce-chrono').textContent = restant;
+    chronoAmbianceInterval = setInterval(() => {
+      restant--;
+      document.getElementById('annonce-chrono').textContent = Math.max(0, restant);
+      if (restant <= 0) arreterEnregistrementAnnonce();
+    }, 1000);
+  } catch (err) { showToast("Impossible d'accéder au micro : " + err.message, 'error'); }
+}
+
+function arreterEnregistrementAnnonce() {
+  if (chronoAmbianceInterval) { clearInterval(chronoAmbianceInterval); chronoAmbianceInterval = null; }
+  if (mediaRecorderAmbiance && mediaRecorderAmbiance.state !== 'inactive') mediaRecorderAmbiance.stop();
+  document.getElementById('btn-demarrer-enregistrement').style.display = 'inline-flex';
+  document.getElementById('btn-arreter-enregistrement').style.display = 'none';
+}
+
+async function sauvegarderAnnonceVocale() {
+  if (!blobAmbianceEnregistre) return;
+  const titre = document.getElementById('annonce-titre').value.trim() || 'Annonce';
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      await db.collection('ambiance_playlist').add({
+        type: 'annonce', titre, audioData: reader.result, ordre: ambiancePlaylist.length,
+        dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      consigner('Annonce vocale Ambiance Boutique ajoutée', titre);
+      showToast('✓ Annonce enregistrée');
+      closeModal('modal-ambiance-annonce');
+      document.getElementById('annonce-titre').value = '';
+      document.getElementById('annonce-preview-audio').style.display = 'none';
+      document.getElementById('btn-sauvegarder-annonce').disabled = true;
+      blobAmbianceEnregistre = null;
+    } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  };
+  reader.readAsDataURL(blobAmbianceEnregistre);
+}
+
+function renderAmbianceAdmin() {
+  if (!currentUser.isAdmin) return;
+  const actifEl = document.getElementById('ambiance-actif');
+  if (actifEl && !actifEl.dataset.init) {
+    actifEl.checked = !!ambianceConfig.actif;
+    document.getElementById('ambiance-volume').value = Math.round((ambianceConfig.volume ?? 0.6) * 100);
+    document.getElementById('ambiance-volume-val').textContent = Math.round((ambianceConfig.volume ?? 0.6) * 100) + '%';
+    document.getElementById('ambiance-mode').value = ambianceConfig.mode || 'sequentiel';
+    document.getElementById('ambiance-intervalle').value = ambianceConfig.intervalleAnnonces || 4;
+    document.getElementById('ambiance-intervalle-val').textContent = ambianceConfig.intervalleAnnonces || 4;
+    actifEl.dataset.init = '1';
+  }
+  const cnt = document.getElementById('ambiance-count');
+  if (cnt) cnt.textContent = `(${ambiancePlaylist.length} élément(s))`;
+  const tbody = document.getElementById('tbody-ambiance-playlist');
+  if (!tbody) return;
+  const liste = [...ambiancePlaylist].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+  tbody.innerHTML = liste.length ? liste.map(p => `
+    <tr>
+      <td>${p.type === 'annonce' ? '🎤' : '🎵'} ${p.titre}</td>
+      <td>${p.type === 'annonce' ? 'Annonce vocale' : 'Musique'}</td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="testerPisteAmbiance('${p.id}')" title="Écouter">▶</button>
+        <button class="btn btn-danger btn-sm" onclick="supprimerPisteAmbiance('${p.id}')" title="Supprimer">🗑</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Aucune piste — ajoutez de la musique ou une annonce</td></tr>';
 }
 
 // ===== SUPPORT — message interne employé → Administrateur (avec capture d'écran) =====
