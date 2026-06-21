@@ -9,6 +9,7 @@
 <link rel="icon" href="/assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
@@ -1392,7 +1393,7 @@
         <div class="nav-item" id="nav-comptes" onclick="navigate('comptes')" style="display:none"><span class="icon">👥</span> Gestion de Comptes</div>
         <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
         <div class="nav-item" id="nav-support" onclick="navigate('support')" style="display:none"><span class="icon">💬</span> Support <span class="badge" id="support-badge" style="display:none">0</span></div>
-        <div class="nav-item" id="nav-ambiance" onclick="navigate('ambiance')" style="display:none"><span class="icon">🎵</span> Ambiance Boutique</div>
+        <div class="nav-item" id="nav-radio" onclick="navigate('radio')" style="display:none"><span class="icon">📻</span> TeMa Smart Radio</div>
         <div class="nav-item" id="nav-reinitialisation" onclick="navigate('reinitialisation')" style="display:none"><span class="icon">🔄</span> Réinitialisation</div>
       </div>
     </div>
@@ -2260,104 +2261,238 @@
       <div id="support-admin-liste"></div>
     </div>
 
-    <!-- MODULE ADMIN — AMBIANCE BOUTIQUE (musique + annonces) -->
-    <div class="page" id="page-ambiance">
-      <div class="alert alert-info no-print">🎵 Musique d'ambiance + annonces vocales, jouée automatiquement sur chaque poste de caisse dès qu'une session est active — la pause d'un(e) caissier(ère) ne l'interrompt pas. Tout se règle ici.</div>
+    <!-- MODULE ADMIN — TEMA SMART RADIO (diffusion audio centralisée) -->
+    <div class="page" id="page-radio">
+      <div class="alert alert-info no-print">📻 Diffusion audio centralisée : musique d'ambiance, radios internet et messages promotionnels. La diffusion tourne sur le ou les postes désignés ci-dessous, <strong>indépendamment des sessions de caisse</strong> — déconnexion ou fermeture de caisse ne l'interrompent jamais. Tout se pilote depuis cet espace Admin.</div>
 
-      <div class="card" style="margin-bottom:14px;background:#1a1e2e;color:#fff">
-        <div class="card-body" style="padding:20px">
-          <div style="text-align:center;margin-bottom:14px">
-            <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:4px">Lecteur — Ambiance Boutique</div>
-            <div style="font-size:17px;font-weight:700" id="ambiance-player-titre">Aucune lecture en cours</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.55)" id="ambiance-player-statut">Cliquez ▶ pour prévisualiser la playlist</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-            <span style="font-size:12px;min-width:38px;text-align:right;color:rgba(255,255,255,.7)" id="ambiance-player-elapsed">0:00</span>
-            <input type="range" id="ambiance-player-seek" min="0" max="100" value="0" step="0.1" style="flex:1" oninput="seekAmbiancePlayer(this.value)">
-            <span style="font-size:12px;min-width:38px;color:rgba(255,255,255,.7)" id="ambiance-player-remaining">-0:00</span>
-          </div>
-          <div style="display:flex;justify-content:center;align-items:center;gap:18px">
-            <button onclick="pisteAmbiancePrecedente()" title="Précédent" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏮</button>
-            <button id="btn-ambiance-playpause" onclick="toggleLecturePlayerAmbiance()" title="Lecture / Pause" style="background:var(--accent);border:none;color:#1a1e2e;width:48px;height:48px;border-radius:50%;font-size:18px;cursor:pointer">▶</button>
-            <button onclick="arreterLecturePlayerAmbiance()" title="Stop" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏹</button>
-            <button onclick="pisteAmbianceSuivanteManuelle()" title="Suivant" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏭</button>
-          </div>
-        </div>
+      <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn active" id="radio-tab-btn-dashboard" onclick="radioNavigate('dashboard')" style="flex:1;min-width:120px">📊 Tableau de bord</button>
+        <button class="btn btn-sm caisse-tab-btn" id="radio-tab-btn-bibliotheque" onclick="radioNavigate('bibliotheque')" style="flex:1;min-width:120px">📚 Bibliothèque</button>
+        <button class="btn btn-sm caisse-tab-btn" id="radio-tab-btn-playlists" onclick="radioNavigate('playlists')" style="flex:1;min-width:120px">📋 Playlists</button>
+        <button class="btn btn-sm caisse-tab-btn" id="radio-tab-btn-radios" onclick="radioNavigate('radios')" style="flex:1;min-width:120px">🌐 Radios Internet</button>
+        <button class="btn btn-sm caisse-tab-btn" id="radio-tab-btn-messages" onclick="radioNavigate('messages')" style="flex:1;min-width:120px">📢 Messages</button>
+        <button class="btn btn-sm caisse-tab-btn" id="radio-tab-btn-journal" onclick="radioNavigate('journal')" style="flex:1;min-width:120px">🕘 Journal</button>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><h2>⚙️ Réglages</h2></div>
-        <div class="card-body">
-          <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer">
-            <input type="checkbox" id="ambiance-actif"> <strong>Activer la musique d'ambiance en caisse</strong>
-          </label>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Volume — <span id="ambiance-volume-val">60%</span></label>
-              <input type="range" id="ambiance-volume" min="0" max="100" value="60" oninput="document.getElementById('ambiance-volume-val').textContent=this.value+'%'" style="width:100%">
+      <!-- ONGLET : TABLEAU DE BORD -->
+      <div class="caisse-tab active" id="radio-tab-dashboard">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>🖥️ Ce poste</h2></div>
+          <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-weight:700" id="radio-poste-statut">Ce poste n'est pas un haut-parleur de diffusion</div>
+              <div style="font-size:12px;color:var(--text-muted)">Branchez ce poste aux enceintes de la boutique avant de démarrer.</div>
             </div>
-            <div class="form-group">
-              <label>Mode de lecture</label>
-              <select class="form-control" id="ambiance-mode">
-                <option value="sequentiel">Séquentiel (dans l'ordre)</option>
-                <option value="aleatoire">Aléatoire</option>
-              </select>
+            <div>
+              <button class="btn btn-primary" id="btn-radio-demarrer-poste" onclick="demarrerDiffusionRadioPoste()">▶ Démarrer la diffusion sur ce poste</button>
+              <button class="btn btn-outline" id="btn-radio-arreter-poste" onclick="arreterDiffusionRadioPosteLocal()" style="display:none">⏹ Arrêter sur ce poste</button>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Répétition</label>
-              <select class="form-control" id="ambiance-repetition">
-                <option value="playlist">🔁 Boucle sur toute la playlist</option>
-                <option value="piste">🔂 Répéter la piste en cours</option>
-              </select>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;background:#1a1e2e;color:#fff">
+          <div class="card-body" style="padding:20px">
+            <div style="text-align:center;margin-bottom:14px">
+              <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:4px">TeMa Smart Radio</div>
+              <div style="font-size:17px;font-weight:700" id="radio-player-titre">Aucune diffusion en cours</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.55)" id="radio-player-statut">État : arrêté</div>
             </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <span style="font-size:12px;min-width:38px;text-align:right;color:rgba(255,255,255,.7)" id="radio-player-elapsed">0:00</span>
+              <input type="range" id="radio-player-seek" min="0" max="100" value="0" step="0.1" style="flex:1" oninput="seekRadioPlayer(this.value)">
+              <span style="font-size:12px;min-width:38px;color:rgba(255,255,255,.7)" id="radio-player-remaining">-0:00</span>
+            </div>
+            <div style="display:flex;justify-content:center;align-items:center;gap:18px">
+              <button onclick="pisteRadioPrecedenteCmd()" title="Précédent" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏮</button>
+              <button id="btn-radio-playpause" onclick="toggleLectureRadio()" title="Lecture / Pause" style="background:var(--accent);border:none;color:#1a1e2e;width:48px;height:48px;border-radius:50%;font-size:18px;cursor:pointer">▶</button>
+              <button onclick="arreterDiffusionGenerale()" title="Arrêt général (tous les postes)" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏹</button>
+              <button onclick="pisteRadioSuivanteCmd()" title="Suivant" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏭</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kpi-card"><div class="kpi-icon">📡</div><div class="kpi-info"><h3 id="radio-kpi-source">—</h3><p>Source actuelle</p></div></div>
+          <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-info"><h3 id="radio-kpi-playlist">—</h3><p>Playlist active</p></div></div>
+          <div class="kpi-card"><div class="kpi-icon">🔊</div><div class="kpi-info"><h3 id="radio-kpi-volume">—</h3><p>Volume général</p></div></div>
+          <div class="kpi-card"><div class="kpi-icon" id="radio-kpi-etat-icon">⚫</div><div class="kpi-info"><h3 id="radio-kpi-etat">—</h3><p>État de diffusion</p></div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>🔍 Recherche dans la bibliothèque</h2></div>
+          <div class="card-body">
+            <input type="text" class="form-control" id="radio-recherche" placeholder="Rechercher un titre, une catégorie..." oninput="renderRadioRecherche()">
+            <div id="radio-recherche-resultats" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>⚙️ Réglages généraux</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Volume — <span id="radio-volume-val">60%</span></label>
+                <input type="range" id="radio-volume" min="0" max="100" value="60" oninput="document.getElementById('radio-volume-val').textContent=this.value+'%'">
+              </div>
+              <div class="form-group">
+                <label>Balance — <span id="radio-balance-val">Centre</span></label>
+                <input type="range" id="radio-balance" min="-100" max="100" value="0" oninput="document.getElementById('radio-balance-val').textContent = this.value==0 ? 'Centre' : (this.value<0 ? Math.abs(this.value)+'% Gauche' : this.value+'% Droite')">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Mode de lecture</label>
+                <select class="form-control" id="radio-mode">
+                  <option value="sequentiel">Séquentiel (dans l'ordre)</option>
+                  <option value="aleatoire">Aléatoire</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Répétition</label>
+                <select class="form-control" id="radio-repetition">
+                  <option value="playlist">🔁 Boucle sur toute la playlist</option>
+                  <option value="piste">🔂 Répéter la piste en cours</option>
+                </select>
+              </div>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer">
+              <input type="checkbox" id="radio-pub-active"> <strong>Insertion automatique des messages promotionnels</strong>
+            </label>
             <div class="form-group" style="max-width:320px">
-              <label>Insérer une annonce vocale toutes les <span id="ambiance-intervalle-val">4</span> pistes</label>
-              <input type="number" class="form-control" id="ambiance-intervalle" min="1" value="4" oninput="document.getElementById('ambiance-intervalle-val').textContent=this.value||1">
+              <label>Insérer un message toutes les <span id="radio-pub-intervalle-val">20</span> minutes</label>
+              <input type="number" class="form-control" id="radio-pub-intervalle" min="1" value="20" oninput="document.getElementById('radio-pub-intervalle-val').textContent=this.value||1">
+            </div>
+            <button class="btn btn-primary" onclick="enregistrerReglagesRadio()">💾 Enregistrer les réglages</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h2>🎚️ Égaliseur graphique</h2></div>
+          <div class="card-body">
+            <div id="radio-eq-bands" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;text-align:center;margin-bottom:14px"></div>
+            <button class="btn btn-outline btn-sm" onclick="reinitialiserEQRadio()">↺ Réinitialiser l'égaliseur</button>
+            <button class="btn btn-primary btn-sm" onclick="enregistrerReglagesRadio()" style="margin-left:8px">💾 Enregistrer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET : BIBLIOTHÈQUE MUSICALE -->
+      <div class="caisse-tab" id="radio-tab-bibliotheque">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>📥 Ajouter à la bibliothèque</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="radio-bib-titre" placeholder="Ex: Ambiance boutique 1"></div>
+              <div class="form-group"><label>Catégorie</label>
+                <select class="form-control" id="radio-bib-categorie">
+                  <option>Ambiance</option><option>Gospel</option><option>Instrumental</option><option>Lounge</option>
+                  <option>Afro</option><option>Variétés</option><option>Promotions</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:6px">Un seul fichier (MP3, WAV, AAC, FLAC) : <input type="file" id="radio-bib-fichier" accept="audio/*" class="form-control" onchange="televerserPisteRadio(event)" style="display:inline-block;width:auto;vertical-align:middle"></div>
+            <div style="margin-bottom:6px">
+              Tout un dossier : <input type="file" id="radio-bib-dossier" webkitdirectory multiple accept="audio/*" onchange="televerserDossierRadio(event)" style="display:none">
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('radio-bib-dossier').click()">📁 Importer un dossier complet</button>
+            </div>
+            <div id="radio-bib-upload-status" style="display:none;font-size:13px;color:var(--primary)"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📚 Bibliothèque <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="radio-bib-count"></span></h2></div>
+          <div class="card-body">
+            <select class="form-control" id="radio-bib-filtre-categorie" onchange="renderRadioBibliotheque()" style="max-width:260px;margin-bottom:12px">
+              <option value="">Toutes les catégories</option>
+              <option>Ambiance</option><option>Gospel</option><option>Instrumental</option><option>Lounge</option>
+              <option>Afro</option><option>Variétés</option><option>Promotions</option>
+            </select>
+            <div class="table-wrap">
+              <table><thead><tr><th>Titre</th><th>Catégorie</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody id="tbody-radio-bibliotheque"></tbody></table>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="enregistrerReglagesAmbiance()">💾 Enregistrer les réglages</button>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><h2>🎚️ Équaliseur</h2></div>
-        <div class="card-body">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Ajustez le son de la musique d'ambiance. Réglages appliqués sur tous les postes de caisse.</p>
-          <div id="ambiance-eq-bands" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;text-align:center;margin-bottom:14px"></div>
-          <button class="btn btn-outline btn-sm" onclick="reinitialiserEQAmbiance()">↺ Réinitialiser l'égaliseur</button>
-          <button class="btn btn-primary btn-sm" onclick="enregistrerReglagesAmbiance()" style="margin-left:8px">💾 Enregistrer</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><h2>🎵 Ajouter une piste musicale</h2></div>
-        <div class="card-body">
-          <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="ambiance-titre" placeholder="Ex: Musique d'ambiance 1"></div>
-
-          <div style="margin-bottom:6px">Un seul fichier : <input type="file" id="ambiance-fichier" accept="audio/*" class="form-control" onchange="televerserPisteAmbiance(event)" style="display:inline-block;width:auto;vertical-align:middle"></div>
-          <div style="margin-bottom:6px">
-            Tout un dossier : <input type="file" id="ambiance-dossier" webkitdirectory multiple accept="audio/*" onchange="televerserDossierAmbiance(event)" style="display:none">
-            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ambiance-dossier').click()">📁 Importer un dossier complet</button>
+      <!-- ONGLET : PLAYLISTS -->
+      <div class="caisse-tab" id="radio-tab-playlists">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Nouvelle playlist</h2></div>
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+            <input type="text" class="form-control" id="radio-playlist-nom" placeholder="Ex: Playlist Matin" style="flex:1;min-width:200px">
+            <button class="btn btn-primary" onclick="creerPlaylistRadio()">➕ Créer</button>
           </div>
-          <div id="ambiance-upload-status" style="display:none;font-size:13px;color:var(--primary);margin-bottom:14px"></div>
+        </div>
+        <div id="radio-playlists-liste"></div>
+      </div>
 
-          <button class="btn btn-outline" onclick="openModal('modal-ambiance-annonce')" style="margin-top:8px">🎤 Enregistrer une annonce vocale</button>
+      <!-- ONGLET : RADIOS INTERNET -->
+      <div class="caisse-tab" id="radio-tab-radios">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Ajouter une radio internet</h2></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="font-size:12px;margin-bottom:10px;align-items:flex-start">
+              <span>ℹ️</span>
+              <div>Collez l'URL de flux direct de la station (mp3/aac en direct, ou .m3u8 pour HLS). Je n'ai pas d'URL vérifiée à vous fournir pour des stations précises (Radio JAM, Nostalgie, Trace FM, BBC, RFI...) — récupérez le lien de flux direct depuis le site officiel de la station, souvent indiqué dans sa page "Écouter en direct".</div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Nom de la station</label><input type="text" class="form-control" id="radio-station-nom" placeholder="Ex: Radio JAM"></div>
+              <div class="form-group"><label>Format</label>
+                <select class="form-control" id="radio-station-format">
+                  <option value="mp3">Flux MP3 / AAC direct</option>
+                  <option value="hls">HLS (.m3u8)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label>URL du flux</label><input type="text" class="form-control" id="radio-station-url" placeholder="https://..."></div>
+            <button class="btn btn-outline" onclick="ajouterStationRadio()">➕ Ajouter la station</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>🌐 Stations enregistrées</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Station</th><th>Format</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-radio-stations"></tbody></table>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header"><h2>📋 Playlist <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="ambiance-count"></span></h2></div>
-        <div class="card-body">
-          <div id="ambiance-selection-bar" style="display:none;margin-bottom:10px">
-            <span style="font-size:13px;color:var(--primary);font-weight:700" id="ambiance-selection-count"></span>
-            <button class="btn btn-primary btn-sm" onclick="lireSelectionAmbiance()" style="margin-left:8px">▶ Lire cette sélection en boucle</button>
-            <button class="btn btn-outline btn-sm" onclick="annulerSelectionAmbiance()" style="margin-left:6px">✕ Annuler la sélection active</button>
+      <!-- ONGLET : MESSAGES PROMOTIONNELS -->
+      <div class="caisse-tab" id="radio-tab-messages">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Nouveau message promotionnel</h2></div>
+          <div class="card-body">
+            <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="radio-msg-titre" placeholder="Ex: Promo fournitures scolaires"></div>
+            <div style="text-align:center;margin:14px 0">
+              <button class="btn btn-primary" id="btn-radio-msg-demarrer" onclick="demarrerEnregistrementMessageRadio()">🔴 Démarrer l'enregistrement</button>
+              <button class="btn btn-danger" id="btn-radio-msg-arreter" onclick="arreterEnregistrementMessageRadio()" style="display:none">⏹ Arrêter (<span id="radio-msg-chrono">30</span>s)</button>
+              <span style="margin:0 8px;color:var(--text-muted)">ou</span>
+              <input type="file" id="radio-msg-fichier" accept="audio/*" onchange="importerFichierMessageRadio(event)" style="display:inline-block;width:auto;vertical-align:middle">
+            </div>
+            <audio id="radio-msg-preview-audio" controls style="display:none;width:100%;margin-bottom:12px"></audio>
+            <div class="form-row">
+              <div class="form-group"><label>Heure de début (optionnel)</label><input type="time" class="form-control" id="radio-msg-heure-debut"></div>
+              <div class="form-group"><label>Heure de fin (optionnel)</label><input type="time" class="form-control" id="radio-msg-heure-fin"></div>
+            </div>
+            <button class="btn btn-outline" id="btn-radio-msg-sauvegarder" disabled onclick="sauvegarderMessageRadio()">💾 Enregistrer le message</button>
           </div>
-          <div class="table-wrap">
-            <table><thead><tr><th style="width:30px"></th><th>Titre</th><th>Type</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody id="tbody-ambiance-playlist"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📢 Messages enregistrés <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="radio-msg-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Titre</th><th>Créneau</th><th>Actif</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-radio-messages"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET : JOURNAL DE DIFFUSION -->
+      <div class="caisse-tab" id="radio-tab-journal">
+        <div class="card">
+          <div class="card-header"><h2>🕘 Historique de diffusion <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="radio-journal-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Date</th><th>Type</th><th>Détails</th><th>Utilisateur</th></tr></thead>
+            <tbody id="tbody-radio-journal"></tbody></table>
           </div>
         </div>
       </div>
@@ -2377,6 +2512,7 @@
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-achats" checked style="margin-top:3px"> <span><strong>Achats Fournisseurs</strong><br><span style="font-size:12px;color:var(--text-muted)">Commandes fournisseurs, paiements</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité</strong><br><span style="font-size:12px;color:var(--text-muted)">Historique des connexions et actions admin (Journal d'Activité)</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-support" checked style="margin-top:3px"> <span><strong>Messages de support</strong><br><span style="font-size:12px;color:var(--text-muted)">Messages de test envoyés par les employés à l'Administrateur</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-cat-radio" checked style="margin-top:3px"> <span><strong>Journal de diffusion radio</strong><br><span style="font-size:12px;color:var(--text-muted)">Historique de test (playlist/bibliothèque/messages/stations conservés)</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (pour ressaisir l'inventaire réel)</span></span></label>
         </div>
       </div>
@@ -3372,32 +3508,9 @@
   </div>
 </div>
 
-<!-- Lecteur global Ambiance Boutique — joue tant qu'une caisse a une session active -->
-<audio id="ambiance-audio" preload="auto" playsinline crossorigin="anonymous" onended="passerPisteAmbianceSuivante()"></audio>
-<audio id="ambiance-preview-audio" preload="auto" playsinline crossorigin="anonymous"></audio>
-
-<!-- Modale : enregistrer une annonce vocale (Ambiance Boutique) -->
-<div class="modal-overlay" id="modal-ambiance-annonce">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <h3>🎤 Nouvelle annonce vocale</h3>
-      <button class="modal-close" onclick="closeModal('modal-ambiance-annonce')">×</button>
-    </div>
-    <div class="form-group">
-      <label>Titre de l'annonce</label>
-      <input type="text" class="form-control" id="annonce-titre" placeholder="Ex: Promo riz 25kg">
-    </div>
-    <div style="text-align:center;margin:14px 0">
-      <button class="btn btn-primary" id="btn-demarrer-enregistrement" onclick="demarrerEnregistrementAnnonce()">🔴 Démarrer l'enregistrement</button>
-      <button class="btn btn-danger" id="btn-arreter-enregistrement" onclick="arreterEnregistrementAnnonce()" style="display:none">⏹ Arrêter (<span id="annonce-chrono">30</span>s)</button>
-    </div>
-    <audio id="annonce-preview-audio" controls style="display:none;width:100%;margin-bottom:12px"></audio>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline" onclick="closeModal('modal-ambiance-annonce')">Annuler</button>
-      <button type="button" class="btn btn-primary" id="btn-sauvegarder-annonce" disabled onclick="sauvegarderAnnonceVocale()">💾 Enregistrer l'annonce</button>
-    </div>
-  </div>
-</div>
+<!-- Lecteur global TeMa Smart Radio — joue indépendamment des sessions de caisse, tant que ce poste est désigné comme haut-parleur de diffusion -->
+<audio id="radio-audio" preload="auto" playsinline crossorigin="anonymous" onended="radioPisteTermine()"></audio>
+<audio id="radio-preview-audio" preload="auto" playsinline crossorigin="anonymous"></audio>
 
 <!-- Modale : caisse occupée (exclusivité) -->
 <div class="pos-modal-overlay" id="modal-caisse-occupee">
@@ -4108,15 +4221,23 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [], supportMessages = [];
-let ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, repetition: 'playlist', eq: [0,0,0,0,0], selectionIds: [] };
-let ambiancePlaylist = [], ambianceQueue = [], ambianceQueueIndex = 0;
-let ambianceSelectionEnCours = new Set();
-const AMBIANCE_EQ_BANDS = [
+
+// ===== TEMA SMART RADIO — état partagé (Firestore) + état local au poste =====
+let radioConfig = { diffusionActive: false, sourceType: 'playlist', playlistActiveId: null, radioActiveId: null,
+  volume: 0.6, balance: 0, mode: 'sequentiel', repetition: 'playlist', eq: [0,0,0,0,0],
+  pubActive: false, pubIntervalleMin: 20, commande: null };
+let radioBibliotheque = [], radioPlaylists = [], radioStations = [], radioMessages = [], radioJournalDiffusion = [];
+let radioQueue = [], radioQueueIndex = 0, radioQueueBuiltFromId = null;
+let radioPosteActif = (typeof localStorage !== 'undefined' && localStorage.getItem('tema_radio_poste_actif') === '1');
+const RADIO_EQ_BANDS = [
   { freq: 60, label: '60 Hz\n(Basses)' }, { freq: 250, label: '250 Hz' }, { freq: 1000, label: '1 kHz' },
   { freq: 4000, label: '4 kHz' }, { freq: 12000, label: '12 kHz\n(Aigus)' }
 ];
-let ambianceAudioCtx = null, ambianceEQNodes = [];
-let ambianceModeManuel = false;
+let radioAudioCtx = null, radioEQNodes = [], radioPanNode = null;
+let radioLastCommandeTs = 0;
+let radioPubTimer = null, radioDerniereAnnoncePubTS = Date.now(), radioSauvegardeAvantPub = null;
+let radioHlsInstance = null;
+const RADIO_CATEGORIES = ['Ambiance','Gospel','Instrumental','Lounge','Afro','Variétés','Promotions'];
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
 // ── RH (Phase RH-A) ────────────────────────────────────────
@@ -5038,7 +5159,6 @@ function seDeconnecter() {
   sessionStorage.removeItem('tema_user');
   // Reset POS state
   posPanier = []; posSessionActive = null; posClientActuel = null;
-  arreterMusiqueAmbiance();
   // Nettoyage Digital
   clearInterval(window._digClock);
   if (window._digUnsub1) { window._digUnsub1(); window._digUnsub1 = null; }
@@ -5183,18 +5303,43 @@ function demarrerListeners() {
     unsubscribers.push(u16, u17);
   }
 
-  // Listeners Ambiance Boutique (musique + annonces) — pour tous les rôles : la lecture
-  // se fait sur chaque poste de caisse, les réglages ne sont modifiables que par l'Admin.
-  const uAmbCfg = db.collection('ambiance_config').doc('config').onSnapshot(doc => {
-    ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, repetition: 'playlist', eq: [0,0,0,0,0], selectionIds: [], ...(doc.exists ? doc.data() : {}) };
-    gererAmbianceMusicale();
+  // Listeners TeMa Smart Radio — pour tous les rôles : la diffusion tourne sur le(s) poste(s)
+  // désigné(s) comme haut-parleur, indépendamment des sessions de caisse. Les écritures
+  // (playlist, réglages, messages...) restent réservées à l'Admin dans les fonctions dédiées.
+  const uRadioCfg = db.collection('radio_config').doc('config').onSnapshot(doc => {
+    radioConfig = { diffusionActive: false, sourceType: 'playlist', playlistActiveId: null, radioActiveId: null,
+      volume: 0.6, balance: 0, mode: 'sequentiel', repetition: 'playlist', eq: [0,0,0,0,0],
+      pubActive: false, pubIntervalleMin: 20, commande: null, ...(doc.exists ? doc.data() : {}) };
+    traiterCommandeRadio(radioConfig.commande);
+    gererDiffusionRadio();
     rafraichirPageActive();
-  }, err => console.error('ambiance_config:', err));
-  const uAmbList = db.collection('ambiance_playlist').onSnapshot(snap => {
-    ambiancePlaylist = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  }, err => console.error('radio_config:', err));
+  const uRadioBib = db.collection('radio_bibliotheque').onSnapshot(snap => {
+    radioBibliotheque = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
-  }, err => console.error('ambiance_playlist:', err));
-  unsubscribers.push(uAmbCfg, uAmbList);
+  }, err => console.error('radio_bibliotheque:', err));
+  const uRadioPl = db.collection('radio_playlists').onSnapshot(snap => {
+    radioPlaylists = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    gererDiffusionRadio();
+    rafraichirPageActive();
+  }, err => console.error('radio_playlists:', err));
+  const uRadioSt = db.collection('radio_stations').onSnapshot(snap => {
+    radioStations = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('radio_stations:', err));
+  const uRadioMsg = db.collection('radio_messages').onSnapshot(snap => {
+    radioMessages = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('radio_messages:', err));
+  unsubscribers.push(uRadioCfg, uRadioBib, uRadioPl, uRadioSt, uRadioMsg);
+  if (currentUser.isAdmin) {
+    const uRadioJournal = db.collection('radio_journal').orderBy('dateTS', 'desc').limit(200).onSnapshot(snap => {
+      radioJournalDiffusion = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      rafraichirPageActive();
+    }, err => console.error('radio_journal:', err));
+    unsubscribers.push(uRadioJournal);
+  }
+  if (radioPosteActif) demarrerMinuteurPubRadio();
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -5384,7 +5529,7 @@ function appliquerFiltrePermissionsEmployes() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-ambiance','nav-reinitialisation','nav-pos','nav-presences',
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-radio','nav-reinitialisation','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
    'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
@@ -5412,7 +5557,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-suivicaisse').style.display = 'flex';
     document.getElementById('nav-journal').style.display = 'flex';
     document.getElementById('nav-support').style.display = 'flex';
-    document.getElementById('nav-ambiance').style.display = 'flex';
+    document.getElementById('nav-radio').style.display = 'flex';
     document.getElementById('nav-reinitialisation').style.display = 'flex';
   }
 
@@ -6193,7 +6338,6 @@ function majBadgeSessionPOS() {
   if (btnReprendre) btnReprendre.style.display = (hasCaisse && st === 'en_pause') ? 'flex' : 'none';
   if (btnFin) btnFin.style.display = hasCaisse ? 'flex' : 'none';
   if (typeof renderPanier === 'function') renderPanier();
-  gererAmbianceMusicale();
 }
 
 // Données initiales du registre des caisses → voir CAISSES_INITIALES / assurerCaissesInitiales()
@@ -6909,7 +7053,7 @@ const pageTitles = {
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   reinitialisation:'Réinitialisation avant Ouverture (Admin)', support:'Support — Messages des Employés (Admin)',
-  ambiance:'Ambiance Boutique — Musique & Annonces (Admin)',
+  radio:'TeMa Smart Radio — Diffusion Audio Centralisée (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
@@ -7084,7 +7228,7 @@ function rafraichirPage(page) {
   else if (page === 'journal') renderJournal();
   else if (page === 'reinitialisation') renderReinitialisation();
   else if (page === 'support') renderSupportAdmin();
-  else if (page === 'ambiance') renderAmbianceAdmin();
+  else if (page === 'radio') renderRadioAdmin();
   else if (page === 'caisse') renderCaissePage();
   else if (page === 'suivicaisse') renderSuiviCaisse();
   else if (page === 'comptabilite') renderComptabilite();
@@ -7931,453 +8075,737 @@ function renderJournal() {
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">Aucune activité enregistrée pour le moment</td></tr>';
 }
 
-// ===== AMBIANCE BOUTIQUE — musique + annonces vocales en caisse (Admin uniquement pour les réglages) =====
-// Joue tant que CE poste a une session de caisse active (ouverte ou en pause) — la pause
-// d'un(e) caissier(ère) ne doit pas interrompre la musique, seule la fin de service le fait.
-function construireFileAmbiance() {
-  const selectionIds = ambianceConfig.selectionIds || [];
-  const baseListe = selectionIds.length ? ambiancePlaylist.filter(p => selectionIds.includes(p.id)) : ambiancePlaylist;
-  const musiques = baseListe.filter(p => p.type !== 'annonce');
-  const annonces = baseListe.filter(p => p.type === 'annonce');
-  let liste = ambianceConfig.mode === 'aleatoire' ? [...musiques].sort(() => Math.random() - 0.5) : musiques;
-  if (!liste.length) liste = annonces;
-  const intervalle = Math.max(1, ambianceConfig.intervalleAnnonces || 4);
-  const file = [];
-  liste.forEach((piste, i) => {
-    file.push(piste);
-    if (annonces.length && liste !== annonces && (i + 1) % intervalle === 0) {
-      file.push(annonces[Math.floor(Math.random() * annonces.length)]);
-    }
-  });
-  return file;
+// ===== TEMA SMART RADIO — diffusion audio centralisée, indépendante des sessions de caisse =====
+function radioNavigate(tab) {
+  document.querySelectorAll('#page-radio .caisse-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-radio .caisse-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('radio-tab-' + tab).classList.add('active');
+  document.getElementById('radio-tab-btn-' + tab).classList.add('active');
+  renderRadioAdmin();
 }
 
-// Équaliseur 5 bandes (Web Audio API) — branché une seule fois sur l'élément <audio>,
-// les gains sont ensuite ajustables en direct sans recréer le graphe audio.
-function initAmbianceEQ() {
-  const audio = document.getElementById('ambiance-audio');
-  if (!audio || ambianceAudioCtx) return;
+async function consignerRadio(type, details) {
+  if (!db || !currentUser) return;
   try {
-    ambianceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = ambianceAudioCtx.createMediaElementSource(audio);
+    await db.collection('radio_journal').add({
+      type, details, utilisateur: currentUser.label,
+      date: new Date().toLocaleString('fr-FR'), dateTS: Date.now(),
+      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.error('radio_journal:', err); }
+}
+
+// ── Poste de diffusion (par appareil) ──
+function demarrerDiffusionRadioPoste() {
+  radioPosteActif = true;
+  try { localStorage.setItem('tema_radio_poste_actif', '1'); } catch (e) {}
+  construireFileRadio();
+  demarrerMinuteurPubRadio();
+  gererDiffusionRadio();
+  consignerRadio('poste_demarre', `${currentUser?.label || '—'} a désigné ce poste comme haut-parleur de diffusion`);
+  renderRadioAdmin();
+}
+
+function arreterDiffusionRadioPosteLocal() {
+  radioPosteActif = false;
+  try { localStorage.removeItem('tema_radio_poste_actif'); } catch (e) {}
+  const audio = document.getElementById('radio-audio');
+  if (audio) audio.pause();
+  if (radioPubTimer) { clearInterval(radioPubTimer); radioPubTimer = null; }
+  consignerRadio('poste_arrete', `${currentUser?.label || '—'} a retiré ce poste de la diffusion`);
+  renderRadioAdmin();
+}
+
+function demarrerMinuteurPubRadio() {
+  if (radioPubTimer) clearInterval(radioPubTimer);
+  radioDerniereAnnoncePubTS = Date.now();
+  radioPubTimer = setInterval(verifierInsertionPubRadio, 30000);
+}
+
+function messageDansCreneauRadio(m) {
+  if (!m.heureDebut || !m.heureFin) return true;
+  const maintenant = new Date();
+  const hm = maintenant.getHours() * 60 + maintenant.getMinutes();
+  const [hd, md] = m.heureDebut.split(':').map(Number);
+  const [hf, mf] = m.heureFin.split(':').map(Number);
+  const debut = hd * 60 + md, fin = hf * 60 + mf;
+  return debut <= fin ? (hm >= debut && hm <= fin) : (hm >= debut || hm <= fin);
+}
+
+function verifierInsertionPubRadio() {
+  if (!radioPosteActif || !radioConfig.diffusionActive || !radioConfig.pubActive || radioSauvegardeAvantPub) return;
+  const messagesActifs = radioMessages.filter(m => m.actif && messageDansCreneauRadio(m));
+  if (!messagesActifs.length) return;
+  const intervalleMs = Math.max(1, radioConfig.pubIntervalleMin || 20) * 60000;
+  if (Date.now() - radioDerniereAnnoncePubTS < intervalleMs) return;
+  jouerMessagePromoRadio(messagesActifs[Math.floor(Math.random() * messagesActifs.length)]);
+}
+
+function jouerMessagePromoRadio(msg) {
+  const audio = document.getElementById('radio-audio');
+  if (!audio || !audio.src) return;
+  radioSauvegardeAvantPub = { src: audio.src, currentTime: audio.currentTime };
+  audio.src = msg.audioData || msg.url;
+  audio.play().catch(err => console.warn('Lecture message promo bloquée :', err));
+  consignerRadio('message_diffuse', msg.titre);
+  majAffichagePlayerRadio();
+}
+
+function radioPisteTermine() {
+  if (radioSauvegardeAvantPub) {
+    const sauv = radioSauvegardeAvantPub;
+    radioSauvegardeAvantPub = null;
+    radioDerniereAnnoncePubTS = Date.now();
+    const audio = document.getElementById('radio-audio');
+    audio.src = sauv.src;
+    audio.currentTime = sauv.currentTime;
+    audio.play().catch(() => {});
+    return;
+  }
+  passerPisteRadioSuivante();
+}
+
+// ── Construction de la file de lecture (playlist active ou radio internet) ──
+function construireFileRadio() {
+  radioQueueBuiltFromId = radioConfig.playlistActiveId || null;
+  if (radioConfig.sourceType === 'radio') { radioQueue = []; radioQueueIndex = 0; return; }
+  const playlist = radioPlaylists.find(p => p.id === radioConfig.playlistActiveId);
+  if (!playlist || !playlist.pisteIds?.length) { radioQueue = []; radioQueueIndex = 0; return; }
+  let pistes = playlist.pisteIds.map(id => radioBibliotheque.find(p => p.id === id)).filter(Boolean);
+  if (radioConfig.mode === 'aleatoire') pistes = [...pistes].sort(() => Math.random() - 0.5);
+  radioQueue = pistes;
+  radioQueueIndex = 0;
+}
+
+// ── Égaliseur / balance (Web Audio API) — branché une seule fois sur l'élément <audio> ──
+function initRadioEQ() {
+  const audio = document.getElementById('radio-audio');
+  if (!audio || radioAudioCtx) return;
+  try {
+    radioAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = radioAudioCtx.createMediaElementSource(audio);
+    radioPanNode = radioAudioCtx.createStereoPanner();
     let prevNode = source;
-    ambianceEQNodes = AMBIANCE_EQ_BANDS.map((band, i) => {
-      const filter = ambianceAudioCtx.createBiquadFilter();
-      filter.type = i === 0 ? 'lowshelf' : (i === AMBIANCE_EQ_BANDS.length - 1 ? 'highshelf' : 'peaking');
+    radioEQNodes = RADIO_EQ_BANDS.map((band, i) => {
+      const filter = radioAudioCtx.createBiquadFilter();
+      filter.type = i === 0 ? 'lowshelf' : (i === RADIO_EQ_BANDS.length - 1 ? 'highshelf' : 'peaking');
       filter.frequency.value = band.freq;
       filter.Q.value = 1;
-      filter.gain.value = (ambianceConfig.eq && ambianceConfig.eq[i]) || 0;
+      filter.gain.value = (radioConfig.eq && radioConfig.eq[i]) || 0;
       prevNode.connect(filter);
       prevNode = filter;
       return filter;
     });
-    prevNode.connect(ambianceAudioCtx.destination);
-  } catch (err) { console.warn('Égaliseur ambiance non initialisé :', err); }
+    prevNode.connect(radioPanNode);
+    radioPanNode.connect(radioAudioCtx.destination);
+  } catch (err) { console.warn('Égaliseur radio non initialisé :', err); }
 }
 
-// Déverrouillage de l'AudioContext — certains navigateurs le créent "suspendu" tant
-// qu'aucune interaction utilisateur n'a eu lieu, même si audio.play() réussit (le son
-// reste alors muet). On tente la reprise à chaque interaction sur la page, sans condition
-// liée à une session de caisse, pour garantir que le contexte tourne dès que possible.
-function deverrouillerAmbianceAudioContext() {
-  initAmbianceEQ();
-  if (ambianceAudioCtx && ambianceAudioCtx.state === 'suspended') {
-    ambianceAudioCtx.resume().catch(() => {});
-  }
+function deverrouillerRadioAudioContext() {
+  initRadioEQ();
+  if (radioAudioCtx && radioAudioCtx.state === 'suspended') radioAudioCtx.resume().catch(() => {});
 }
 ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
-  document.addEventListener(evt, deverrouillerAmbianceAudioContext, { passive: true });
+  document.addEventListener(evt, deverrouillerRadioAudioContext, { passive: true });
 });
 
-function appliquerGainsEQAmbiance() {
-  if (!ambianceEQNodes.length) return;
-  (ambianceConfig.eq || [0,0,0,0,0]).forEach((g, i) => { if (ambianceEQNodes[i]) ambianceEQNodes[i].gain.value = g; });
-}
-
-function jouerPisteAmbianceCourante() {
-  const audio = document.getElementById('ambiance-audio');
-  if (!audio || !ambianceQueue.length) return;
-  const piste = ambianceQueue[ambianceQueueIndex % ambianceQueue.length];
-  const src = piste.type === 'annonce' ? piste.audioData : piste.url;
-  if (!src) { passerPisteAmbianceSuivante(); return; }
-  initAmbianceEQ();
-  if (ambianceAudioCtx && ambianceAudioCtx.state === 'suspended') ambianceAudioCtx.resume();
-  appliquerGainsEQAmbiance();
-  audio.src = src;
-  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
-  audio.play().catch(err => console.warn('Lecture ambiance bloquée (geste utilisateur requis) :', err));
-  majAffichagePlayerAmbiance();
-}
-
-function passerPisteAmbianceSuivante() {
-  if (!ambianceQueue.length) return;
-  if (ambianceConfig.repetition === 'piste') { jouerPisteAmbianceCourante(); return; }
-  ambianceQueueIndex++;
-  if (ambianceQueueIndex >= ambianceQueue.length) {
-    ambianceQueue = construireFileAmbiance();
-    ambianceQueueIndex = 0;
-  }
-  jouerPisteAmbianceCourante();
-}
-
-function demarrerLecturePlaylist() {
-  ambianceQueue = construireFileAmbiance();
-  ambianceQueueIndex = 0;
-  jouerPisteAmbianceCourante();
-}
-
-function arreterMusiqueAmbiance() {
-  const audio = document.getElementById('ambiance-audio');
-  if (audio) { audio.pause(); audio.removeAttribute('src'); }
-  ambianceQueue = []; ambianceQueueIndex = 0;
-}
-
-// Point d'entrée appelé à chaque changement d'état de session caisse (ouverture, pause,
-// reprise, fin de service) et à chaque mise à jour des réglages/playlist par l'Admin.
-function gererAmbianceMusicale() {
-  const audio = document.getElementById('ambiance-audio');
+function appliquerVolumeBalanceEQRadio() {
+  const audio = document.getElementById('radio-audio');
   if (!audio) return;
-  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
-  appliquerGainsEQAmbiance();
-  if (ambianceModeManuel) return; // l'Admin a pris le contrôle depuis le lecteur de prévisualisation
-  const doitJouer = !!posSessionActive && ambianceConfig.actif && ambiancePlaylist.length > 0;
+  audio.volume = Math.min(1, Math.max(0, radioConfig.volume ?? 0.6));
+  if (radioPanNode) radioPanNode.pan.value = Math.min(1, Math.max(-1, radioConfig.balance ?? 0));
+  if (radioEQNodes.length) (radioConfig.eq || [0,0,0,0,0]).forEach((g, i) => { if (radioEQNodes[i]) radioEQNodes[i].gain.value = g; });
+}
+
+function chargerSourceRadioDansAudio(src, isHls) {
+  const audio = document.getElementById('radio-audio');
+  if (radioHlsInstance) { radioHlsInstance.destroy(); radioHlsInstance = null; }
+  if (isHls && window.Hls && window.Hls.isSupported()) {
+    radioHlsInstance = new Hls();
+    radioHlsInstance.loadSource(src);
+    radioHlsInstance.attachMedia(audio);
+  } else {
+    audio.src = src;
+  }
+}
+
+function jouerPisteRadioCourante() {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+  initRadioEQ();
+  if (radioAudioCtx && radioAudioCtx.state === 'suspended') radioAudioCtx.resume().catch(() => {});
+  appliquerVolumeBalanceEQRadio();
+  if (radioConfig.sourceType === 'radio') {
+    const station = radioStations.find(s => s.id === radioConfig.radioActiveId);
+    if (!station) return;
+    chargerSourceRadioDansAudio(station.url, station.format === 'hls');
+  } else {
+    if (!radioQueue.length) return;
+    const piste = radioQueue[radioQueueIndex % radioQueue.length];
+    chargerSourceRadioDansAudio(piste.url, false);
+  }
+  audio.play().catch(err => console.warn('Lecture radio bloquée (geste utilisateur requis) :', err));
+  majAffichagePlayerRadio();
+}
+
+function passerPisteRadioSuivante() {
+  if (radioConfig.sourceType === 'radio' || !radioQueue.length) { jouerPisteRadioCourante(); return; }
+  if (radioConfig.repetition === 'piste') { jouerPisteRadioCourante(); return; }
+  radioQueueIndex++;
+  if (radioQueueIndex >= radioQueue.length) { construireFileRadio(); }
+  jouerPisteRadioCourante();
+}
+
+function pisteRadioPrecedente() {
+  if (radioConfig.sourceType === 'radio' || !radioQueue.length) return;
+  radioQueueIndex = (radioQueueIndex - 1 + radioQueue.length) % radioQueue.length;
+  jouerPisteRadioCourante();
+}
+
+// Point d'entrée appelé à chaque mise à jour de réglages/playlist/poste. Totalement
+// indépendant de posSessionActive — une caisse qui se déconnecte ou se ferme n'a aucun effet ici.
+function gererDiffusionRadio() {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+  appliquerVolumeBalanceEQRadio();
+  if (radioConfig.sourceType === 'playlist' && radioQueueBuiltFromId !== (radioConfig.playlistActiveId || null)) {
+    construireFileRadio();
+  }
+  const sourcePrete = radioConfig.sourceType === 'radio' ? !!radioConfig.radioActiveId : !!radioQueue.length;
+  const doitJouer = radioPosteActif && radioConfig.diffusionActive && sourcePrete;
   if (doitJouer) {
-    if (audio.paused) demarrerLecturePlaylist();
+    if (audio.paused) jouerPisteRadioCourante();
   } else if (!audio.paused) {
     audio.pause();
   }
 }
 
-// ── Lecteur de prévisualisation (Admin) — façon iTunes/VLC : Play/Pause, Stop, Précédent/Suivant ──
-function formaterDureeAmbiance(sec) {
+// ── Commandes transport (Play/Pause/Stop/Précédent/Suivant), envoyées par l'Admin et
+// exécutées par tous les postes de diffusion enregistrés, depuis n'importe quel appareil ──
+async function envoyerCommandeRadio(action) {
+  try {
+    await db.collection('radio_config').doc('config').set({ commande: { action, ts: Date.now() } }, { merge: true });
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function traiterCommandeRadio(commande) {
+  if (!commande || !commande.ts || commande.ts <= radioLastCommandeTs) return;
+  radioLastCommandeTs = commande.ts;
+  if (!radioPosteActif) return;
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+  if (commande.action === 'play') { if (audio.paused) { if (!audio.src) jouerPisteRadioCourante(); else audio.play().catch(() => {}); } }
+  else if (commande.action === 'pause') { audio.pause(); }
+  else if (commande.action === 'stop') { audio.pause(); audio.currentTime = 0; }
+  else if (commande.action === 'next') { passerPisteRadioSuivante(); }
+  else if (commande.action === 'prev') { pisteRadioPrecedente(); }
+  majAffichagePlayerRadio();
+}
+
+async function toggleLectureRadio() {
+  if (!currentUser?.isAdmin) return;
+  const audio = document.getElementById('radio-audio');
+  const enCours = audio && !audio.paused;
+  if (!enCours) await db.collection('radio_config').doc('config').set({ diffusionActive: true }, { merge: true });
+  await envoyerCommandeRadio(enCours ? 'pause' : 'play');
+}
+
+async function arreterDiffusionGenerale() {
+  if (!currentUser?.isAdmin) return;
+  await db.collection('radio_config').doc('config').set({ diffusionActive: false }, { merge: true });
+  await envoyerCommandeRadio('stop');
+  consignerRadio('arret_general', `Diffusion arrêtée par ${currentUser.label}`);
+}
+
+function pisteRadioPrecedenteCmd() { if (currentUser?.isAdmin) envoyerCommandeRadio('prev'); }
+function pisteRadioSuivanteCmd() { if (currentUser?.isAdmin) envoyerCommandeRadio('next'); }
+
+function seekRadioPlayer(valeur) {
+  const audio = document.getElementById('radio-audio');
+  if (audio && audio.duration) audio.currentTime = Number(valeur);
+}
+
+function formaterDureeRadio(sec) {
   if (!isFinite(sec) || sec < 0) sec = 0;
   const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function initAmbiancePlayerUI() {
-  const audio = document.getElementById('ambiance-audio');
+function initRadioPlayerUI() {
+  const audio = document.getElementById('radio-audio');
   if (!audio || audio.dataset.playerInit) return;
   audio.dataset.playerInit = '1';
-  audio.addEventListener('timeupdate', majAffichagePlayerAmbiance);
-  audio.addEventListener('loadedmetadata', majAffichagePlayerAmbiance);
-  audio.addEventListener('play', () => { const b = document.getElementById('btn-ambiance-playpause'); if (b) b.textContent = '⏸'; });
-  audio.addEventListener('pause', () => { const b = document.getElementById('btn-ambiance-playpause'); if (b) b.textContent = '▶'; });
+  audio.addEventListener('timeupdate', majAffichagePlayerRadio);
+  audio.addEventListener('loadedmetadata', majAffichagePlayerRadio);
+  audio.addEventListener('play', () => { const b = document.getElementById('btn-radio-playpause'); if (b) b.textContent = '⏸'; });
+  audio.addEventListener('pause', () => { const b = document.getElementById('btn-radio-playpause'); if (b) b.textContent = '▶'; });
 }
 
-function majAffichagePlayerAmbiance() {
-  const audio = document.getElementById('ambiance-audio');
-  const titreEl = document.getElementById('ambiance-player-titre');
-  const statutEl = document.getElementById('ambiance-player-statut');
-  const seekEl = document.getElementById('ambiance-player-seek');
-  const elapsedEl = document.getElementById('ambiance-player-elapsed');
-  const remainingEl = document.getElementById('ambiance-player-remaining');
+function majAffichagePlayerRadio() {
+  const audio = document.getElementById('radio-audio');
+  const titreEl = document.getElementById('radio-player-titre');
   if (!audio || !titreEl) return;
-  const piste = ambianceQueue[ambianceQueueIndex % (ambianceQueue.length || 1)];
-  if (audio.src && piste) {
-    titreEl.textContent = `${piste.type === 'annonce' ? '🎤' : '🎵'} ${piste.titre}`;
-    statutEl.textContent = audio.paused ? 'En pause' : 'Lecture en cours';
+  let titre = 'Aucune diffusion en cours', source = '—';
+  if (radioConfig.sourceType === 'radio') {
+    const station = radioStations.find(s => s.id === radioConfig.radioActiveId);
+    if (station) { titre = '🌐 ' + station.nom; source = 'Radio internet'; }
   } else {
-    titreEl.textContent = 'Aucune lecture en cours';
-    statutEl.textContent = 'Cliquez ▶ pour prévisualiser la playlist';
+    const piste = radioQueue[radioQueueIndex % (radioQueue.length || 1)];
+    if (piste && audio.src) { titre = '🎵 ' + piste.titre; source = 'Playlist musicale'; }
   }
+  if (radioSauvegardeAvantPub) { titre = '📢 Message promotionnel'; source = 'Message promotionnel'; }
+  titreEl.textContent = titre;
+  const statutEl = document.getElementById('radio-player-statut');
+  if (statutEl) statutEl.textContent = !radioPosteActif ? 'Ce poste n\'est pas diffuseur' : (audio.paused ? 'État : en pause' : 'État : diffusion en cours');
+  const seekEl = document.getElementById('radio-player-seek'), elapsedEl = document.getElementById('radio-player-elapsed'), remainingEl = document.getElementById('radio-player-remaining');
   const duree = audio.duration || 0;
   if (seekEl) { seekEl.max = duree || 100; seekEl.value = audio.currentTime || 0; }
-  if (elapsedEl) elapsedEl.textContent = formaterDureeAmbiance(audio.currentTime || 0);
-  if (remainingEl) remainingEl.textContent = duree ? '-' + formaterDureeAmbiance(duree - audio.currentTime) : '-0:00';
+  if (elapsedEl) elapsedEl.textContent = formaterDureeRadio(audio.currentTime || 0);
+  if (remainingEl) remainingEl.textContent = duree ? '-' + formaterDureeRadio(duree - audio.currentTime) : '-0:00';
+  majKpisRadio(source);
 }
 
-function seekAmbiancePlayer(valeur) {
-  const audio = document.getElementById('ambiance-audio');
-  if (audio && audio.duration) audio.currentTime = Number(valeur);
+function majKpisRadio(source) {
+  const elSrc = document.getElementById('radio-kpi-source'); if (elSrc) elSrc.textContent = source || '—';
+  const elPl = document.getElementById('radio-kpi-playlist');
+  if (elPl) elPl.textContent = radioConfig.sourceType === 'playlist' ? (radioPlaylists.find(p => p.id === radioConfig.playlistActiveId)?.nom || 'Aucune') : '—';
+  const elVol = document.getElementById('radio-kpi-volume'); if (elVol) elVol.textContent = Math.round((radioConfig.volume ?? 0.6) * 100) + '%';
+  const elEtat = document.getElementById('radio-kpi-etat'), elEtatIcon = document.getElementById('radio-kpi-etat-icon');
+  const audio = document.getElementById('radio-audio');
+  const actif = radioConfig.diffusionActive && audio && !audio.paused;
+  if (elEtat) elEtat.textContent = actif ? 'En diffusion' : (radioConfig.diffusionActive ? 'En attente' : 'Arrêtée');
+  if (elEtatIcon) elEtatIcon.textContent = actif ? '🟢' : (radioConfig.diffusionActive ? '🟡' : '⚫');
 }
 
-function toggleLecturePlayerAmbiance() {
-  if (!currentUser?.isAdmin) return;
-  initAmbiancePlayerUI();
-  const audio = document.getElementById('ambiance-audio');
-  ambianceModeManuel = true;
-  if (!ambianceQueue.length) { demarrerLecturePlaylist(); return; }
-  if (audio.paused) audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
-  else audio.pause();
-}
-
-function arreterLecturePlayerAmbiance() {
-  arreterMusiqueAmbiance();
-  ambianceModeManuel = false;
-  majAffichagePlayerAmbiance();
-  gererAmbianceMusicale(); // redonne immédiatement le contrôle à la logique automatique des sessions de caisse
-}
-
-function pisteAmbianceSuivanteManuelle() {
-  if (!ambianceQueue.length) return;
-  ambianceQueueIndex++;
-  if (ambianceQueueIndex >= ambianceQueue.length) { ambianceQueue = construireFileAmbiance(); ambianceQueueIndex = 0; }
-  jouerPisteAmbianceCourante();
-}
-
-function pisteAmbiancePrecedente() {
-  if (!ambianceQueue.length) return;
-  ambianceQueueIndex = (ambianceQueueIndex - 1 + ambianceQueue.length) % ambianceQueue.length;
-  jouerPisteAmbianceCourante();
-}
-
-// ── Réglages (Admin) ──
-async function enregistrerReglagesAmbiance() {
+// ── Réglages généraux (Admin) ──
+async function enregistrerReglagesRadio() {
   if (!currentUser.isAdmin) return;
-  const actif = document.getElementById('ambiance-actif').checked;
-  const volume = Number(document.getElementById('ambiance-volume').value) / 100;
-  const mode = document.getElementById('ambiance-mode').value;
-  const repetition = document.getElementById('ambiance-repetition').value;
-  const intervalleAnnonces = Math.max(1, Number(document.getElementById('ambiance-intervalle').value) || 4);
-  const eq = AMBIANCE_EQ_BANDS.map((b, i) => Number(document.getElementById(`ambiance-eq-${i}`)?.value) || 0);
+  const volume = Number(document.getElementById('radio-volume').value) / 100;
+  const balance = Number(document.getElementById('radio-balance').value) / 100;
+  const mode = document.getElementById('radio-mode').value;
+  const repetition = document.getElementById('radio-repetition').value;
+  const pubActive = document.getElementById('radio-pub-active').checked;
+  const pubIntervalleMin = Math.max(1, Number(document.getElementById('radio-pub-intervalle').value) || 20);
+  const eq = RADIO_EQ_BANDS.map((b, i) => Number(document.getElementById(`radio-eq-${i}`)?.value) || 0);
   try {
-    await db.collection('ambiance_config').doc('config').set({ actif, volume, mode, repetition, intervalleAnnonces, eq }, { merge: true });
-    consigner('Réglages Ambiance Boutique modifiés', `Actif: ${actif ? 'oui' : 'non'} — Volume: ${Math.round(volume * 100)}% — Mode: ${mode} — Répétition: ${repetition} — par ${currentUser.label}`);
+    await db.collection('radio_config').doc('config').set({ volume, balance, mode, repetition, pubActive, pubIntervalleMin, eq }, { merge: true });
+    consignerRadio('reglages_modifies', `Volume: ${Math.round(volume*100)}% — Mode: ${mode} — Pub: ${pubActive ? 'oui/'+pubIntervalleMin+'min' : 'non'} — par ${currentUser.label}`);
     showToast('✓ Réglages enregistrés');
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function reinitialiserEQAmbiance() {
-  AMBIANCE_EQ_BANDS.forEach((b, i) => {
-    const slider = document.getElementById(`ambiance-eq-${i}`);
-    const val = document.getElementById(`ambiance-eq-${i}-val`);
+function reinitialiserEQRadio() {
+  RADIO_EQ_BANDS.forEach((b, i) => {
+    const slider = document.getElementById(`radio-eq-${i}`);
+    const val = document.getElementById(`radio-eq-${i}-val`);
     if (slider) slider.value = 0;
     if (val) val.textContent = '0 dB';
   });
 }
 
-// ── Playlist : import d'un fichier audio depuis l'ordinateur (Firebase Storage) ──
-async function televerserFichierAmbiance(file, titre, onProgress) {
-  const storageRef = firebase.storage().ref(`ambiance/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`);
+// ── Bibliothèque musicale ──
+async function televerserFichierRadio(file, titre, categorie, onProgress) {
+  const storageRef = firebase.storage().ref(`radio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`);
   const task = storageRef.put(file);
-  task.on('state_changed', snap => {
-    const pct = snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0;
-    if (onProgress) onProgress(pct);
-  });
+  task.on('state_changed', snap => { if (onProgress) onProgress(snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0); });
   await task;
   const url = await storageRef.getDownloadURL();
-  await db.collection('ambiance_playlist').add({
-    type: 'musique', titre, url, ordre: ambiancePlaylist.length,
-    dateAjout: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  await db.collection('radio_bibliotheque').add({ titre, categorie, url, dateAjout: firebase.firestore.FieldValue.serverTimestamp() });
 }
 
-async function televerserPisteAmbiance(event) {
+async function televerserPisteRadio(event) {
   if (!currentUser.isAdmin) return;
   const file = event.target.files[0];
   if (!file) return;
   if (file.size > 20 * 1024 * 1024) { showToast('Fichier trop volumineux (max 20 Mo)', 'error'); event.target.value = ''; return; }
-  const titre = document.getElementById('ambiance-titre').value.trim() || file.name.replace(/\.[^.]+$/, '');
-  const statusEl = document.getElementById('ambiance-upload-status');
-  statusEl.style.display = 'block';
-  statusEl.textContent = 'Téléversement... 0%';
+  const titre = document.getElementById('radio-bib-titre').value.trim() || file.name.replace(/\.[^.]+$/, '');
+  const categorie = document.getElementById('radio-bib-categorie').value;
+  const statusEl = document.getElementById('radio-bib-upload-status');
+  statusEl.style.display = 'block'; statusEl.textContent = 'Téléversement... 0%';
   try {
-    await televerserFichierAmbiance(file, titre, pct => { statusEl.textContent = `Téléversement... ${pct}%`; });
-    consigner('Piste Ambiance Boutique importée', titre);
-    showToast('✓ Piste importée et ajoutée à la playlist');
+    await televerserFichierRadio(file, titre, categorie, pct => { statusEl.textContent = `Téléversement... ${pct}%`; });
+    consignerRadio('piste_ajoutee', `${titre} (${categorie})`);
+    showToast('✓ Piste ajoutée à la bibliothèque');
     statusEl.style.display = 'none';
-    document.getElementById('ambiance-titre').value = '';
+    document.getElementById('radio-bib-titre').value = '';
     event.target.value = '';
-  } catch (err) {
-    statusEl.style.display = 'none';
-    showToast('Erreur de téléversement : ' + err.message, 'error');
-  }
+  } catch (err) { statusEl.style.display = 'none'; showToast('Erreur de téléversement : ' + err.message, 'error'); }
 }
 
-// ── Playlist : import d'un dossier complet (plusieurs fichiers audio à la fois) ──
-async function televerserDossierAmbiance(event) {
+async function televerserDossierRadio(event) {
   if (!currentUser.isAdmin) return;
   const fichiers = [...event.target.files].filter(f => f.type.startsWith('audio/') || /\.(mp3|ogg|wav|m4a|aac|flac)$/i.test(f.name));
   if (!fichiers.length) { showToast('Aucun fichier audio trouvé dans ce dossier', 'error'); event.target.value = ''; return; }
-  const tropGros = fichiers.filter(f => f.size > 20 * 1024 * 1024);
+  const categorie = document.getElementById('radio-bib-categorie').value;
   const aImporter = fichiers.filter(f => f.size <= 20 * 1024 * 1024);
-  const statusEl = document.getElementById('ambiance-upload-status');
+  const statusEl = document.getElementById('radio-bib-upload-status');
   statusEl.style.display = 'block';
   let reussies = 0;
   for (let i = 0; i < aImporter.length; i++) {
     const file = aImporter[i];
     const titre = file.name.replace(/\.[^.]+$/, '');
-    statusEl.textContent = `Fichier ${i + 1}/${aImporter.length} — ${titre}... 0%`;
-    try {
-      await televerserFichierAmbiance(file, titre, pct => { statusEl.textContent = `Fichier ${i + 1}/${aImporter.length} — ${titre}... ${pct}%`; });
-      reussies++;
-    } catch (err) { console.error('Échec import', file.name, err); }
+    statusEl.textContent = `Fichier ${i + 1}/${aImporter.length} — ${titre}...`;
+    try { await televerserFichierRadio(file, titre, categorie, pct => { statusEl.textContent = `Fichier ${i+1}/${aImporter.length} — ${titre}... ${pct}%`; }); reussies++; }
+    catch (err) { console.error('Échec import', file.name, err); }
   }
   statusEl.style.display = 'none';
   event.target.value = '';
-  consigner('Dossier Ambiance Boutique importé', `${reussies} piste(s) sur ${aImporter.length} — par ${currentUser.label}`);
-  let msg = `✓ ${reussies} piste(s) importée(s) et ajoutée(s) à la playlist`;
-  if (tropGros.length) msg += ` (${tropGros.length} fichier(s) ignoré(s), trop volumineux > 20 Mo)`;
-  showToast(msg);
+  consignerRadio('dossier_importe', `${reussies} piste(s) — par ${currentUser.label}`);
+  showToast(`✓ ${reussies} piste(s) importée(s)`);
 }
 
-async function supprimerPisteAmbiance(id) {
+async function supprimerPisteRadio(id) {
   if (!currentUser.isAdmin) return;
-  if (!confirm('Supprimer cette piste de la playlist ?')) return;
-  const piste = ambiancePlaylist.find(p => p.id === id);
+  if (!confirm('Supprimer cette piste de la bibliothèque ? (elle sera retirée des playlists qui la contiennent)')) return;
+  const piste = radioBibliotheque.find(p => p.id === id);
   try {
-    await db.collection('ambiance_playlist').doc(id).delete();
-    consigner('Piste Ambiance Boutique supprimée', id);
-    showToast('✓ Supprimée');
-    // Nettoyage best-effort du fichier dans Firebase Storage si la piste y a été importée
-    // (ignoré silencieusement pour un lien externe, qui n'est pas une URL Storage).
-    if (piste?.url) {
-      try { await firebase.storage().refFromURL(piste.url).delete(); } catch (e) { /* lien externe ou déjà supprimé */ }
+    await db.collection('radio_bibliotheque').doc(id).delete();
+    for (const pl of radioPlaylists.filter(p => p.pisteIds?.includes(id))) {
+      await db.collection('radio_playlists').doc(pl.id).update({ pisteIds: pl.pisteIds.filter(x => x !== id) });
     }
+    consignerRadio('piste_supprimee', piste?.titre || id);
+    showToast('✓ Supprimée');
+    if (piste?.url) { try { await firebase.storage().refFromURL(piste.url).delete(); } catch (e) {} }
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function testerPisteAmbiance(id) {
-  const p = ambiancePlaylist.find(x => x.id === id);
-  if (!p) return;
-  const audio = document.getElementById('ambiance-preview-audio');
-  audio.src = p.type === 'annonce' ? p.audioData : p.url;
-  audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
+function testerPisteRadio(url) {
+  const audio = document.getElementById('radio-preview-audio');
+  audio.src = url;
   audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
 }
 
-// ── Enregistrement d'une annonce vocale (MediaRecorder — aucune API externe) ──
-let mediaRecorderAmbiance = null, chunksAmbiance = [], blobAmbianceEnregistre = null, chronoAmbianceInterval = null;
+function renderRadioBibliotheque() {
+  const tbody = document.getElementById('tbody-radio-bibliotheque');
+  if (!tbody) return;
+  const filtre = document.getElementById('radio-bib-filtre-categorie')?.value || '';
+  const cnt = document.getElementById('radio-bib-count');
+  const liste = radioBibliotheque.filter(p => !filtre || p.categorie === filtre);
+  if (cnt) cnt.textContent = `(${radioBibliotheque.length} piste(s))`;
+  tbody.innerHTML = liste.length ? liste.map(p => `
+    <tr>
+      <td>🎵 ${p.titre}</td>
+      <td>${p.categorie || '—'}</td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.url}')" title="Écouter">▶</button>
+        <button class="btn btn-danger btn-sm" onclick="supprimerPisteRadio('${p.id}')" title="Supprimer">🗑</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
+}
 
-async function demarrerEnregistrementAnnonce() {
+function renderRadioRecherche() {
+  const q = (document.getElementById('radio-recherche')?.value || '').toLowerCase().trim();
+  const cont = document.getElementById('radio-recherche-resultats');
+  if (!cont) return;
+  if (!q) { cont.innerHTML = ''; return; }
+  const resultats = radioBibliotheque.filter(p => p.titre.toLowerCase().includes(q) || (p.categorie || '').toLowerCase().includes(q)).slice(0, 15);
+  cont.innerHTML = resultats.length ? resultats.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>🎵 ${p.titre} <span style="color:var(--text-muted);font-size:11px">(${p.categorie})</span></span>
+      <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.url}')">▶</button>
+    </div>`).join('') : '<p style="color:var(--text-muted);font-size:13px">Aucun résultat</p>';
+}
+
+// ── Playlists ──
+async function creerPlaylistRadio() {
+  if (!currentUser.isAdmin) return;
+  const nom = document.getElementById('radio-playlist-nom').value.trim();
+  if (!nom) { showToast('Donnez un nom à la playlist', 'error'); return; }
+  try {
+    await db.collection('radio_playlists').add({ nom, pisteIds: [], dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
+    consignerRadio('playlist_creee', nom);
+    showToast('✓ Playlist créée');
+    document.getElementById('radio-playlist-nom').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function supprimerPlaylistRadio(id) {
+  if (!currentUser.isAdmin) return;
+  if (!confirm('Supprimer cette playlist ?')) return;
+  try {
+    await db.collection('radio_playlists').doc(id).delete();
+    if (radioConfig.playlistActiveId === id) await db.collection('radio_config').doc('config').set({ playlistActiveId: null }, { merge: true });
+    consignerRadio('playlist_supprimee', id);
+    showToast('✓ Supprimée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function activerPlaylistRadio(id) {
+  if (!currentUser.isAdmin) return;
+  try {
+    await db.collection('radio_config').doc('config').set({ sourceType: 'playlist', playlistActiveId: id }, { merge: true });
+    consignerRadio('playlist_activee', radioPlaylists.find(p => p.id === id)?.nom || id);
+    showToast('✓ Playlist activée pour la diffusion');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function ajouterPisteAPlaylistRadio(playlistId, pisteId) {
+  if (!currentUser.isAdmin || !pisteId) return;
+  const pl = radioPlaylists.find(p => p.id === playlistId);
+  if (!pl || pl.pisteIds?.includes(pisteId)) return;
+  try {
+    await db.collection('radio_playlists').doc(playlistId).update({ pisteIds: [...(pl.pisteIds || []), pisteId] });
+    showToast('✓ Piste ajoutée à la playlist');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function retirerPisteDePlaylistRadio(playlistId, pisteId) {
+  if (!currentUser.isAdmin) return;
+  const pl = radioPlaylists.find(p => p.id === playlistId);
+  if (!pl) return;
+  try { await db.collection('radio_playlists').doc(playlistId).update({ pisteIds: (pl.pisteIds || []).filter(x => x !== pisteId) }); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function renderRadioPlaylists() {
+  const cont = document.getElementById('radio-playlists-liste');
+  if (!cont) return;
+  if (!radioPlaylists.length) { cont.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:30px;color:var(--text-muted)">Aucune playlist — créez-en une ci-dessus</div></div>'; return; }
+  cont.innerHTML = radioPlaylists.map(pl => {
+    const pistes = (pl.pisteIds || []).map(id => radioBibliotheque.find(p => p.id === id)).filter(Boolean);
+    const estActive = radioConfig.sourceType === 'playlist' && radioConfig.playlistActiveId === pl.id;
+    const optionsDisponibles = radioBibliotheque.filter(p => !(pl.pisteIds || []).includes(p.id));
+    return `<div class="card" style="margin-bottom:14px${estActive ? ';border:2px solid var(--primary)' : ''}">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h2>📋 ${pl.nom} ${estActive ? '<span style="color:var(--primary);font-size:12px">· ACTIVE</span>' : ''}</h2>
+        <div>
+          ${!estActive ? `<button class="btn btn-primary btn-sm" onclick="activerPlaylistRadio('${pl.id}')">▶ Activer</button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="supprimerPlaylistRadio('${pl.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <select class="form-control" id="radio-add-select-${pl.id}" style="flex:1">
+            <option value="">— Ajouter une piste —</option>
+            ${optionsDisponibles.map(p => `<option value="${p.id}">${p.titre} (${p.categorie})</option>`).join('')}
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="ajouterPisteAPlaylistRadio('${pl.id}', document.getElementById('radio-add-select-${pl.id}').value)">➕</button>
+        </div>
+        ${pistes.length ? pistes.map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <span>🎵 ${p.titre} <span style="color:var(--text-muted);font-size:11px">(${p.categorie})</span></span>
+            <button class="btn btn-outline btn-sm" onclick="retirerPisteDePlaylistRadio('${pl.id}','${p.id}')">✕</button>
+          </div>`).join('') : '<p style="color:var(--text-muted);font-size:12px">Playlist vide</p>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Radios internet ──
+async function ajouterStationRadio() {
+  if (!currentUser.isAdmin) return;
+  const nom = document.getElementById('radio-station-nom').value.trim();
+  const url = document.getElementById('radio-station-url').value.trim();
+  const format = document.getElementById('radio-station-format').value;
+  if (!nom || !url) { showToast('Nom et URL requis', 'error'); return; }
+  try {
+    await db.collection('radio_stations').add({ nom, url, format, dateAjout: firebase.firestore.FieldValue.serverTimestamp() });
+    consignerRadio('station_ajoutee', nom);
+    showToast('✓ Station ajoutée');
+    document.getElementById('radio-station-nom').value = '';
+    document.getElementById('radio-station-url').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function activerStationRadio(id) {
+  if (!currentUser.isAdmin) return;
+  try {
+    await db.collection('radio_config').doc('config').set({ sourceType: 'radio', radioActiveId: id }, { merge: true });
+    consignerRadio('station_activee', radioStations.find(s => s.id === id)?.nom || id);
+    showToast('✓ Station activée pour la diffusion');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function supprimerStationRadio(id) {
+  if (!currentUser.isAdmin) return;
+  if (!confirm('Supprimer cette station ?')) return;
+  try {
+    await db.collection('radio_stations').doc(id).delete();
+    if (radioConfig.radioActiveId === id) await db.collection('radio_config').doc('config').set({ radioActiveId: null }, { merge: true });
+    consignerRadio('station_supprimee', id);
+    showToast('✓ Supprimée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function renderRadioStations() {
+  const tbody = document.getElementById('tbody-radio-stations');
+  if (!tbody) return;
+  tbody.innerHTML = radioStations.length ? radioStations.map(s => {
+    const estActive = radioConfig.sourceType === 'radio' && radioConfig.radioActiveId === s.id;
+    return `<tr${estActive ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
+      <td>🌐 ${s.nom} ${estActive ? '<span style="color:var(--primary);font-size:11px">· ACTIVE</span>' : ''}</td>
+      <td>${s.format === 'hls' ? 'HLS' : 'MP3/AAC'}</td>
+      <td style="text-align:right">
+        ${!estActive ? `<button class="btn btn-primary btn-sm" onclick="activerStationRadio('${s.id}')">▶ Activer</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="supprimerStationRadio('${s.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Aucune station enregistrée</td></tr>';
+}
+
+// ── Messages promotionnels ──
+let mediaRecorderRadio = null, chunksRadio = [], blobRadioEnregistre = null, chronoRadioInterval = null;
+
+async function demarrerEnregistrementMessageRadio() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    chunksAmbiance = []; blobAmbianceEnregistre = null;
-    mediaRecorderAmbiance = new MediaRecorder(stream);
-    mediaRecorderAmbiance.ondataavailable = e => chunksAmbiance.push(e.data);
-    mediaRecorderAmbiance.onstop = () => {
-      blobAmbianceEnregistre = new Blob(chunksAmbiance, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blobAmbianceEnregistre);
-      const prev = document.getElementById('annonce-preview-audio');
-      prev.src = url; prev.style.display = 'block';
-      document.getElementById('btn-sauvegarder-annonce').disabled = false;
+    chunksRadio = []; blobRadioEnregistre = null;
+    mediaRecorderRadio = new MediaRecorder(stream);
+    mediaRecorderRadio.ondataavailable = e => chunksRadio.push(e.data);
+    mediaRecorderRadio.onstop = () => {
+      blobRadioEnregistre = new Blob(chunksRadio, { type: 'audio/webm' });
+      const prev = document.getElementById('radio-msg-preview-audio');
+      prev.src = URL.createObjectURL(blobRadioEnregistre); prev.style.display = 'block';
+      document.getElementById('btn-radio-msg-sauvegarder').disabled = false;
       stream.getTracks().forEach(t => t.stop());
     };
-    mediaRecorderAmbiance.start();
-    document.getElementById('btn-demarrer-enregistrement').style.display = 'none';
-    document.getElementById('btn-arreter-enregistrement').style.display = 'inline-flex';
+    mediaRecorderRadio.start();
+    document.getElementById('btn-radio-msg-demarrer').style.display = 'none';
+    document.getElementById('btn-radio-msg-arreter').style.display = 'inline-flex';
     let restant = 30;
-    document.getElementById('annonce-chrono').textContent = restant;
-    chronoAmbianceInterval = setInterval(() => {
-      restant--;
-      document.getElementById('annonce-chrono').textContent = Math.max(0, restant);
-      if (restant <= 0) arreterEnregistrementAnnonce();
+    document.getElementById('radio-msg-chrono').textContent = restant;
+    chronoRadioInterval = setInterval(() => {
+      restant--; document.getElementById('radio-msg-chrono').textContent = Math.max(0, restant);
+      if (restant <= 0) arreterEnregistrementMessageRadio();
     }, 1000);
   } catch (err) { showToast("Impossible d'accéder au micro : " + err.message, 'error'); }
 }
 
-function arreterEnregistrementAnnonce() {
-  if (chronoAmbianceInterval) { clearInterval(chronoAmbianceInterval); chronoAmbianceInterval = null; }
-  if (mediaRecorderAmbiance && mediaRecorderAmbiance.state !== 'inactive') mediaRecorderAmbiance.stop();
-  document.getElementById('btn-demarrer-enregistrement').style.display = 'inline-flex';
-  document.getElementById('btn-arreter-enregistrement').style.display = 'none';
+function arreterEnregistrementMessageRadio() {
+  if (chronoRadioInterval) { clearInterval(chronoRadioInterval); chronoRadioInterval = null; }
+  if (mediaRecorderRadio && mediaRecorderRadio.state !== 'inactive') mediaRecorderRadio.stop();
+  document.getElementById('btn-radio-msg-demarrer').style.display = 'inline-flex';
+  document.getElementById('btn-radio-msg-arreter').style.display = 'none';
 }
 
-async function sauvegarderAnnonceVocale() {
-  if (!blobAmbianceEnregistre) return;
-  const titre = document.getElementById('annonce-titre').value.trim() || 'Annonce';
+function importerFichierMessageRadio(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  blobRadioEnregistre = file;
+  const prev = document.getElementById('radio-msg-preview-audio');
+  prev.src = URL.createObjectURL(file); prev.style.display = 'block';
+  document.getElementById('btn-radio-msg-sauvegarder').disabled = false;
+}
+
+async function sauvegarderMessageRadio() {
+  if (!blobRadioEnregistre) return;
+  const titre = document.getElementById('radio-msg-titre').value.trim() || 'Message';
+  const heureDebut = document.getElementById('radio-msg-heure-debut').value;
+  const heureFin = document.getElementById('radio-msg-heure-fin').value;
   const reader = new FileReader();
   reader.onload = async () => {
     try {
-      await db.collection('ambiance_playlist').add({
-        type: 'annonce', titre, audioData: reader.result, ordre: ambiancePlaylist.length,
+      await db.collection('radio_messages').add({
+        titre, audioData: reader.result, actif: true, heureDebut: heureDebut || null, heureFin: heureFin || null,
         dateAjout: firebase.firestore.FieldValue.serverTimestamp()
       });
-      consigner('Annonce vocale Ambiance Boutique ajoutée', titre);
-      showToast('✓ Annonce enregistrée');
-      closeModal('modal-ambiance-annonce');
-      document.getElementById('annonce-titre').value = '';
-      document.getElementById('annonce-preview-audio').style.display = 'none';
-      document.getElementById('btn-sauvegarder-annonce').disabled = true;
-      blobAmbianceEnregistre = null;
+      consignerRadio('message_ajoute', titre);
+      showToast('✓ Message enregistré');
+      document.getElementById('radio-msg-titre').value = '';
+      document.getElementById('radio-msg-preview-audio').style.display = 'none';
+      document.getElementById('btn-radio-msg-sauvegarder').disabled = true;
+      document.getElementById('radio-msg-heure-debut').value = '';
+      document.getElementById('radio-msg-heure-fin').value = '';
+      blobRadioEnregistre = null;
     } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
   };
-  reader.readAsDataURL(blobAmbianceEnregistre);
+  reader.readAsDataURL(blobRadioEnregistre);
 }
 
-// ── Sélection multiple : jouer en boucle uniquement certaines pistes ──
-function toggleSelectionAmbiance(id, checked) {
-  if (checked) ambianceSelectionEnCours.add(id); else ambianceSelectionEnCours.delete(id);
-  majBarreSelectionAmbiance();
-}
-
-function majBarreSelectionAmbiance() {
-  const bar = document.getElementById('ambiance-selection-bar');
-  const cnt = document.getElementById('ambiance-selection-count');
-  if (!bar) return;
-  if (ambianceSelectionEnCours.size > 0) {
-    bar.style.display = 'block';
-    if (cnt) cnt.textContent = `${ambianceSelectionEnCours.size} piste(s) sélectionnée(s)`;
-  } else {
-    bar.style.display = (ambianceConfig.selectionIds || []).length ? 'block' : 'none';
-    if (cnt && (ambianceConfig.selectionIds || []).length) cnt.textContent = `Sélection active : ${ambianceConfig.selectionIds.length} piste(s) en boucle`;
-  }
-}
-
-async function lireSelectionAmbiance() {
+async function toggleActifMessageRadio(id, actif) {
   if (!currentUser.isAdmin) return;
-  if (!ambianceSelectionEnCours.size) { showToast('Cochez au moins une piste', 'error'); return; }
-  try {
-    await db.collection('ambiance_config').doc('config').set({ selectionIds: [...ambianceSelectionEnCours] }, { merge: true });
-    consigner('Sélection Ambiance Boutique activée', `${ambianceSelectionEnCours.size} piste(s) — par ${currentUser.label}`);
-    showToast('✓ Cette sélection jouera en boucle sur les caisses actives');
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  try { await db.collection('radio_messages').doc(id).update({ actif }); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-async function annulerSelectionAmbiance() {
+async function supprimerMessageRadio(id) {
   if (!currentUser.isAdmin) return;
-  try {
-    await db.collection('ambiance_config').doc('config').set({ selectionIds: [] }, { merge: true });
-    ambianceSelectionEnCours.clear();
-    consigner('Sélection Ambiance Boutique annulée', `par ${currentUser.label}`);
-    showToast('✓ Retour à la playlist complète');
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  if (!confirm('Supprimer ce message ?')) return;
+  try { await db.collection('radio_messages').doc(id).delete(); consignerRadio('message_supprime', id); showToast('✓ Supprimé'); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function renderAmbianceAdmin() {
+function testerMessageRadio(id) {
+  const m = radioMessages.find(x => x.id === id);
+  if (!m) return;
+  const audio = document.getElementById('radio-preview-audio');
+  audio.src = m.audioData || m.url;
+  audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
+}
+
+function renderRadioMessages() {
+  const tbody = document.getElementById('tbody-radio-messages');
+  if (!tbody) return;
+  const cnt = document.getElementById('radio-msg-count');
+  if (cnt) cnt.textContent = `(${radioMessages.length})`;
+  tbody.innerHTML = radioMessages.length ? radioMessages.map(m => `
+    <tr>
+      <td>📢 ${m.titre}</td>
+      <td style="font-size:12px">${m.heureDebut && m.heureFin ? `${m.heureDebut} - ${m.heureFin}` : 'Toute la journée'}</td>
+      <td><input type="checkbox" ${m.actif ? 'checked' : ''} onchange="toggleActifMessageRadio('${m.id}', this.checked)"></td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="testerMessageRadio('${m.id}')" title="Écouter">▶</button>
+        <button class="btn btn-danger btn-sm" onclick="supprimerMessageRadio('${m.id}')" title="Supprimer">🗑</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucun message</td></tr>';
+}
+
+// ── Journal de diffusion ──
+function renderRadioJournal() {
+  const tbody = document.getElementById('tbody-radio-journal');
+  if (!tbody) return;
+  const cnt = document.getElementById('radio-journal-count');
+  if (cnt) cnt.textContent = `(${radioJournalDiffusion.length})`;
+  tbody.innerHTML = radioJournalDiffusion.length ? radioJournalDiffusion.map(j => `
+    <tr><td style="font-size:12px;color:var(--text-muted);white-space:nowrap">${j.date || '—'}</td><td style="font-size:12px">${j.type}</td><td style="font-size:12px">${j.details || ''}</td><td style="font-size:12px">${j.utilisateur || '—'}</td></tr>
+  `).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucune activité enregistrée</td></tr>';
+}
+
+// ── Rendu principal ──
+function renderRadioAdmin() {
   if (!currentUser.isAdmin) return;
-  initAmbiancePlayerUI();
-  majAffichagePlayerAmbiance();
-  const actifEl = document.getElementById('ambiance-actif');
-  if (actifEl && !actifEl.dataset.init) {
-    actifEl.checked = !!ambianceConfig.actif;
-    document.getElementById('ambiance-volume').value = Math.round((ambianceConfig.volume ?? 0.6) * 100);
-    document.getElementById('ambiance-volume-val').textContent = Math.round((ambianceConfig.volume ?? 0.6) * 100) + '%';
-    document.getElementById('ambiance-mode').value = ambianceConfig.mode || 'sequentiel';
-    document.getElementById('ambiance-repetition').value = ambianceConfig.repetition || 'playlist';
-    document.getElementById('ambiance-intervalle').value = ambianceConfig.intervalleAnnonces || 4;
-    document.getElementById('ambiance-intervalle-val').textContent = ambianceConfig.intervalleAnnonces || 4;
-    const eqWrap = document.getElementById('ambiance-eq-bands');
+  initRadioPlayerUI();
+  majAffichagePlayerRadio();
+
+  const statutEl = document.getElementById('radio-poste-statut');
+  const btnDemarrer = document.getElementById('btn-radio-demarrer-poste');
+  const btnArreter = document.getElementById('btn-radio-arreter-poste');
+  if (statutEl) statutEl.textContent = radioPosteActif ? '🟢 Ce poste diffuse actuellement la radio' : "Ce poste n'est pas un haut-parleur de diffusion";
+  if (btnDemarrer) btnDemarrer.style.display = radioPosteActif ? 'none' : 'inline-flex';
+  if (btnArreter) btnArreter.style.display = radioPosteActif ? 'inline-flex' : 'none';
+
+  const reglagesEl = document.getElementById('radio-volume');
+  if (reglagesEl && !reglagesEl.dataset.init) {
+    document.getElementById('radio-volume').value = Math.round((radioConfig.volume ?? 0.6) * 100);
+    document.getElementById('radio-volume-val').textContent = Math.round((radioConfig.volume ?? 0.6) * 100) + '%';
+    const baleVal = Math.round((radioConfig.balance ?? 0) * 100);
+    document.getElementById('radio-balance').value = baleVal;
+    document.getElementById('radio-balance-val').textContent = baleVal === 0 ? 'Centre' : (baleVal < 0 ? Math.abs(baleVal)+'% Gauche' : baleVal+'% Droite');
+    document.getElementById('radio-mode').value = radioConfig.mode || 'sequentiel';
+    document.getElementById('radio-repetition').value = radioConfig.repetition || 'playlist';
+    document.getElementById('radio-pub-active').checked = !!radioConfig.pubActive;
+    document.getElementById('radio-pub-intervalle').value = radioConfig.pubIntervalleMin || 20;
+    document.getElementById('radio-pub-intervalle-val').textContent = radioConfig.pubIntervalleMin || 20;
+    const eqWrap = document.getElementById('radio-eq-bands');
     if (eqWrap) {
-      const eq = ambianceConfig.eq || [0,0,0,0,0];
-      eqWrap.innerHTML = AMBIANCE_EQ_BANDS.map((band, i) => `
+      const eq = radioConfig.eq || [0,0,0,0,0];
+      eqWrap.innerHTML = RADIO_EQ_BANDS.map((band, i) => `
         <div>
           <div style="font-size:11px;color:var(--text-muted);white-space:pre-line;margin-bottom:6px">${band.label}</div>
-          <input type="range" id="ambiance-eq-${i}" min="-12" max="12" value="${eq[i] || 0}" orient="vertical"
+          <input type="range" id="radio-eq-${i}" min="-12" max="12" value="${eq[i] || 0}"
                  style="writing-mode:vertical-lr;direction:rtl;height:90px"
-                 oninput="document.getElementById('ambiance-eq-${i}-val').textContent=this.value+' dB'">
-          <div style="font-size:12px;font-weight:700;margin-top:6px" id="ambiance-eq-${i}-val">${eq[i] || 0} dB</div>
+                 oninput="document.getElementById('radio-eq-${i}-val').textContent=this.value+' dB'">
+          <div style="font-size:12px;font-weight:700;margin-top:6px" id="radio-eq-${i}-val">${eq[i] || 0} dB</div>
         </div>`).join('');
     }
-    actifEl.dataset.init = '1';
+    reglagesEl.dataset.init = '1';
   }
-  const cnt = document.getElementById('ambiance-count');
-  if (cnt) cnt.textContent = `(${ambiancePlaylist.length} élément(s))`;
-  majBarreSelectionAmbiance();
-  const tbody = document.getElementById('tbody-ambiance-playlist');
-  if (!tbody) return;
-  const liste = [...ambiancePlaylist].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
-  tbody.innerHTML = liste.length ? liste.map(p => `
-    <tr>
-      <td><input type="checkbox" onchange="toggleSelectionAmbiance('${p.id}', this.checked)" ${ambianceSelectionEnCours.has(p.id) ? 'checked' : ''}></td>
-      <td>${p.type === 'annonce' ? '🎤' : '🎵'} ${p.titre} ${(ambianceConfig.selectionIds||[]).includes(p.id) ? '<span style="font-size:11px;color:var(--primary);font-weight:700">· en boucle</span>' : ''}</td>
-      <td>${p.type === 'annonce' ? 'Annonce vocale' : 'Musique'}</td>
-      <td style="text-align:right">
-        <button class="btn btn-outline btn-sm" onclick="testerPisteAmbiance('${p.id}')" title="Écouter">▶</button>
-        <button class="btn btn-danger btn-sm" onclick="supprimerPisteAmbiance('${p.id}')" title="Supprimer">🗑</button>
-      </td>
-    </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucune piste — ajoutez de la musique ou une annonce</td></tr>';
+
+  renderRadioBibliotheque();
+  renderRadioPlaylists();
+  renderRadioStations();
+  renderRadioMessages();
+  renderRadioJournal();
 }
 
 // ===== SUPPORT — message interne employé → Administrateur (avec capture d'écran) =====
@@ -8582,7 +9010,8 @@ const REINIT_CATEGORIES = {
   rh:          { label: 'RH — Pointages, Planning, Absences', collections: ['rh_pointages','rh_planning','rh_absences'] },
   achats:      { label: 'Achats Fournisseurs',           collections: ['commandes','paiements'] },
   journal:     { label: "Journal d'activité",            collections: ['journal','audit_trail'] },
-  support:     { label: 'Messages de support',           collections: ['support_messages'] }
+  support:     { label: 'Messages de support',           collections: ['support_messages'] },
+  radio:       { label: 'Journal de diffusion radio',    collections: ['radio_journal'] }
 };
 
 function renderReinitialisation() {
