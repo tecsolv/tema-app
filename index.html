@@ -5145,10 +5145,19 @@ function demarrerListeners() {
   const u14 = db.collection('sessions_caisse').where('utilisateurId','==', currentUser.id).onSnapshot(snap => {
     const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
     const active = docs.find(d => d.statutSession === 'ouverte' || d.statutSession === 'en_pause');
+    const etaitActive = !!posSessionActive;
     posSessionActive = active || null;
     majBadgeSessionPOS();
     if (document.getElementById('screen-select-caisse')?.classList.contains('active') && posSessionActive) {
       ouvrirEcranPOS();
+    }
+    // Sécurité : si la session a été fermée à distance (Admin/Gérant — fermeture forcée,
+    // transfert, réattribution) pendant que ce poste vendait encore, on bloque immédiatement
+    // toute saisie et on renvoie vers la sélection de caisse.
+    if (etaitActive && !posSessionActive && document.getElementById('screen-pos')?.classList.contains('active')) {
+      posPanier = [];
+      showToast('⚠️ Votre session de caisse a été fermée par un(e) responsable', 'error');
+      forcerSelectionCaisse();
     }
   }, err => console.error('sessions_caisse:', err));
 
@@ -5748,6 +5757,7 @@ function handleBarcodeScan(e) {
 }
 
 function ajouterAuPanier(id) {
+  if (!posSessionActive) { showToast('⚠️ Aucune session de caisse active — reconnectez-vous', 'error'); forcerSelectionCaisse(); return; }
   const p = produits.find(x => x.id === id);
   if (!p) return;
   if ((p.stock||0) <= 0) { showToast('🚫 Rupture de stock — article non disponible', 'error'); return; }
@@ -5763,6 +5773,7 @@ function ajouterAuPanier(id) {
 }
 
 function ajouterServiceDirectPOS(nom, prix) {
+  if (!posSessionActive) { showToast('⚠️ Aucune session de caisse active — reconnectez-vous', 'error'); forcerSelectionCaisse(); return; }
   if (!prix) { ouvrirModalServicePOS(nom); return; }
   const exist = posPanier.find(i => i.serviceType && i.nom===nom);
   if (exist) { exist.qte++; exist.total = exist.qte * exist.prix; }
@@ -5790,6 +5801,7 @@ function majTotalSvc() {
 }
 
 function ajouterServiceAuPanier() {
+  if (!posSessionActive) { showToast('⚠️ Aucune session de caisse active — reconnectez-vous', 'error'); forcerSelectionCaisse(); return; }
   const val=document.getElementById('svc-pos-type').value;
   if (!val) { showToast('Choisissez un service','error'); return; }
   const nom=val.split('|')[0], qte=parseInt(document.getElementById('svc-pos-qte').value)||1;
@@ -7962,6 +7974,20 @@ function initAmbianceEQ() {
     prevNode.connect(ambianceAudioCtx.destination);
   } catch (err) { console.warn('Égaliseur ambiance non initialisé :', err); }
 }
+
+// Déverrouillage de l'AudioContext — certains navigateurs le créent "suspendu" tant
+// qu'aucune interaction utilisateur n'a eu lieu, même si audio.play() réussit (le son
+// reste alors muet). On tente la reprise à chaque interaction sur la page, sans condition
+// liée à une session de caisse, pour garantir que le contexte tourne dès que possible.
+function deverrouillerAmbianceAudioContext() {
+  initAmbianceEQ();
+  if (ambianceAudioCtx && ambianceAudioCtx.state === 'suspended') {
+    ambianceAudioCtx.resume().catch(() => {});
+  }
+}
+['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, deverrouillerAmbianceAudioContext, { passive: true });
+});
 
 function appliquerGainsEQAmbiance() {
   if (!ambianceEQNodes.length) return;
