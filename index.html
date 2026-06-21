@@ -2400,7 +2400,13 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><h2>📚 Bibliothèque <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="radio-bib-count"></span></h2></div>
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+            <h2>📚 Bibliothèque <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="radio-bib-count"></span></h2>
+            <div>
+              <button class="btn btn-outline btn-sm" onclick="ouvrirDebugAudioRadio()">🐞 DEBUG AUDIO</button>
+              <button class="btn btn-outline btn-sm" onclick="reparerBibliothequeRadio()">🔧 Réparer automatiquement</button>
+            </div>
+          </div>
           <div class="card-body">
             <select class="form-control" id="radio-bib-filtre-categorie" onchange="renderRadioBibliotheque()" style="max-width:260px;margin-bottom:12px">
               <option value="">Toutes les catégories</option>
@@ -3529,6 +3535,22 @@
     </div>
     <button class="btn btn-primary" id="btn-audio-mode-activer" onclick="activerRecepteurAudioPoste()" style="width:100%;margin-bottom:8px">🔴 Faire de ce poste un Récepteur Audio</button>
     <button class="btn btn-outline" id="btn-audio-mode-desactiver" onclick="desactiverRecepteurAudioPoste()" style="width:100%;display:none">⚪ Désactiver le Récepteur Audio sur ce poste</button>
+  </div>
+</div>
+
+<!-- Modale : DEBUG AUDIO — diagnostic des pistes de la bibliothèque TeMa Smart Radio -->
+<div class="modal-overlay" id="modal-radio-debug">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <h3>🐞 Debug Audio — Bibliothèque</h3>
+      <button class="modal-close" onclick="closeModal('modal-radio-debug')">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Cliquez "Vérifier" sur une piste pour tester son URL en HTTP réel (sans lancer la lecture).</p>
+    <div class="table-wrap" style="max-height:60vh;overflow-y:auto">
+      <table style="font-size:12px"><thead><tr>
+        <th>Titre</th><th>storagePath</th><th>mimeType</th><th>Taille</th><th>downloadURL</th><th>Statut</th><th></th>
+      </tr></thead><tbody id="tbody-radio-debug"></tbody></table>
+    </div>
   </div>
 </div>
 
@@ -8291,12 +8313,17 @@ function jouerPisteRadioCourante() {
   if (radioConfig.sourceType === 'radio') {
     const station = radioStations.find(s => s.id === radioConfig.radioActiveId);
     if (!station) return;
+    console.log('Piste sélectionnée', station);
+    console.log('URL utilisée', station.url);
     chargerSourceRadioDansAudio(station.url, station.format === 'hls');
   } else {
     if (!radioQueue.length) return;
     const piste = radioQueue[radioQueueIndex % radioQueue.length];
+    console.log('Piste sélectionnée', piste);
+    console.log('URL utilisée', piste.url);
     chargerSourceRadioDansAudio(piste.url, false);
   }
+  console.log('Audio src', audio.src);
   audio.play().catch(err => console.warn('Lecture radio bloquée (geste utilisateur requis) :', err));
   majAffichagePlayerRadio();
 }
@@ -8457,13 +8484,27 @@ function reinitialiserEQRadio() {
 }
 
 // ── Bibliothèque musicale ──
+// Le type MIME du navigateur (file.type) est parfois vide — notamment pour .flac, et pour
+// certains fichiers importés par dossier selon l'OS. Sans contentType explicite, Firebase
+// Storage stocke le fichier en "application/octet-stream" et le navigateur refuse de le lire
+// comme audio ("no supported source was found") même si les octets sont valides.
+function devinerMimeTypeAudio(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  return { mp3: 'audio/mpeg', wav: 'audio/wav', aac: 'audio/aac', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', webm: 'audio/webm' }[ext] || 'audio/mpeg';
+}
+
 async function televerserFichierRadio(file, titre, categorie, onProgress) {
-  const storageRef = firebase.storage().ref(`radio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`);
-  const task = storageRef.put(file);
+  const storagePath = `radio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`;
+  const storageRef = firebase.storage().ref(storagePath);
+  const contentType = file.type || devinerMimeTypeAudio(file.name);
+  const task = storageRef.put(file, { contentType });
   task.on('state_changed', snap => { if (onProgress) onProgress(snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0); });
   await task;
   const url = await storageRef.getDownloadURL();
-  await db.collection('radio_bibliotheque').add({ titre, categorie, url, dateAjout: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection('radio_bibliotheque').add({
+    titre, categorie, url, storagePath, mimeType: contentType, taille: file.size,
+    dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
 
 async function televerserPisteRadio(event) {
@@ -8522,10 +8563,80 @@ async function supprimerPisteRadio(id) {
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function testerPisteRadio(url) {
+function testerPisteRadio(id) {
+  const piste = radioBibliotheque.find(p => p.id === id);
+  if (!piste) return;
+  console.log('Piste sélectionnée', piste);
+  console.log('URL utilisée', piste.url);
   const audio = document.getElementById('radio-preview-audio');
-  audio.src = url;
+  audio.src = piste.url;
+  console.log('Audio src', audio.src);
   audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
+}
+
+// ── DEBUG AUDIO : diagnostic + réparation automatique de la bibliothèque ──
+function ouvrirDebugAudioRadio() {
+  const tbody = document.getElementById('tbody-radio-debug');
+  tbody.innerHTML = radioBibliotheque.length ? radioBibliotheque.map(p => `
+    <tr id="debug-radio-row-${p.id}">
+      <td>${p.titre}</td>
+      <td style="word-break:break-all">${p.storagePath || '<span style="color:var(--danger)">absent</span>'}</td>
+      <td>${p.mimeType || '<span style="color:var(--danger)">absent</span>'}</td>
+      <td>${p.taille ? Math.round(p.taille/1024)+' Ko' : '—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${p.url}" target="_blank" rel="noopener">${p.url ? p.url.slice(0,40)+'...' : '<span style="color:var(--danger)">absent</span>'}</a></td>
+      <td id="debug-radio-statut-${p.id}">—</td>
+      <td><button class="btn btn-outline btn-sm" onclick="verifierPisteRadioDebug('${p.id}')">Vérifier</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
+  openModal('modal-radio-debug');
+}
+
+async function verifierPisteRadioDebug(id) {
+  const piste = radioBibliotheque.find(p => p.id === id);
+  const cell = document.getElementById(`debug-radio-statut-${id}`);
+  if (!piste || !cell) return;
+  if (!piste.url) { cell.innerHTML = '<span style="color:var(--danger)">Pas d\'URL</span>'; return; }
+  cell.textContent = 'Test en cours...';
+  console.log('Piste sélectionnée', piste);
+  console.log('URL utilisée', piste.url);
+  try {
+    const resp = await fetch(piste.url, { method: 'GET', headers: { Range: 'bytes=0-1' } });
+    console.log('Réponse HTTP', resp.status, resp.headers.get('content-type'));
+    cell.innerHTML = resp.ok
+      ? `<span style="color:var(--success)">✓ HTTP ${resp.status} — ${resp.headers.get('content-type') || '?'}</span>`
+      : `<span style="color:var(--danger)">✗ HTTP ${resp.status}</span>`;
+  } catch (err) {
+    console.error('Erreur réseau', err);
+    cell.innerHTML = `<span style="color:var(--danger)">✗ ${err.message}</span>`;
+  }
+}
+
+// Répare les pistes existantes dont les métadonnées Storage sont manquantes/incorrectes —
+// ne re-téléverse jamais le fichier, corrige juste le Content-Type + complète Firestore.
+async function reparerBibliothequeRadio() {
+  if (!currentUser.isAdmin) return;
+  if (!confirm('Vérifier et réparer automatiquement toutes les pistes de la bibliothèque ?')) return;
+  let reparees = 0, erreurs = 0;
+  for (const piste of radioBibliotheque) {
+    if (!piste.url) { erreurs++; continue; }
+    try {
+      const ref = firebase.storage().refFromURL(piste.url);
+      const meta = await ref.getMetadata();
+      const bonMime = devinerMimeTypeAudio(piste.titre || ref.name);
+      const patch = {};
+      if (!piste.storagePath) patch.storagePath = ref.fullPath;
+      if (!piste.taille) patch.taille = meta.size;
+      if (!piste.mimeType || piste.mimeType === 'application/octet-stream') patch.mimeType = bonMime;
+      if (meta.contentType === 'application/octet-stream' || !meta.contentType) {
+        await ref.updateMetadata({ contentType: bonMime });
+      }
+      if (Object.keys(patch).length) {
+        await db.collection('radio_bibliotheque').doc(piste.id).update(patch);
+        reparees++;
+      }
+    } catch (err) { console.error('Réparation impossible pour', piste.titre, err); erreurs++; }
+  }
+  consignerRadio('bibliotheque_reparee', `${reparees} piste(s) réparée(s), ${erreurs} erreur(s) — par ${currentUser.label}`);
+  showToast(`✓ Réparation terminée : ${reparees} corrigée(s)${erreurs ? `, ${erreurs} erreur(s)` : ''}`);
 }
 
 function renderRadioBibliotheque() {
@@ -8540,7 +8651,7 @@ function renderRadioBibliotheque() {
       <td>🎵 ${p.titre}</td>
       <td>${p.categorie || '—'}</td>
       <td style="text-align:right">
-        <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.url}')" title="Écouter">▶</button>
+        <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.id}')" title="Écouter">▶</button>
         <button class="btn btn-danger btn-sm" onclick="supprimerPisteRadio('${p.id}')" title="Supprimer">🗑</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
@@ -8555,7 +8666,7 @@ function renderRadioRecherche() {
   cont.innerHTML = resultats.length ? resultats.map(p => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
       <span>🎵 ${p.titre} <span style="color:var(--text-muted);font-size:11px">(${p.categorie})</span></span>
-      <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.url}')">▶</button>
+      <button class="btn btn-outline btn-sm" onclick="testerPisteRadio('${p.id}')">▶</button>
     </div>`).join('') : '<p style="color:var(--text-muted);font-size:13px">Aucun résultat</p>';
 }
 
