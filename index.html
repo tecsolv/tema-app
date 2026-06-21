@@ -8319,7 +8319,8 @@ function jouerPisteRadioCourante() {
     console.log('URL utilisée', station.url);
     chargerSourceRadioDansAudio(station.url, station.format === 'hls');
   } else {
-    if (!radioQueue.length) return;
+    if (!radioQueue.length) construireFileRadio(); // dernier recours si la file n'a jamais pu se construire
+    if (!radioQueue.length) { console.warn('Aucune piste disponible : playlist active vide ou bibliothèque non chargée'); return; }
     const piste = radioQueue[radioQueueIndex % radioQueue.length];
     console.log('Piste sélectionnée', piste);
     console.log('URL utilisée', piste.url);
@@ -8350,7 +8351,12 @@ function gererDiffusionRadio() {
   const audio = document.getElementById('radio-audio');
   if (!audio) return;
   appliquerVolumeBalanceEQRadio();
-  if (radioConfig.sourceType === 'playlist' && radioQueueBuiltFromId !== (radioConfig.playlistActiveId || null)) {
+  // Reconstruit la file si la playlist active a changé, OU si elle est vide alors qu'une
+  // playlist est sélectionnée (cas d'une construction précédente faite avant que la
+  // bibliothèque/playlist Firestore aient fini de charger — sinon la file reste vide
+  // pour toujours et Play ne fait plus rien).
+  if (radioConfig.sourceType === 'playlist' && radioConfig.playlistActiveId &&
+      (radioQueueBuiltFromId !== radioConfig.playlistActiveId || !radioQueue.length)) {
     construireFileRadio();
   }
   const sourcePrete = radioConfig.sourceType === 'radio' ? !!radioConfig.radioActiveId : !!radioQueue.length;
@@ -8365,9 +8371,11 @@ function gererDiffusionRadio() {
 // ── Commandes transport (Play/Pause/Stop/Précédent/Suivant), envoyées par l'Admin et
 // exécutées par tous les postes de diffusion enregistrés, depuis n'importe quel appareil ──
 async function envoyerCommandeRadio(action) {
+  const ts = Date.now();
   try {
-    await db.collection('radio_config').doc('config').set({ commande: { action, ts: Date.now() } }, { merge: true });
+    await db.collection('radio_config').doc('config').set({ commande: { action, ts } }, { merge: true });
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  return ts;
 }
 
 function traiterCommandeRadio(commande) {
@@ -8384,23 +8392,46 @@ function traiterCommandeRadio(commande) {
   majAffichagePlayerRadio();
 }
 
+// Si CE poste est lui-même Récepteur Audio, on joue immédiatement en local, dans le même
+// geste de clic — sinon le navigateur perd l'autorisation "user gesture" pendant l'aller-
+// retour Firestore et bloque audio.play() silencieusement (état figé sur "En attente").
+// La commande Firestore reste envoyée pour synchroniser les AUTRES postes de diffusion.
 async function toggleLectureRadio() {
   if (!currentUser?.isAdmin) return;
   const audio = document.getElementById('radio-audio');
   const enCours = audio && !audio.paused;
+  if (radioPosteActif) {
+    if (enCours) { audio.pause(); }
+    else if (!audio.src) { jouerPisteRadioCourante(); }
+    else { audio.play().catch(err => console.warn('Lecture radio bloquée :', err)); }
+    majAffichagePlayerRadio();
+  }
   if (!enCours) await db.collection('radio_config').doc('config').set({ diffusionActive: true }, { merge: true });
-  await envoyerCommandeRadio(enCours ? 'pause' : 'play');
+  radioLastCommandeTs = await envoyerCommandeRadio(enCours ? 'pause' : 'play');
 }
 
 async function arreterDiffusionGenerale() {
   if (!currentUser?.isAdmin) return;
+  if (radioPosteActif) {
+    const audio = document.getElementById('radio-audio');
+    audio.pause(); audio.currentTime = 0;
+    majAffichagePlayerRadio();
+  }
   await db.collection('radio_config').doc('config').set({ diffusionActive: false }, { merge: true });
-  await envoyerCommandeRadio('stop');
+  radioLastCommandeTs = await envoyerCommandeRadio('stop');
   consignerRadio('arret_general', `Diffusion arrêtée par ${currentUser.label}`);
 }
 
-function pisteRadioPrecedenteCmd() { if (currentUser?.isAdmin) envoyerCommandeRadio('prev'); }
-function pisteRadioSuivanteCmd() { if (currentUser?.isAdmin) envoyerCommandeRadio('next'); }
+function pisteRadioPrecedenteCmd() {
+  if (!currentUser?.isAdmin) return;
+  if (radioPosteActif) pisteRadioPrecedente();
+  envoyerCommandeRadio('prev').then(ts => { radioLastCommandeTs = ts; });
+}
+function pisteRadioSuivanteCmd() {
+  if (!currentUser?.isAdmin) return;
+  if (radioPosteActif) passerPisteRadioSuivante();
+  envoyerCommandeRadio('next').then(ts => { radioLastCommandeTs = ts; });
+}
 
 function seekRadioPlayer(valeur) {
   const audio = document.getElementById('radio-audio');
