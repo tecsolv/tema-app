@@ -2264,6 +2264,27 @@
     <div class="page" id="page-ambiance">
       <div class="alert alert-info no-print">🎵 Musique d'ambiance + annonces vocales, jouée automatiquement sur chaque poste de caisse dès qu'une session est active — la pause d'un(e) caissier(ère) ne l'interrompt pas. Tout se règle ici.</div>
 
+      <div class="card" style="margin-bottom:14px;background:#1a1e2e;color:#fff">
+        <div class="card-body" style="padding:20px">
+          <div style="text-align:center;margin-bottom:14px">
+            <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:4px">Lecteur — Ambiance Boutique</div>
+            <div style="font-size:17px;font-weight:700" id="ambiance-player-titre">Aucune lecture en cours</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55)" id="ambiance-player-statut">Cliquez ▶ pour prévisualiser la playlist</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <span style="font-size:12px;min-width:38px;text-align:right;color:rgba(255,255,255,.7)" id="ambiance-player-elapsed">0:00</span>
+            <input type="range" id="ambiance-player-seek" min="0" max="100" value="0" step="0.1" style="flex:1" oninput="seekAmbiancePlayer(this.value)">
+            <span style="font-size:12px;min-width:38px;color:rgba(255,255,255,.7)" id="ambiance-player-remaining">-0:00</span>
+          </div>
+          <div style="display:flex;justify-content:center;align-items:center;gap:18px">
+            <button onclick="pisteAmbiancePrecedente()" title="Précédent" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏮</button>
+            <button id="btn-ambiance-playpause" onclick="toggleLecturePlayerAmbiance()" title="Lecture / Pause" style="background:var(--accent);border:none;color:#1a1e2e;width:48px;height:48px;border-radius:50%;font-size:18px;cursor:pointer">▶</button>
+            <button onclick="arreterLecturePlayerAmbiance()" title="Stop" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏹</button>
+            <button onclick="pisteAmbianceSuivanteManuelle()" title="Suivant" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏭</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:14px">
         <div class="card-header"><h2>⚙️ Réglages</h2></div>
         <div class="card-body">
@@ -2283,11 +2304,30 @@
               </select>
             </div>
           </div>
-          <div class="form-group" style="max-width:320px">
-            <label>Insérer une annonce vocale toutes les <span id="ambiance-intervalle-val">4</span> pistes</label>
-            <input type="number" class="form-control" id="ambiance-intervalle" min="1" value="4" oninput="document.getElementById('ambiance-intervalle-val').textContent=this.value||1">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Répétition</label>
+              <select class="form-control" id="ambiance-repetition">
+                <option value="playlist">🔁 Boucle sur toute la playlist</option>
+                <option value="piste">🔂 Répéter la piste en cours</option>
+              </select>
+            </div>
+            <div class="form-group" style="max-width:320px">
+              <label>Insérer une annonce vocale toutes les <span id="ambiance-intervalle-val">4</span> pistes</label>
+              <input type="number" class="form-control" id="ambiance-intervalle" min="1" value="4" oninput="document.getElementById('ambiance-intervalle-val').textContent=this.value||1">
+            </div>
           </div>
           <button class="btn btn-primary" onclick="enregistrerReglagesAmbiance()">💾 Enregistrer les réglages</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><h2>🎚️ Équaliseur</h2></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Ajustez le son de la musique d'ambiance. Réglages appliqués sur tous les postes de caisse.</p>
+          <div id="ambiance-eq-bands" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;text-align:center;margin-bottom:14px"></div>
+          <button class="btn btn-outline btn-sm" onclick="reinitialiserEQAmbiance()">↺ Réinitialiser l'égaliseur</button>
+          <button class="btn btn-primary btn-sm" onclick="enregistrerReglagesAmbiance()" style="margin-left:8px">💾 Enregistrer</button>
         </div>
       </div>
 
@@ -2296,35 +2336,29 @@
         <div class="card-body">
           <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="ambiance-titre" placeholder="Ex: Musique d'ambiance 1"></div>
 
-          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">Option 1 — Depuis cet ordinateur</label>
-          <input type="file" id="ambiance-fichier" accept="audio/*" class="form-control" onchange="televerserPisteAmbiance(event)" style="margin-bottom:6px">
+          <div style="margin-bottom:6px">Un seul fichier : <input type="file" id="ambiance-fichier" accept="audio/*" class="form-control" onchange="televerserPisteAmbiance(event)" style="display:inline-block;width:auto;vertical-align:middle"></div>
+          <div style="margin-bottom:6px">
+            Tout un dossier : <input type="file" id="ambiance-dossier" webkitdirectory multiple accept="audio/*" onchange="televerserDossierAmbiance(event)" style="display:none">
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ambiance-dossier').click()">📁 Importer un dossier complet</button>
+          </div>
           <div id="ambiance-upload-status" style="display:none;font-size:13px;color:var(--primary);margin-bottom:14px"></div>
 
-          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">Option 2 — Lien direct vers un fichier audio</label>
-          <div class="alert alert-info" style="font-size:12px;margin-bottom:10px;align-items:flex-start">
-            <span>⚠️</span>
-            <div>
-              Un lien YouTube ne fonctionne pas ici — il faut un lien <strong>direct</strong> vers un fichier .mp3/.ogg/.wav, pas une page de lecture.<br><br>
-              <strong>Comment obtenir un lien direct gratuit avec Google Drive :</strong><br>
-              1. Déposez le fichier audio sur Google Drive, clic-droit → "Partager" → "Toute personne disposant du lien" (lecteur).<br>
-              2. Copiez l'ID dans le lien de partage (la suite de lettres/chiffres entre <code>/d/</code> et <code>/view</code>).<br>
-              3. Collez ici un lien de cette forme : <code>https://drive.google.com/uc?export=download&id=VOTRE_ID</code>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="margin:0"><input type="text" class="form-control" id="ambiance-url" placeholder="https://drive.google.com/uc?export=download&id=..."></div>
-            <div class="form-group" style="margin:0"><button class="btn btn-outline" style="width:100%" onclick="ajouterPisteAmbiance()">➕ Ajouter ce lien</button></div>
-          </div>
-
-          <button class="btn btn-outline" onclick="openModal('modal-ambiance-annonce')" style="margin-top:14px">🎤 Enregistrer une annonce vocale</button>
+          <button class="btn btn-outline" onclick="openModal('modal-ambiance-annonce')" style="margin-top:8px">🎤 Enregistrer une annonce vocale</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header"><h2>📋 Playlist <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="ambiance-count"></span></h2></div>
-        <div class="card-body table-wrap">
-          <table><thead><tr><th>Titre</th><th>Type</th><th style="text-align:right">Actions</th></tr></thead>
-          <tbody id="tbody-ambiance-playlist"></tbody></table>
+        <div class="card-body">
+          <div id="ambiance-selection-bar" style="display:none;margin-bottom:10px">
+            <span style="font-size:13px;color:var(--primary);font-weight:700" id="ambiance-selection-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="lireSelectionAmbiance()" style="margin-left:8px">▶ Lire cette sélection en boucle</button>
+            <button class="btn btn-outline btn-sm" onclick="annulerSelectionAmbiance()" style="margin-left:6px">✕ Annuler la sélection active</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th style="width:30px"></th><th>Titre</th><th>Type</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-ambiance-playlist"></tbody></table>
+          </div>
         </div>
       </div>
     </div>
@@ -4074,8 +4108,15 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [], supportMessages = [];
-let ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4 };
+let ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, repetition: 'playlist', eq: [0,0,0,0,0], selectionIds: [] };
 let ambiancePlaylist = [], ambianceQueue = [], ambianceQueueIndex = 0;
+let ambianceSelectionEnCours = new Set();
+const AMBIANCE_EQ_BANDS = [
+  { freq: 60, label: '60 Hz\n(Basses)' }, { freq: 250, label: '250 Hz' }, { freq: 1000, label: '1 kHz' },
+  { freq: 4000, label: '4 kHz' }, { freq: 12000, label: '12 kHz\n(Aigus)' }
+];
+let ambianceAudioCtx = null, ambianceEQNodes = [];
+let ambianceModeManuel = false;
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
 // ── RH (Phase RH-A) ────────────────────────────────────────
@@ -5136,7 +5177,7 @@ function demarrerListeners() {
   // Listeners Ambiance Boutique (musique + annonces) — pour tous les rôles : la lecture
   // se fait sur chaque poste de caisse, les réglages ne sont modifiables que par l'Admin.
   const uAmbCfg = db.collection('ambiance_config').doc('config').onSnapshot(doc => {
-    ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, ...(doc.exists ? doc.data() : {}) };
+    ambianceConfig = { actif: false, volume: 0.6, mode: 'sequentiel', intervalleAnnonces: 4, repetition: 'playlist', eq: [0,0,0,0,0], selectionIds: [], ...(doc.exists ? doc.data() : {}) };
     gererAmbianceMusicale();
     rafraichirPageActive();
   }, err => console.error('ambiance_config:', err));
@@ -7882,8 +7923,10 @@ function renderJournal() {
 // Joue tant que CE poste a une session de caisse active (ouverte ou en pause) — la pause
 // d'un(e) caissier(ère) ne doit pas interrompre la musique, seule la fin de service le fait.
 function construireFileAmbiance() {
-  const musiques = ambiancePlaylist.filter(p => p.type !== 'annonce');
-  const annonces = ambiancePlaylist.filter(p => p.type === 'annonce');
+  const selectionIds = ambianceConfig.selectionIds || [];
+  const baseListe = selectionIds.length ? ambiancePlaylist.filter(p => selectionIds.includes(p.id)) : ambiancePlaylist;
+  const musiques = baseListe.filter(p => p.type !== 'annonce');
+  const annonces = baseListe.filter(p => p.type === 'annonce');
   let liste = ambianceConfig.mode === 'aleatoire' ? [...musiques].sort(() => Math.random() - 0.5) : musiques;
   if (!liste.length) liste = annonces;
   const intervalle = Math.max(1, ambianceConfig.intervalleAnnonces || 4);
@@ -7897,19 +7940,52 @@ function construireFileAmbiance() {
   return file;
 }
 
+// Équaliseur 5 bandes (Web Audio API) — branché une seule fois sur l'élément <audio>,
+// les gains sont ensuite ajustables en direct sans recréer le graphe audio.
+function initAmbianceEQ() {
+  const audio = document.getElementById('ambiance-audio');
+  if (!audio || ambianceAudioCtx) return;
+  try {
+    ambianceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ambianceAudioCtx.createMediaElementSource(audio);
+    let prevNode = source;
+    ambianceEQNodes = AMBIANCE_EQ_BANDS.map((band, i) => {
+      const filter = ambianceAudioCtx.createBiquadFilter();
+      filter.type = i === 0 ? 'lowshelf' : (i === AMBIANCE_EQ_BANDS.length - 1 ? 'highshelf' : 'peaking');
+      filter.frequency.value = band.freq;
+      filter.Q.value = 1;
+      filter.gain.value = (ambianceConfig.eq && ambianceConfig.eq[i]) || 0;
+      prevNode.connect(filter);
+      prevNode = filter;
+      return filter;
+    });
+    prevNode.connect(ambianceAudioCtx.destination);
+  } catch (err) { console.warn('Égaliseur ambiance non initialisé :', err); }
+}
+
+function appliquerGainsEQAmbiance() {
+  if (!ambianceEQNodes.length) return;
+  (ambianceConfig.eq || [0,0,0,0,0]).forEach((g, i) => { if (ambianceEQNodes[i]) ambianceEQNodes[i].gain.value = g; });
+}
+
 function jouerPisteAmbianceCourante() {
   const audio = document.getElementById('ambiance-audio');
   if (!audio || !ambianceQueue.length) return;
   const piste = ambianceQueue[ambianceQueueIndex % ambianceQueue.length];
   const src = piste.type === 'annonce' ? piste.audioData : piste.url;
   if (!src) { passerPisteAmbianceSuivante(); return; }
+  initAmbianceEQ();
+  if (ambianceAudioCtx && ambianceAudioCtx.state === 'suspended') ambianceAudioCtx.resume();
+  appliquerGainsEQAmbiance();
   audio.src = src;
   audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
   audio.play().catch(err => console.warn('Lecture ambiance bloquée (geste utilisateur requis) :', err));
+  majAffichagePlayerAmbiance();
 }
 
 function passerPisteAmbianceSuivante() {
   if (!ambianceQueue.length) return;
+  if (ambianceConfig.repetition === 'piste') { jouerPisteAmbianceCourante(); return; }
   ambianceQueueIndex++;
   if (ambianceQueueIndex >= ambianceQueue.length) {
     ambianceQueue = construireFileAmbiance();
@@ -7936,6 +8012,8 @@ function gererAmbianceMusicale() {
   const audio = document.getElementById('ambiance-audio');
   if (!audio) return;
   audio.volume = Math.min(1, Math.max(0, ambianceConfig.volume ?? 0.6));
+  appliquerGainsEQAmbiance();
+  if (ambianceModeManuel) return; // l'Admin a pris le contrôle depuis le lecteur de prévisualisation
   const doitJouer = !!posSessionActive && ambianceConfig.actif && ambiancePlaylist.length > 0;
   if (doitJouer) {
     if (audio.paused) demarrerLecturePlaylist();
@@ -7944,21 +8022,121 @@ function gererAmbianceMusicale() {
   }
 }
 
+// ── Lecteur de prévisualisation (Admin) — façon iTunes/VLC : Play/Pause, Stop, Précédent/Suivant ──
+function formaterDureeAmbiance(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function initAmbiancePlayerUI() {
+  const audio = document.getElementById('ambiance-audio');
+  if (!audio || audio.dataset.playerInit) return;
+  audio.dataset.playerInit = '1';
+  audio.addEventListener('timeupdate', majAffichagePlayerAmbiance);
+  audio.addEventListener('loadedmetadata', majAffichagePlayerAmbiance);
+  audio.addEventListener('play', () => { const b = document.getElementById('btn-ambiance-playpause'); if (b) b.textContent = '⏸'; });
+  audio.addEventListener('pause', () => { const b = document.getElementById('btn-ambiance-playpause'); if (b) b.textContent = '▶'; });
+}
+
+function majAffichagePlayerAmbiance() {
+  const audio = document.getElementById('ambiance-audio');
+  const titreEl = document.getElementById('ambiance-player-titre');
+  const statutEl = document.getElementById('ambiance-player-statut');
+  const seekEl = document.getElementById('ambiance-player-seek');
+  const elapsedEl = document.getElementById('ambiance-player-elapsed');
+  const remainingEl = document.getElementById('ambiance-player-remaining');
+  if (!audio || !titreEl) return;
+  const piste = ambianceQueue[ambianceQueueIndex % (ambianceQueue.length || 1)];
+  if (audio.src && piste) {
+    titreEl.textContent = `${piste.type === 'annonce' ? '🎤' : '🎵'} ${piste.titre}`;
+    statutEl.textContent = audio.paused ? 'En pause' : 'Lecture en cours';
+  } else {
+    titreEl.textContent = 'Aucune lecture en cours';
+    statutEl.textContent = 'Cliquez ▶ pour prévisualiser la playlist';
+  }
+  const duree = audio.duration || 0;
+  if (seekEl) { seekEl.max = duree || 100; seekEl.value = audio.currentTime || 0; }
+  if (elapsedEl) elapsedEl.textContent = formaterDureeAmbiance(audio.currentTime || 0);
+  if (remainingEl) remainingEl.textContent = duree ? '-' + formaterDureeAmbiance(duree - audio.currentTime) : '-0:00';
+}
+
+function seekAmbiancePlayer(valeur) {
+  const audio = document.getElementById('ambiance-audio');
+  if (audio && audio.duration) audio.currentTime = Number(valeur);
+}
+
+function toggleLecturePlayerAmbiance() {
+  if (!currentUser?.isAdmin) return;
+  initAmbiancePlayerUI();
+  const audio = document.getElementById('ambiance-audio');
+  ambianceModeManuel = true;
+  if (!ambianceQueue.length) { demarrerLecturePlaylist(); return; }
+  if (audio.paused) audio.play().catch(err => showToast('Lecture impossible : ' + err.message, 'error'));
+  else audio.pause();
+}
+
+function arreterLecturePlayerAmbiance() {
+  arreterMusiqueAmbiance();
+  ambianceModeManuel = false;
+  majAffichagePlayerAmbiance();
+  gererAmbianceMusicale(); // redonne immédiatement le contrôle à la logique automatique des sessions de caisse
+}
+
+function pisteAmbianceSuivanteManuelle() {
+  if (!ambianceQueue.length) return;
+  ambianceQueueIndex++;
+  if (ambianceQueueIndex >= ambianceQueue.length) { ambianceQueue = construireFileAmbiance(); ambianceQueueIndex = 0; }
+  jouerPisteAmbianceCourante();
+}
+
+function pisteAmbiancePrecedente() {
+  if (!ambianceQueue.length) return;
+  ambianceQueueIndex = (ambianceQueueIndex - 1 + ambianceQueue.length) % ambianceQueue.length;
+  jouerPisteAmbianceCourante();
+}
+
 // ── Réglages (Admin) ──
 async function enregistrerReglagesAmbiance() {
   if (!currentUser.isAdmin) return;
   const actif = document.getElementById('ambiance-actif').checked;
   const volume = Number(document.getElementById('ambiance-volume').value) / 100;
   const mode = document.getElementById('ambiance-mode').value;
+  const repetition = document.getElementById('ambiance-repetition').value;
   const intervalleAnnonces = Math.max(1, Number(document.getElementById('ambiance-intervalle').value) || 4);
+  const eq = AMBIANCE_EQ_BANDS.map((b, i) => Number(document.getElementById(`ambiance-eq-${i}`)?.value) || 0);
   try {
-    await db.collection('ambiance_config').doc('config').set({ actif, volume, mode, intervalleAnnonces }, { merge: true });
-    consigner('Réglages Ambiance Boutique modifiés', `Actif: ${actif ? 'oui' : 'non'} — Volume: ${Math.round(volume * 100)}% — Mode: ${mode} — par ${currentUser.label}`);
+    await db.collection('ambiance_config').doc('config').set({ actif, volume, mode, repetition, intervalleAnnonces, eq }, { merge: true });
+    consigner('Réglages Ambiance Boutique modifiés', `Actif: ${actif ? 'oui' : 'non'} — Volume: ${Math.round(volume * 100)}% — Mode: ${mode} — Répétition: ${repetition} — par ${currentUser.label}`);
     showToast('✓ Réglages enregistrés');
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
+function reinitialiserEQAmbiance() {
+  AMBIANCE_EQ_BANDS.forEach((b, i) => {
+    const slider = document.getElementById(`ambiance-eq-${i}`);
+    const val = document.getElementById(`ambiance-eq-${i}-val`);
+    if (slider) slider.value = 0;
+    if (val) val.textContent = '0 dB';
+  });
+}
+
 // ── Playlist : import d'un fichier audio depuis l'ordinateur (Firebase Storage) ──
+async function televerserFichierAmbiance(file, titre, onProgress) {
+  const storageRef = firebase.storage().ref(`ambiance/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`);
+  const task = storageRef.put(file);
+  task.on('state_changed', snap => {
+    const pct = snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0;
+    if (onProgress) onProgress(pct);
+  });
+  await task;
+  const url = await storageRef.getDownloadURL();
+  await db.collection('ambiance_playlist').add({
+    type: 'musique', titre, url, ordre: ambiancePlaylist.length,
+    dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
 async function televerserPisteAmbiance(event) {
   if (!currentUser.isAdmin) return;
   const file = event.target.files[0];
@@ -7969,18 +8147,7 @@ async function televerserPisteAmbiance(event) {
   statusEl.style.display = 'block';
   statusEl.textContent = 'Téléversement... 0%';
   try {
-    const storageRef = firebase.storage().ref(`ambiance/${Date.now()}_${file.name}`);
-    const task = storageRef.put(file);
-    task.on('state_changed', snap => {
-      const pct = snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0;
-      statusEl.textContent = `Téléversement... ${pct}%`;
-    });
-    await task;
-    const url = await storageRef.getDownloadURL();
-    await db.collection('ambiance_playlist').add({
-      type: 'musique', titre, url, ordre: ambiancePlaylist.length,
-      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await televerserFichierAmbiance(file, titre, pct => { statusEl.textContent = `Téléversement... ${pct}%`; });
     consigner('Piste Ambiance Boutique importée', titre);
     showToast('✓ Piste importée et ajoutée à la playlist');
     statusEl.style.display = 'none';
@@ -7992,22 +8159,31 @@ async function televerserPisteAmbiance(event) {
   }
 }
 
-// ── Playlist : ajout d'une piste musicale par lien ──
-async function ajouterPisteAmbiance() {
+// ── Playlist : import d'un dossier complet (plusieurs fichiers audio à la fois) ──
+async function televerserDossierAmbiance(event) {
   if (!currentUser.isAdmin) return;
-  const titre = document.getElementById('ambiance-titre').value.trim();
-  const url = document.getElementById('ambiance-url').value.trim();
-  if (!titre || !url) { showToast('Titre et lien audio requis', 'error'); return; }
-  try {
-    await db.collection('ambiance_playlist').add({
-      type: 'musique', titre, url, ordre: ambiancePlaylist.length,
-      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    consigner('Piste Ambiance Boutique ajoutée', titre);
-    showToast('✓ Piste ajoutée à la playlist');
-    document.getElementById('ambiance-titre').value = '';
-    document.getElementById('ambiance-url').value = '';
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  const fichiers = [...event.target.files].filter(f => f.type.startsWith('audio/') || /\.(mp3|ogg|wav|m4a|aac|flac)$/i.test(f.name));
+  if (!fichiers.length) { showToast('Aucun fichier audio trouvé dans ce dossier', 'error'); event.target.value = ''; return; }
+  const tropGros = fichiers.filter(f => f.size > 20 * 1024 * 1024);
+  const aImporter = fichiers.filter(f => f.size <= 20 * 1024 * 1024);
+  const statusEl = document.getElementById('ambiance-upload-status');
+  statusEl.style.display = 'block';
+  let reussies = 0;
+  for (let i = 0; i < aImporter.length; i++) {
+    const file = aImporter[i];
+    const titre = file.name.replace(/\.[^.]+$/, '');
+    statusEl.textContent = `Fichier ${i + 1}/${aImporter.length} — ${titre}... 0%`;
+    try {
+      await televerserFichierAmbiance(file, titre, pct => { statusEl.textContent = `Fichier ${i + 1}/${aImporter.length} — ${titre}... ${pct}%`; });
+      reussies++;
+    } catch (err) { console.error('Échec import', file.name, err); }
+  }
+  statusEl.style.display = 'none';
+  event.target.value = '';
+  consigner('Dossier Ambiance Boutique importé', `${reussies} piste(s) sur ${aImporter.length} — par ${currentUser.label}`);
+  let msg = `✓ ${reussies} piste(s) importée(s) et ajoutée(s) à la playlist`;
+  if (tropGros.length) msg += ` (${tropGros.length} fichier(s) ignoré(s), trop volumineux > 20 Mo)`;
+  showToast(msg);
 }
 
 async function supprimerPisteAmbiance(id) {
@@ -8094,32 +8270,88 @@ async function sauvegarderAnnonceVocale() {
   reader.readAsDataURL(blobAmbianceEnregistre);
 }
 
+// ── Sélection multiple : jouer en boucle uniquement certaines pistes ──
+function toggleSelectionAmbiance(id, checked) {
+  if (checked) ambianceSelectionEnCours.add(id); else ambianceSelectionEnCours.delete(id);
+  majBarreSelectionAmbiance();
+}
+
+function majBarreSelectionAmbiance() {
+  const bar = document.getElementById('ambiance-selection-bar');
+  const cnt = document.getElementById('ambiance-selection-count');
+  if (!bar) return;
+  if (ambianceSelectionEnCours.size > 0) {
+    bar.style.display = 'block';
+    if (cnt) cnt.textContent = `${ambianceSelectionEnCours.size} piste(s) sélectionnée(s)`;
+  } else {
+    bar.style.display = (ambianceConfig.selectionIds || []).length ? 'block' : 'none';
+    if (cnt && (ambianceConfig.selectionIds || []).length) cnt.textContent = `Sélection active : ${ambianceConfig.selectionIds.length} piste(s) en boucle`;
+  }
+}
+
+async function lireSelectionAmbiance() {
+  if (!currentUser.isAdmin) return;
+  if (!ambianceSelectionEnCours.size) { showToast('Cochez au moins une piste', 'error'); return; }
+  try {
+    await db.collection('ambiance_config').doc('config').set({ selectionIds: [...ambianceSelectionEnCours] }, { merge: true });
+    consigner('Sélection Ambiance Boutique activée', `${ambianceSelectionEnCours.size} piste(s) — par ${currentUser.label}`);
+    showToast('✓ Cette sélection jouera en boucle sur les caisses actives');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function annulerSelectionAmbiance() {
+  if (!currentUser.isAdmin) return;
+  try {
+    await db.collection('ambiance_config').doc('config').set({ selectionIds: [] }, { merge: true });
+    ambianceSelectionEnCours.clear();
+    consigner('Sélection Ambiance Boutique annulée', `par ${currentUser.label}`);
+    showToast('✓ Retour à la playlist complète');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
 function renderAmbianceAdmin() {
   if (!currentUser.isAdmin) return;
+  initAmbiancePlayerUI();
+  majAffichagePlayerAmbiance();
   const actifEl = document.getElementById('ambiance-actif');
   if (actifEl && !actifEl.dataset.init) {
     actifEl.checked = !!ambianceConfig.actif;
     document.getElementById('ambiance-volume').value = Math.round((ambianceConfig.volume ?? 0.6) * 100);
     document.getElementById('ambiance-volume-val').textContent = Math.round((ambianceConfig.volume ?? 0.6) * 100) + '%';
     document.getElementById('ambiance-mode').value = ambianceConfig.mode || 'sequentiel';
+    document.getElementById('ambiance-repetition').value = ambianceConfig.repetition || 'playlist';
     document.getElementById('ambiance-intervalle').value = ambianceConfig.intervalleAnnonces || 4;
     document.getElementById('ambiance-intervalle-val').textContent = ambianceConfig.intervalleAnnonces || 4;
+    const eqWrap = document.getElementById('ambiance-eq-bands');
+    if (eqWrap) {
+      const eq = ambianceConfig.eq || [0,0,0,0,0];
+      eqWrap.innerHTML = AMBIANCE_EQ_BANDS.map((band, i) => `
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:pre-line;margin-bottom:6px">${band.label}</div>
+          <input type="range" id="ambiance-eq-${i}" min="-12" max="12" value="${eq[i] || 0}" orient="vertical"
+                 style="writing-mode:vertical-lr;direction:rtl;height:90px"
+                 oninput="document.getElementById('ambiance-eq-${i}-val').textContent=this.value+' dB'">
+          <div style="font-size:12px;font-weight:700;margin-top:6px" id="ambiance-eq-${i}-val">${eq[i] || 0} dB</div>
+        </div>`).join('');
+    }
     actifEl.dataset.init = '1';
   }
   const cnt = document.getElementById('ambiance-count');
   if (cnt) cnt.textContent = `(${ambiancePlaylist.length} élément(s))`;
+  majBarreSelectionAmbiance();
   const tbody = document.getElementById('tbody-ambiance-playlist');
   if (!tbody) return;
   const liste = [...ambiancePlaylist].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
   tbody.innerHTML = liste.length ? liste.map(p => `
     <tr>
-      <td>${p.type === 'annonce' ? '🎤' : '🎵'} ${p.titre}</td>
+      <td><input type="checkbox" onchange="toggleSelectionAmbiance('${p.id}', this.checked)" ${ambianceSelectionEnCours.has(p.id) ? 'checked' : ''}></td>
+      <td>${p.type === 'annonce' ? '🎤' : '🎵'} ${p.titre} ${(ambianceConfig.selectionIds||[]).includes(p.id) ? '<span style="font-size:11px;color:var(--primary);font-weight:700">· en boucle</span>' : ''}</td>
       <td>${p.type === 'annonce' ? 'Annonce vocale' : 'Musique'}</td>
       <td style="text-align:right">
         <button class="btn btn-outline btn-sm" onclick="testerPisteAmbiance('${p.id}')" title="Écouter">▶</button>
         <button class="btn btn-danger btn-sm" onclick="supprimerPisteAmbiance('${p.id}')" title="Supprimer">🗑</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Aucune piste — ajoutez de la musique ou une annonce</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucune piste — ajoutez de la musique ou une annonce</td></tr>';
 }
 
 // ===== SUPPORT — message interne employé → Administrateur (avec capture d'écran) =====
