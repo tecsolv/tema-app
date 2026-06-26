@@ -2262,26 +2262,23 @@
       <div id="support-admin-liste"></div>
     </div>
 
-    <!-- MODULE ADMIN — TEMA MEDIA CENTER (pilotage VirtualDJ via Firestore + service Windows) -->
+    <!-- MODULE ADMIN — TEMA MEDIA CENTER (centre de contrôle ; aucun son dans le navigateur) -->
     <div class="page" id="page-media-center">
-      <div class="alert alert-info no-print">🎵 TeMa Media Center pilote le système de diffusion de la boutique (VirtualDJ, via un service Windows installé sur le poste de diffusion). <strong>Le navigateur n'envoie que des commandes — il ne joue jamais le son lui-même.</strong></div>
-
-      <div class="form-group" style="max-width:320px;margin-bottom:14px">
-        <label>Zone de diffusion</label>
-        <select class="form-control" id="mc-zone-select" onchange="changerZoneMediaCenter(this.value)"></select>
-      </div>
+      <div class="alert alert-info no-print">🎵 TeMa Media Center est un centre de contrôle uniquement. La diffusion réelle est assurée par <strong>TeMa Media Service</strong> (lecteur VLC local sur le poste de diffusion). <strong>Aucun son ne sort du navigateur.</strong></div>
 
       <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
         <button class="btn btn-sm caisse-tab-btn active" id="mc-tab-btn-dashboard" onclick="mcNavigate('dashboard')" style="flex:1;min-width:120px">📊 Tableau de bord</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-bibliotheque" onclick="mcNavigate('bibliotheque')" style="flex:1;min-width:120px">🎵 Bibliothèque</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-playlists" onclick="mcNavigate('playlists')" style="flex:1;min-width:120px">📋 Playlists</button>
-        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-messages" onclick="mcNavigate('messages')" style="flex:1;min-width:120px">📢 Messages</button>
-        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-publicites" onclick="mcNavigate('publicites')" style="flex:1;min-width:120px">📣 Publicités</button>
-        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-radios" onclick="mcNavigate('radios')" style="flex:1;min-width:120px">🌐 Radios Internet</button>
-        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-historique" onclick="mcNavigate('historique')" style="flex:1;min-width:120px">🕘 Historique</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-appareils" onclick="mcNavigate('appareils')" style="flex:1;min-width:120px">🖥️ Appareils</button>
       </div>
 
       <!-- ONGLET : TABLEAU DE BORD -->
       <div class="caisse-tab active" id="mc-tab-dashboard">
+        <div class="form-group" style="max-width:320px;margin-bottom:14px">
+          <label>Appareil piloté</label>
+          <select class="form-control" id="mc-device-select" onchange="changerAppareilMediaCenter(this.value)"></select>
+        </div>
         <div class="kpi-grid" style="margin-bottom:14px">
           <div class="kpi-card"><div class="kpi-icon" id="mc-kpi-diffusion-icon">⚫</div><div class="kpi-info"><h3 id="mc-kpi-diffusion">—</h3><p>Diffusion active</p></div></div>
           <div class="kpi-card"><div class="kpi-icon" id="mc-kpi-poste-icon">⚫</div><div class="kpi-info"><h3 id="mc-kpi-poste">—</h3><p>Poste connecté</p></div></div>
@@ -2293,24 +2290,17 @@
             <div style="text-align:center;margin-bottom:6px">
               <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:4px">Titre en cours</div>
               <div style="font-size:18px;font-weight:700" id="mc-titre-cours">—</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.55)" id="mc-duree-restante">Durée : — · Restant : —</div>
             </div>
             <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin:16px 0">
-              <button onclick="envoyerCommandeMC('PREVIOUS')" title="Précédent" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏮</button>
               <button onclick="envoyerCommandeMC('PLAY')" title="Lecture" style="background:var(--accent);border:none;color:#1a1e2e;width:44px;height:44px;border-radius:50%;font-size:16px;cursor:pointer">▶</button>
               <button onclick="envoyerCommandeMC('PAUSE')" title="Pause" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;font-size:15px;cursor:pointer">⏸</button>
               <button onclick="envoyerCommandeMC('STOP')" title="Stop" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;font-size:15px;cursor:pointer">⏹</button>
               <button onclick="envoyerCommandeMC('NEXT')" title="Suivant" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏭</button>
             </div>
             <div style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-sm" id="mc-btn-shuffle" onclick="toggleShuffleMC()" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔀 Shuffle</button>
-              <button class="btn btn-sm" id="mc-btn-repeat" onclick="toggleRepeatMC()" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔁 Repeat</button>
-              <button class="btn btn-sm" id="mc-btn-mute" onclick="toggleMuteMC()" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔇 Mute</button>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-size:14px">🔊</span>
-                <input type="range" id="mc-volume-slider" min="0" max="100" value="70" oninput="this.dataset.touched='1';document.getElementById('mc-volume-val').textContent=this.value+'%'" onchange="envoyerVolumeMC(this.value)" style="width:120px">
-                <span style="font-size:12px;min-width:34px" id="mc-volume-val">70%</span>
-              </div>
+              <span style="font-size:14px">🔊</span>
+              <input type="range" id="mc-volume-slider" min="0" max="100" value="70" oninput="this.dataset.touched='1';document.getElementById('mc-volume-val').textContent=this.value+'%'" onchange="envoyerVolumeMC(this.value)" style="width:160px">
+              <span style="font-size:12px;min-width:34px" id="mc-volume-val">70%</span>
             </div>
           </div>
         </div>
@@ -2318,127 +2308,58 @@
           <div class="card-header"><h2>🖥️ État du service de diffusion</h2></div>
           <div class="card-body">
             <table style="font-size:13px;width:100%">
-              <tr><td style="padding:4px 8px;color:var(--text-muted)">État VirtualDJ</td><td style="padding:4px 8px;font-weight:700" id="mc-etat-vdj">—</td></tr>
               <tr><td style="padding:4px 8px;color:var(--text-muted)">Dernière synchronisation</td><td style="padding:4px 8px" id="mc-derniere-synchro">—</td></tr>
               <tr><td style="padding:4px 8px;color:var(--text-muted)">Erreur signalée</td><td style="padding:4px 8px" id="mc-erreur-service">—</td></tr>
-              <tr><td style="padding:4px 8px;color:var(--text-muted)">Version du service</td><td style="padding:4px 8px" id="mc-version-service">—</td></tr>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET : BIBLIOTHÈQUE (pistes, uploadées vers Firebase Storage pour téléchargement par le service local) -->
+      <div class="caisse-tab" id="mc-tab-bibliotheque">
+        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Les pistes sont stockées sur Firebase Storage. Le navigateur ne les joue jamais : seul TeMa Media Service les télécharge et les lit localement.</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Ajouter une piste</h2></div>
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <input type="file" id="mc-track-fichier" accept="audio/*" style="flex:1;min-width:220px">
+            <input type="text" class="form-control" id="mc-track-titre" placeholder="Titre (optionnel)" style="flex:1;min-width:160px">
+            <button class="btn btn-primary" onclick="televerserPisteMC()">⬆ Téléverser</button>
+          </div>
+          <div class="card-body" id="mc-track-progress" style="display:none;padding-top:0">
+            <div style="background:var(--bg-soft,#eef2f6);border-radius:6px;height:8px;overflow:hidden"><div id="mc-track-progress-bar" style="background:var(--primary);height:100%;width:0%"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>🎵 Pistes <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-track-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Titre</th><th>Taille</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-mc-tracks"></tbody></table>
           </div>
         </div>
       </div>
 
       <!-- ONGLET : PLAYLISTS -->
       <div class="caisse-tab" id="mc-tab-playlists">
-        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Ce catalogue ne contient que les <strong>noms</strong> des playlists. Le contenu réel (les morceaux) reste géré directement dans VirtualDJ — TeMa envoie juste l'ordre de charger une playlist par son nom exact.</div>
         <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>➕ Nouvelle référence de playlist</h2></div>
+          <div class="card-header"><h2>➕ Nouvelle playlist</h2></div>
           <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
-            <input type="text" class="form-control" id="mc-playlist-nom" placeholder="Nom exact de la playlist dans VirtualDJ" style="flex:1;min-width:220px">
+            <input type="text" class="form-control" id="mc-playlist-nom" placeholder="Nom de la playlist" style="flex:1;min-width:220px">
             <button class="btn btn-primary" onclick="creerPlaylistMC()">➕ Créer</button>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h2>📋 Playlists <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-playlist-count"></span></h2></div>
-          <div class="card-body table-wrap">
-            <table><thead><tr><th>Nom</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody id="tbody-mc-playlists"></tbody></table>
-          </div>
+          <div class="card-body" id="mc-playlists-liste"></div>
         </div>
       </div>
 
-      <!-- ONGLET : MESSAGES PROMOTIONNELS -->
-      <div class="caisse-tab" id="mc-tab-messages">
-        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Le fichier audio du message doit déjà exister sur le poste de diffusion (dans VirtualDJ). TeMa envoie juste son nom au service pour déclenchement.</div>
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>➕ Nouveau message</h2></div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="mc-msg-titre" placeholder="Ex: Promo fournitures scolaires"></div>
-              <div class="form-group"><label>Nom du fichier dans VirtualDJ</label><input type="text" class="form-control" id="mc-msg-fichier" placeholder="Ex: promo_fournitures.mp3"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Heure de début (optionnel)</label><input type="time" class="form-control" id="mc-msg-heure-debut"></div>
-              <div class="form-group"><label>Heure de fin (optionnel)</label><input type="time" class="form-control" id="mc-msg-heure-fin"></div>
-            </div>
-            <button class="btn btn-primary" onclick="creerMessageMC()">➕ Ajouter</button>
-          </div>
-        </div>
+      <!-- ONGLET : APPAREILS (media_devices) -->
+      <div class="caisse-tab" id="mc-tab-appareils">
         <div class="card">
-          <div class="card-header"><h2>📢 Messages <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-msg-count"></span></h2></div>
+          <div class="card-header"><h2>🖥️ Appareils de diffusion <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-device-count"></span></h2></div>
           <div class="card-body table-wrap">
-            <table><thead><tr><th>Titre</th><th>Fichier</th><th>Créneau</th><th>Actif</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody id="tbody-mc-messages"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ONGLET : PUBLICITÉS -->
-      <div class="caisse-tab" id="mc-tab-publicites">
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>➕ Ajouter à la bibliothèque de publicités</h2></div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="mc-pub-titre" placeholder="Ex: Pub Mobile Money"></div>
-              <div class="form-group"><label>Nom du fichier dans VirtualDJ</label><input type="text" class="form-control" id="mc-pub-fichier" placeholder="Ex: pub_mobile_money.mp3"></div>
-            </div>
-            <button class="btn btn-primary" onclick="creerPubMC()">➕ Ajouter</button>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>⏱️ Programmation automatique</h2></div>
-          <div class="card-body">
-            <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer">
-              <input type="checkbox" id="mc-pub-prog-active"> <strong>Insertion automatique des publicités</strong>
-            </label>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-              <label><input type="radio" name="mc-pub-intervalle" value="15"> Toutes les 15 min</label>
-              <label><input type="radio" name="mc-pub-intervalle" value="20"> Toutes les 20 min</label>
-              <label><input type="radio" name="mc-pub-intervalle" value="30"> Toutes les 30 min</label>
-              <label><input type="radio" name="mc-pub-intervalle" value="60"> Toutes les heures</label>
-            </div>
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">⚠️ L'insertion automatique est exécutée par le <strong>service Windows</strong> sur le poste de diffusion, pas par ce navigateur — elle continue même si personne n'a l'espace Admin ouvert.</p>
-            <button class="btn btn-primary" onclick="enregistrerProgrammationPubMC()">💾 Enregistrer la programmation</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h2>📣 Bibliothèque de publicités <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-pub-count"></span></h2></div>
-          <div class="card-body table-wrap">
-            <table><thead><tr><th>Titre</th><th>Fichier</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody id="tbody-mc-publicites"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ONGLET : RADIOS INTERNET -->
-      <div class="caisse-tab" id="mc-tab-radios">
-        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">VirtualDJ assure la lecture du flux — TeMa ne gère que le catalogue (nom, URL, catégorie) et l'ordre de chargement.</div>
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>➕ Ajouter une radio</h2></div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group"><label>Nom</label><input type="text" class="form-control" id="mc-radio-nom" placeholder="Ex: Radio JAM"></div>
-              <div class="form-group"><label>Catégorie</label><input type="text" class="form-control" id="mc-radio-categorie" placeholder="Ex: Variétés"></div>
-            </div>
-            <div class="form-group"><label>URL du flux</label><input type="text" class="form-control" id="mc-radio-url" placeholder="https://..."></div>
-            <button class="btn btn-primary" onclick="creerRadioMC()">➕ Ajouter</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h2>🌐 Radios enregistrées <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-radio-count"></span></h2></div>
-          <div class="card-body table-wrap">
-            <table><thead><tr><th></th><th>Nom</th><th>Catégorie</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody id="tbody-mc-radios"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ONGLET : HISTORIQUE -->
-      <div class="caisse-tab" id="mc-tab-historique">
-        <div class="card">
-          <div class="card-header"><h2>🕘 Historique des commandes <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-historique-count"></span></h2></div>
-          <div class="card-body table-wrap">
-            <table><thead><tr><th>Date</th><th>Utilisateur</th><th>Commande</th><th>Poste</th><th>État</th></tr></thead>
-            <tbody id="tbody-mc-historique"></tbody></table>
+            <table><thead><tr><th></th><th>Appareil</th><th>Statut</th><th>Dernière synchro</th></tr></thead>
+            <tbody id="tbody-mc-devices"></tbody></table>
           </div>
         </div>
       </div>
@@ -4181,16 +4102,16 @@ const FB_CONFIGURED = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 // ===== DONNÉES EN MÉMOIRE (miroir temps réel) =====
 let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal = [], paiements = [], ventesCaisse = [], supportMessages = [];
 
-// ===== TEMA MEDIA CENTER — pilotage de VirtualDJ via Firestore + service Windows.
+// ===== TEMA MEDIA CENTER — centre de contrôle uniquement (Firestore).
 // Le navigateur n'envoie QUE des commandes ; il ne lit, ne décode, ni ne joue jamais
-// le son lui-même. La diffusion réelle est assurée par le poste de diffusion
-// (VirtualDJ + service Windows), totalement indépendant du navigateur Admin.
-let mcZoneActive = 'principale';
-let mcZones = [{ id: 'principale', nom: 'Boutique Principale' }];
-let mcState = { mode: 'playlist', playlist: '', status: 'stopped', track: null, volume: 70, shuffle: false,
-  repeat: false, autodj: false, station: '', lastCommand: '', updatedBy: '', updatedAt: null,
-  titre: '', duree: 0, tempsEcoule: 0, etatVirtualDJ: 'inconnu', derniereSynchro: null, erreur: null, version: '' };
-let mcPlaylists = [], mcMessages = [], mcPublicites = [], mcProgrammationPub = { actif: false, intervalleMin: 20 }, mcRadios = [], mcHistorique = [];
+// le son lui-même. La diffusion réelle est assurée par TeMa Media Service (lecteur
+// VLC local), totalement indépendant du navigateur Admin.
+// Collections strictes : media_devices, media_commands, media_state,
+// media_playlists, media_tracks — aucune autre collection autorisée.
+let mcDeviceActive = null;
+let mcDevices = [];
+let mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null };
+let mcPlaylists = [], mcTracks = [];
 
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
@@ -5257,50 +5178,36 @@ function demarrerListeners() {
     unsubscribers.push(u16, u17);
   }
 
-  // Listeners TeMa Media Center — état + catalogues lus par tous les rôles (affichage en
-  // lecture seule pour les non-Admin) ; les écritures restent réservées à l'Admin dans les
-  // fonctions dédiées (mc...). Le service Windows publie aussi des champs dans ce même doc.
-  const uMcZones = db.collection('media_zones').onSnapshot(snap => {
-    mcZones = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    if (!mcZones.find(z => z.id === mcZoneActive)) mcZoneActive = mcZones[0]?.id || 'principale';
+  // Listeners TeMa Media Center — collections strictes : media_devices, media_commands,
+  // media_state, media_playlists, media_tracks. Lus par tous les rôles (lecture seule pour
+  // les non-Admin) ; les écritures restent réservées à l'Admin dans les fonctions mc...
+  // TeMa Media Service publie aussi directement dans media_state et media_devices.
+  let uMcStateUnsub = null;
+  function demarrerListenerEtatMC() {
+    if (uMcStateUnsub) uMcStateUnsub();
+    uMcStateUnsub = db.collection('media_state').doc(mcDeviceActive).onSnapshot(doc => {
+      mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
+        ...(doc.exists ? doc.data() : {}) };
+      majMediaCenterLecture();
+      rafraichirPageActive();
+    }, err => console.error('media_state:', err));
+    unsubscribers.push(uMcStateUnsub);
+  }
+  const uMcDevices = db.collection('media_devices').onSnapshot(snap => {
+    mcDevices = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (!mcDeviceActive && mcDevices.length) mcDeviceActive = mcDevices[0].id;
+    if (mcDeviceActive) demarrerListenerEtatMC();
     rafraichirPageActive();
-  }, err => console.error('media_zones:', err));
-  const uMcState = db.collection('media_center').doc(mcZoneActive).onSnapshot(doc => {
-    mcState = { mode: 'playlist', playlist: '', status: 'stopped', track: null, volume: 70, shuffle: false,
-      repeat: false, autodj: false, station: '', lastCommand: '', updatedBy: '', updatedAt: null,
-      titre: '', duree: 0, tempsEcoule: 0, etatVirtualDJ: 'inconnu', derniereSynchro: null, erreur: null, version: '',
-      ...(doc.exists ? doc.data() : {}) };
-    majMediaCenterLecture();
-    rafraichirPageActive();
-  }, err => console.error('media_center:', err));
+  }, err => console.error('media_devices:', err));
   const uMcPl = db.collection('media_playlists').onSnapshot(snap => {
     mcPlaylists = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('media_playlists:', err));
-  const uMcMsg = db.collection('media_messages').onSnapshot(snap => {
-    mcMessages = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  const uMcTracks = db.collection('media_tracks').onSnapshot(snap => {
+    mcTracks = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
-  }, err => console.error('media_messages:', err));
-  const uMcPub = db.collection('media_publicites').onSnapshot(snap => {
-    mcPublicites = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    rafraichirPageActive();
-  }, err => console.error('media_publicites:', err));
-  const uMcProg = db.collection('media_pub_programmation').doc(mcZoneActive).onSnapshot(doc => {
-    mcProgrammationPub = { actif: false, intervalleMin: 20, ...(doc.exists ? doc.data() : {}) };
-    rafraichirPageActive();
-  }, err => console.error('media_pub_programmation:', err));
-  const uMcRadios = db.collection('media_radios').onSnapshot(snap => {
-    mcRadios = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    rafraichirPageActive();
-  }, err => console.error('media_radios:', err));
-  unsubscribers.push(uMcZones, uMcState, uMcPl, uMcMsg, uMcPub, uMcProg, uMcRadios);
-  if (currentUser.isAdmin) {
-    const uMcHist = db.collection('media_history').orderBy('dateTS', 'desc').limit(200).onSnapshot(snap => {
-      mcHistorique = snap.docs.map(d => ({id: d.id, ...d.data()}));
-      rafraichirPageActive();
-    }, err => console.error('media_history:', err));
-    unsubscribers.push(uMcHist);
-  }
+  }, err => console.error('media_tracks:', err));
+  unsubscribers.push(uMcDevices, uMcPl, uMcTracks);
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -8036,7 +7943,7 @@ function renderJournal() {
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px">Aucune activité enregistrée pour le moment</td></tr>';
 }
 
-// ===== TEMA MEDIA CENTER — pilotage VirtualDJ via Firestore (aucun moteur audio ici) =====
+// ===== TEMA MEDIA CENTER — centre de contrôle uniquement (aucun moteur audio ici) =====
 function mcNavigate(tab) {
   document.querySelectorAll('#page-media-center .caisse-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('#page-media-center .caisse-tab-btn').forEach(b => b.classList.remove('active'));
@@ -8045,167 +7952,108 @@ function mcNavigate(tab) {
   renderMediaCenterAdmin();
 }
 
-function changerZoneMediaCenter(zoneId) {
-  mcZoneActive = zoneId;
-  consignerMediaHistory('CHANGEMENT_ZONE', zoneId);
-  // Les listeners de demarrerListeners() sont attachés à mcZoneActive au moment de leur
-  // création ; un changement de zone nécessite donc de relancer les listeners concernés.
-  demarrerListeners();
-}
-
-async function consignerMediaHistory(commande, details) {
-  if (!db || !currentUser) return;
-  try {
-    await db.collection('media_history').add({
-      zone: mcZoneActive, commande, details: details || '', utilisateur: currentUser.label,
-      poste: navigator.userAgent.slice(0, 60), etat: 'envoyée',
-      date: new Date().toLocaleString('fr-FR'), dateTS: Date.now(),
-      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (err) { console.error('media_history:', err); }
+function changerAppareilMediaCenter(deviceId) {
+  mcDeviceActive = deviceId;
+  demarrerListenerEtatMC();
+  renderMediaCenterAdmin();
 }
 
 // Écrit une commande dans media_commands. C'est le SEUL mécanisme de pilotage : le
-// navigateur n'exécute jamais l'action lui-même, le service Windows s'en charge.
-async function envoyerCommandeMC(commande, params) {
-  if (!currentUser?.isAdmin) return;
+// navigateur n'exécute jamais l'action lui-même, TeMa Media Service s'en charge.
+// Commandes strictement autorisées : PLAY, PAUSE, STOP, NEXT, SET_PLAYLIST, SET_VOLUME.
+async function envoyerCommandeMC(command, params) {
+  if (!currentUser?.isAdmin || !mcDeviceActive) return;
   try {
     await db.collection('media_commands').add({
-      zone: mcZoneActive, commande, params: params || {}, utilisateur: currentUser.label,
-      date: new Date().toLocaleString('fr-FR'), dateTS: Date.now(), statut: 'en_attente'
+      deviceId: mcDeviceActive, command, params: params || {}, utilisateur: currentUser.label,
+      timestamp: Date.now(), statut: 'en_attente'
     });
-    await db.collection('media_center').doc(mcZoneActive).set({
-      lastCommand: commande, updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    consignerMediaHistory(commande, JSON.stringify(params || {}));
-    showToast(`✓ Commande ${commande} envoyée`);
+    showToast(`✓ Commande ${command} envoyée`);
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
 function envoyerVolumeMC(valeur) { envoyerCommandeMC('SET_VOLUME', { volume: Number(valeur) }); }
-function toggleShuffleMC() { envoyerCommandeMC('SET_SHUFFLE', { shuffle: !mcState.shuffle }); }
-function toggleRepeatMC() { envoyerCommandeMC('SET_REPEAT', { repeat: !mcState.repeat }); }
-function toggleMuteMC() { envoyerCommandeMC('MUTE'); }
-function toggleAutoDjMC() { envoyerCommandeMC('SET_AUTODJ', { autodj: !mcState.autodj }); }
 
-// ── Playlists (catalogue de noms — le contenu réel vit dans VirtualDJ) ──
+// ── Bibliothèque de pistes (media_tracks) — uploadées vers Firebase Storage pour
+// téléchargement par TeMa Media Service. Jamais lues dans le navigateur. ──
+function devinerMimeTypeAudioMC(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  return { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4', flac: 'audio/flac', aac: 'audio/aac' }[ext] || 'application/octet-stream';
+}
+
+async function televerserPisteMC() {
+  if (!currentUser?.isAdmin) return;
+  const fileInput = document.getElementById('mc-track-fichier');
+  const file = fileInput.files[0];
+  if (!file) { showToast('Choisissez un fichier audio', 'error'); return; }
+  const titre = document.getElementById('mc-track-titre').value.trim() || file.name.replace(/\.[^.]+$/, '');
+  const progressWrap = document.getElementById('mc-track-progress');
+  const progressBar = document.getElementById('mc-track-progress-bar');
+  progressWrap.style.display = 'block';
+  try {
+    const storageRef = firebase.storage().ref(`media_tracks/${Date.now()}_${file.name}`);
+    const contentType = file.type || devinerMimeTypeAudioMC(file.name);
+    const uploadTask = storageRef.put(file, { contentType });
+    await new Promise((resolve, reject) => {
+      uploadTask.on('state_changed',
+        snap => { progressBar.style.width = Math.round((snap.bytesTransferred / snap.totalBytes) * 100) + '%'; },
+        reject, resolve);
+    });
+    const url = await storageRef.getDownloadURL();
+    await db.collection('media_tracks').add({
+      titre, url, storagePath: storageRef.fullPath, mimeType: contentType, taille: file.size,
+      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✓ Piste téléversée');
+    fileInput.value = ''; document.getElementById('mc-track-titre').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+  finally { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }
+}
+
+async function supprimerPisteMC(id, storagePath, titre) {
+  if (!currentUser?.isAdmin) return;
+  if (!confirm(`Supprimer la piste "${titre}" ?`)) return;
+  try {
+    if (storagePath) await firebase.storage().ref(storagePath).delete().catch(() => {});
+    await db.collection('media_tracks').doc(id).delete();
+    showToast('✓ Piste supprimée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+// ── Playlists (media_playlists, avec trackIds résolus en pistes par le service) ──
 async function creerPlaylistMC() {
   if (!currentUser?.isAdmin) return;
   const nom = document.getElementById('mc-playlist-nom').value.trim();
-  if (!nom) { showToast('Indiquez le nom exact de la playlist dans VirtualDJ', 'error'); return; }
+  if (!nom) { showToast('Indiquez un nom de playlist', 'error'); return; }
   try {
-    await db.collection('media_playlists').add({ zone: mcZoneActive, nom, dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
-    consignerMediaHistory('CREATION_PLAYLIST', nom);
-    showToast('✓ Playlist ajoutée au catalogue');
+    await db.collection('media_playlists').add({ nom, trackIds: [], dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('✓ Playlist créée');
     document.getElementById('mc-playlist-nom').value = '';
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function activerPlaylistMC(nom) { envoyerCommandeMC('LOAD_PLAYLIST', { playlist: nom }); }
+function activerPlaylistMC(playlistId) { envoyerCommandeMC('SET_PLAYLIST', { playlistId }); }
+
+async function ajouterPisteAPlaylistMC(playlistId, trackId) {
+  if (!currentUser?.isAdmin || !trackId) return;
+  const pl = mcPlaylists.find(p => p.id === playlistId);
+  if (!pl || (pl.trackIds || []).includes(trackId)) return;
+  try { await db.collection('media_playlists').doc(playlistId).update({ trackIds: [...(pl.trackIds || []), trackId] }); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function retirerPisteDePlaylistMC(playlistId, trackId) {
+  if (!currentUser?.isAdmin) return;
+  const pl = mcPlaylists.find(p => p.id === playlistId);
+  if (!pl) return;
+  try { await db.collection('media_playlists').doc(playlistId).update({ trackIds: (pl.trackIds || []).filter(id => id !== trackId) }); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
 
 async function supprimerPlaylistMC(id, nom) {
   if (!currentUser?.isAdmin) return;
-  if (!confirm(`Retirer "${nom}" du catalogue TeMa ? (la playlist reste intacte dans VirtualDJ)`)) return;
-  try { await db.collection('media_playlists').doc(id).delete(); consignerMediaHistory('SUPPRESSION_PLAYLIST', nom); showToast('✓ Retirée du catalogue'); }
-  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-// ── Messages promotionnels ──
-async function creerMessageMC() {
-  if (!currentUser?.isAdmin) return;
-  const titre = document.getElementById('mc-msg-titre').value.trim();
-  const fichier = document.getElementById('mc-msg-fichier').value.trim();
-  if (!titre || !fichier) { showToast('Titre et nom du fichier requis', 'error'); return; }
-  const heureDebut = document.getElementById('mc-msg-heure-debut').value || null;
-  const heureFin = document.getElementById('mc-msg-heure-fin').value || null;
-  try {
-    await db.collection('media_messages').add({ zone: mcZoneActive, titre, fichier, actif: true, heureDebut, heureFin, dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
-    consignerMediaHistory('CREATION_MESSAGE', titre);
-    showToast('✓ Message ajouté');
-    document.getElementById('mc-msg-titre').value = '';
-    document.getElementById('mc-msg-fichier').value = '';
-    document.getElementById('mc-msg-heure-debut').value = '';
-    document.getElementById('mc-msg-heure-fin').value = '';
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-function declencherMessageMC(fichier, titre) { envoyerCommandeMC('PLAY_ANNOUNCEMENT', { fichier, titre }); }
-
-async function toggleActifMessageMC(id, actif) {
-  if (!currentUser?.isAdmin) return;
-  try { await db.collection('media_messages').doc(id).update({ actif }); } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-async function supprimerMessageMC(id, titre) {
-  if (!currentUser?.isAdmin) return;
-  if (!confirm(`Supprimer le message "${titre}" ?`)) return;
-  try { await db.collection('media_messages').doc(id).delete(); consignerMediaHistory('SUPPRESSION_MESSAGE', titre); showToast('✓ Supprimé'); }
-  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-// ── Publicités (bibliothèque + programmation) ──
-async function creerPubMC() {
-  if (!currentUser?.isAdmin) return;
-  const titre = document.getElementById('mc-pub-titre').value.trim();
-  const fichier = document.getElementById('mc-pub-fichier').value.trim();
-  if (!titre || !fichier) { showToast('Titre et nom du fichier requis', 'error'); return; }
-  try {
-    await db.collection('media_publicites').add({ zone: mcZoneActive, titre, fichier, dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
-    consignerMediaHistory('CREATION_PUB', titre);
-    showToast('✓ Publicité ajoutée');
-    document.getElementById('mc-pub-titre').value = '';
-    document.getElementById('mc-pub-fichier').value = '';
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-async function supprimerPubMC(id, titre) {
-  if (!currentUser?.isAdmin) return;
-  if (!confirm(`Supprimer la publicité "${titre}" ?`)) return;
-  try { await db.collection('media_publicites').doc(id).delete(); consignerMediaHistory('SUPPRESSION_PUB', titre); showToast('✓ Supprimée'); }
-  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-async function enregistrerProgrammationPubMC() {
-  if (!currentUser?.isAdmin) return;
-  const actif = document.getElementById('mc-pub-prog-active').checked;
-  const radioCheck = document.querySelector('input[name="mc-pub-intervalle"]:checked');
-  const intervalleMin = radioCheck ? Number(radioCheck.value) : 20;
-  try {
-    await db.collection('media_pub_programmation').doc(mcZoneActive).set({ zone: mcZoneActive, actif, intervalleMin }, { merge: true });
-    consignerMediaHistory('PROGRAMMATION_PUB', `${actif ? 'active' : 'inactive'} — toutes les ${intervalleMin} min`);
-    showToast('✓ Programmation enregistrée — appliquée par le service Windows');
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-// ── Radios internet (catalogue — VirtualDJ assure la lecture du flux) ──
-async function creerRadioMC() {
-  if (!currentUser?.isAdmin) return;
-  const nom = document.getElementById('mc-radio-nom').value.trim();
-  const url = document.getElementById('mc-radio-url').value.trim();
-  const categorie = document.getElementById('mc-radio-categorie').value.trim();
-  if (!nom || !url) { showToast('Nom et URL requis', 'error'); return; }
-  try {
-    await db.collection('media_radios').add({ zone: mcZoneActive, nom, url, categorie, favori: false, dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
-    consignerMediaHistory('CREATION_RADIO', nom);
-    showToast('✓ Radio ajoutée');
-    document.getElementById('mc-radio-nom').value = '';
-    document.getElementById('mc-radio-url').value = '';
-    document.getElementById('mc-radio-categorie').value = '';
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-function activerRadioMC(url, nom) { envoyerCommandeMC('LOAD_RADIO', { url, nom }); }
-function testerRadioMC(url) { window.open(url, '_blank', 'noopener'); }
-
-async function toggleFavoriRadioMC(id, favori) {
-  if (!currentUser?.isAdmin) return;
-  try { await db.collection('media_radios').doc(id).update({ favori }); } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-}
-
-async function supprimerRadioMC(id, nom) {
-  if (!currentUser?.isAdmin) return;
-  if (!confirm(`Supprimer la radio "${nom}" ?`)) return;
-  try { await db.collection('media_radios').doc(id).delete(); consignerMediaHistory('SUPPRESSION_RADIO', nom); showToast('✓ Supprimée'); }
+  if (!confirm(`Supprimer la playlist "${nom}" ?`)) return;
+  try { await db.collection('media_playlists').doc(id).delete(); showToast('✓ Playlist supprimée'); }
   catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
@@ -8217,13 +8065,12 @@ function ouvrirMediaCenterLecture() {
 
 function majMediaCenterLecture() {
   const etatEl = document.getElementById('mclec-etat');
-  const titreEl = document.getElementById('mclec-titre');
-  const plEl = document.getElementById('mclec-playlist');
   if (!etatEl) return;
   const labels = { playing: '🟢 En diffusion', paused: '🟡 En pause', stopped: '⚫ Arrêtée' };
   etatEl.textContent = labels[mcState.status] || mcState.status || '—';
-  titreEl.textContent = mcState.titre || '—';
-  plEl.textContent = mcState.playlist || mcState.station || '—';
+  document.getElementById('mclec-titre').textContent = mcState.nowPlaying || '—';
+  const pl = mcPlaylists.find(p => p.id === mcState.playlistId);
+  document.getElementById('mclec-playlist').textContent = pl ? pl.nom : '—';
 }
 
 function formaterDateMC(ts) {
@@ -8234,9 +8081,11 @@ function formaterDateMC(ts) {
 function renderMediaCenterAdmin() {
   if (!currentUser?.isAdmin) return;
 
-  const zoneSel = document.getElementById('mc-zone-select');
-  if (zoneSel) {
-    zoneSel.innerHTML = mcZones.map(z => `<option value="${z.id}" ${z.id === mcZoneActive ? 'selected' : ''}>${z.nom}</option>`).join('');
+  const deviceSel = document.getElementById('mc-device-select');
+  if (deviceSel) {
+    deviceSel.innerHTML = mcDevices.length
+      ? mcDevices.map(d => `<option value="${d.id}" ${d.id === mcDeviceActive ? 'selected' : ''}>${d.label || d.id}${d.statut === 'online' ? ' 🟢' : ' 🔴'}</option>`).join('')
+      : '<option value="">Aucun appareil enregistré</option>';
   }
 
   const diffuse = mcState.status === 'playing';
@@ -8244,112 +8093,75 @@ function renderMediaCenterAdmin() {
   if (elDiff) elDiff.textContent = diffuse ? 'Active' : (mcState.status === 'paused' ? 'En pause' : 'Arrêtée');
   if (elDiffIcon) elDiffIcon.textContent = diffuse ? '🟢' : (mcState.status === 'paused' ? '🟡' : '⚫');
 
-  const synchroRecente = mcState.derniereSynchro && (Date.now() - (mcState.derniereSynchro.toMillis ? mcState.derniereSynchro.toMillis() : new Date(mcState.derniereSynchro).getTime())) < 60000;
+  const deviceActuel = mcDevices.find(d => d.id === mcDeviceActive);
+  const enLigne = deviceActuel?.statut === 'online';
   const elPoste = document.getElementById('mc-kpi-poste'), elPosteIcon = document.getElementById('mc-kpi-poste-icon');
-  if (elPoste) elPoste.textContent = synchroRecente ? 'Connecté' : 'Hors ligne';
-  if (elPosteIcon) elPosteIcon.textContent = synchroRecente ? '🟢' : '🔴';
+  if (elPoste) elPoste.textContent = enLigne ? 'Connecté' : 'Hors ligne';
+  if (elPosteIcon) elPosteIcon.textContent = enLigne ? '🟢' : '🔴';
 
-  const elPl = document.getElementById('mc-kpi-playlist'); if (elPl) elPl.textContent = mcState.playlist || mcState.station || '—';
+  const playlistActive = mcPlaylists.find(p => p.id === mcState.playlistId);
+  const elPl = document.getElementById('mc-kpi-playlist'); if (elPl) elPl.textContent = playlistActive?.nom || '—';
   const elVol = document.getElementById('mc-kpi-volume'); if (elVol) elVol.textContent = (mcState.volume ?? 70) + '%';
-
-  const elTitre = document.getElementById('mc-titre-cours'); if (elTitre) elTitre.textContent = mcState.titre || 'Aucune lecture en cours';
-  const elDuree = document.getElementById('mc-duree-restante');
-  if (elDuree) {
-    const duree = mcState.duree || 0, ecoule = mcState.tempsEcoule || 0;
-    const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    elDuree.textContent = duree ? `Durée : ${fmt(duree)} · Restant : ${fmt(Math.max(0, duree - ecoule))}` : 'Durée : — · Restant : —';
-  }
+  const elTitre = document.getElementById('mc-titre-cours'); if (elTitre) elTitre.textContent = mcState.nowPlaying || 'Aucune lecture en cours';
 
   const volSlider = document.getElementById('mc-volume-slider');
   if (volSlider && !volSlider.dataset.touched) { volSlider.value = mcState.volume ?? 70; document.getElementById('mc-volume-val').textContent = (mcState.volume ?? 70) + '%'; }
-  document.getElementById('mc-btn-shuffle')?.style.setProperty('background', mcState.shuffle ? 'var(--accent)' : 'rgba(255,255,255,.1)');
-  document.getElementById('mc-btn-repeat')?.style.setProperty('background', mcState.repeat ? 'var(--accent)' : 'rgba(255,255,255,.1)');
 
-  const etatVdj = { connecte: '🟢 Connecté', deconnecte: '🔴 Déconnecté', erreur: '⚠️ Erreur', inconnu: '⚫ Inconnu (service jamais synchronisé)' };
-  document.getElementById('mc-etat-vdj').textContent = etatVdj[mcState.etatVirtualDJ] || mcState.etatVirtualDJ || '—';
   document.getElementById('mc-derniere-synchro').textContent = formaterDateMC(mcState.derniereSynchro);
   document.getElementById('mc-erreur-service').textContent = mcState.erreur || 'Aucune';
-  document.getElementById('mc-version-service').textContent = mcState.version || '—';
 
-  // Playlists
-  const cntPl = document.getElementById('mc-playlist-count'); if (cntPl) cntPl.textContent = `(${mcPlaylists.length})`;
-  const tbodyPl = document.getElementById('tbody-mc-playlists');
-  if (tbodyPl) {
-    tbodyPl.innerHTML = mcPlaylists.length ? mcPlaylists.map(p => `
-      <tr${mcState.playlist === p.nom ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
-        <td>📋 ${p.nom} ${mcState.playlist === p.nom ? '<span style="color:var(--primary);font-size:11px">· ACTIVE</span>' : ''}</td>
-        <td style="text-align:right">
-          <button class="btn btn-primary btn-sm" onclick="activerPlaylistMC('${p.nom.replace(/'/g, "\\'")}')">▶ Charger</button>
-          <button class="btn btn-danger btn-sm" onclick="supprimerPlaylistMC('${p.id}','${p.nom.replace(/'/g, "\\'")}')">🗑</button>
-        </td>
-      </tr>`).join('') : '<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:20px">Aucune playlist au catalogue</td></tr>';
-  }
-
-  // Messages
-  const cntMsg = document.getElementById('mc-msg-count'); if (cntMsg) cntMsg.textContent = `(${mcMessages.length})`;
-  const tbodyMsg = document.getElementById('tbody-mc-messages');
-  if (tbodyMsg) {
-    tbodyMsg.innerHTML = mcMessages.length ? mcMessages.map(m => `
+  // Bibliothèque
+  const cntTrack = document.getElementById('mc-track-count'); if (cntTrack) cntTrack.textContent = `(${mcTracks.length})`;
+  const tbodyTrack = document.getElementById('tbody-mc-tracks');
+  if (tbodyTrack) {
+    tbodyTrack.innerHTML = mcTracks.length ? mcTracks.map(t => `
       <tr>
-        <td>📢 ${m.titre}</td>
-        <td style="font-size:12px">${m.fichier}</td>
-        <td style="font-size:12px">${m.heureDebut && m.heureFin ? `${m.heureDebut} - ${m.heureFin}` : 'Toute la journée'}</td>
-        <td><input type="checkbox" ${m.actif ? 'checked' : ''} onchange="toggleActifMessageMC('${m.id}', this.checked)"></td>
-        <td style="text-align:right">
-          <button class="btn btn-primary btn-sm" onclick="declencherMessageMC('${m.fichier.replace(/'/g, "\\'")}','${m.titre.replace(/'/g, "\\'")}')">▶ Déclencher</button>
-          <button class="btn btn-danger btn-sm" onclick="supprimerMessageMC('${m.id}','${m.titre.replace(/'/g, "\\'")}')">🗑</button>
-        </td>
-      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucun message</td></tr>';
-  }
-
-  // Publicités
-  const cntPub = document.getElementById('mc-pub-count'); if (cntPub) cntPub.textContent = `(${mcPublicites.length})`;
-  const tbodyPub = document.getElementById('tbody-mc-publicites');
-  if (tbodyPub) {
-    tbodyPub.innerHTML = mcPublicites.length ? mcPublicites.map(p => `
-      <tr>
-        <td>📣 ${p.titre}</td>
-        <td style="font-size:12px">${p.fichier}</td>
-        <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="supprimerPubMC('${p.id}','${p.titre.replace(/'/g, "\\'")}')">🗑</button></td>
+        <td>🎵 ${t.titre}</td>
+        <td style="font-size:12px">${t.taille ? (t.taille / 1024 / 1024).toFixed(1) + ' Mo' : '—'}</td>
+        <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="supprimerPisteMC('${t.id}','${(t.storagePath || '').replace(/'/g, "\\'")}','${t.titre.replace(/'/g, "\\'")}')">🗑</button></td>
       </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
   }
-  const progActif = document.getElementById('mc-pub-prog-active');
-  if (progActif && !progActif.dataset.init) {
-    progActif.checked = !!mcProgrammationPub.actif;
-    const radio = document.querySelector(`input[name="mc-pub-intervalle"][value="${mcProgrammationPub.intervalleMin || 20}"]`);
-    if (radio) radio.checked = true;
-    progActif.dataset.init = '1';
+
+  // Playlists (avec gestion des pistes par playlist)
+  const cntPl = document.getElementById('mc-playlist-count'); if (cntPl) cntPl.textContent = `(${mcPlaylists.length})`;
+  const listePl = document.getElementById('mc-playlists-liste');
+  if (listePl) {
+    listePl.innerHTML = mcPlaylists.length ? mcPlaylists.map(p => {
+      const pistes = (p.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean);
+      const optionsRestantes = mcTracks.filter(t => !(p.trackIds || []).includes(t.id));
+      return `
+      <div class="card" style="margin-bottom:10px${mcState.playlistId === p.id ? ';border:2px solid var(--primary)' : ''}">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong>📋 ${p.nom} ${mcState.playlistId === p.id ? '<span style="color:var(--primary);font-size:11px">· ACTIVE</span>' : ''}</strong>
+            <div>
+              <button class="btn btn-primary btn-sm" onclick="activerPlaylistMC('${p.id}')">▶ Charger</button>
+              <button class="btn btn-danger btn-sm" onclick="supprimerPlaylistMC('${p.id}','${p.nom.replace(/'/g, "\\'")}')">🗑</button>
+            </div>
+          </div>
+          <div style="font-size:13px;margin-bottom:8px">
+            ${pistes.length ? pistes.map(t => `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-soft,#eef2f6);border-radius:6px;padding:3px 8px;margin:2px;font-size:12px">🎵 ${t.titre} <span style="cursor:pointer;color:var(--danger)" onclick="retirerPisteDePlaylistMC('${p.id}','${t.id}')">×</span></span>`).join('') : '<span style="color:var(--text-muted)">Aucune piste</span>'}
+          </div>
+          ${optionsRestantes.length ? `<select class="form-control" style="max-width:260px;display:inline-block" onchange="if(this.value){ajouterPisteAPlaylistMC('${p.id}',this.value);this.value='';}">
+            <option value="">+ Ajouter une piste...</option>
+            ${optionsRestantes.map(t => `<option value="${t.id}">${t.titre}</option>`).join('')}
+          </select>` : ''}
+        </div>
+      </div>`;
+    }).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune playlist</p>';
   }
 
-  // Radios
-  const cntRadio = document.getElementById('mc-radio-count'); if (cntRadio) cntRadio.textContent = `(${mcRadios.length})`;
-  const tbodyRadio = document.getElementById('tbody-mc-radios');
-  if (tbodyRadio) {
-    tbodyRadio.innerHTML = mcRadios.length ? mcRadios.map(r => `
-      <tr${mcState.station === r.url ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
-        <td><input type="checkbox" ${r.favori ? 'checked' : ''} onchange="toggleFavoriRadioMC('${r.id}', this.checked)" title="Favori"></td>
-        <td>🌐 ${r.nom} ${mcState.station === r.url ? '<span style="color:var(--primary);font-size:11px">· ACTIVE</span>' : ''}</td>
-        <td style="font-size:12px">${r.categorie || '—'}</td>
-        <td style="text-align:right">
-          <button class="btn btn-outline btn-sm" onclick="testerRadioMC('${r.url}')">↗ Tester</button>
-          <button class="btn btn-primary btn-sm" onclick="activerRadioMC('${r.url}','${r.nom.replace(/'/g, "\\'")}')">▶ Charger</button>
-          <button class="btn btn-danger btn-sm" onclick="supprimerRadioMC('${r.id}','${r.nom.replace(/'/g, "\\'")}')">🗑</button>
-        </td>
-      </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucune radio enregistrée</td></tr>';
-  }
-
-  // Historique
-  const cntHist = document.getElementById('mc-historique-count'); if (cntHist) cntHist.textContent = `(${mcHistorique.length})`;
-  const tbodyHist = document.getElementById('tbody-mc-historique');
-  if (tbodyHist) {
-    tbodyHist.innerHTML = mcHistorique.length ? mcHistorique.map(h => `
-      <tr>
-        <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">${h.date || '—'}</td>
-        <td style="font-size:12px">${h.utilisateur || '—'}</td>
-        <td style="font-size:12px">${h.commande}</td>
-        <td style="font-size:11px;color:var(--text-muted)">${(h.poste || '').slice(0, 30)}</td>
-        <td style="font-size:12px">${h.etat || '—'}</td>
-      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucune commande envoyée</td></tr>';
+  // Appareils
+  const cntDev = document.getElementById('mc-device-count'); if (cntDev) cntDev.textContent = `(${mcDevices.length})`;
+  const tbodyDev = document.getElementById('tbody-mc-devices');
+  if (tbodyDev) {
+    tbodyDev.innerHTML = mcDevices.length ? mcDevices.map(d => `
+      <tr${d.id === mcDeviceActive ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
+        <td>${d.statut === 'online' ? '🟢' : '🔴'}</td>
+        <td>${d.label || d.id}</td>
+        <td style="font-size:12px">${d.statut === 'online' ? 'En ligne' : 'Hors ligne'}</td>
+        <td style="font-size:12px">${formaterDateMC(d.derniereSynchro)}</td>
+      </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucun appareil — démarrez TeMa Media Service sur un poste pour qu\'il apparaisse ici</td></tr>';
   }
 }
 

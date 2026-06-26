@@ -1,7 +1,7 @@
 {
   "name": "tema-media-service",
-  "version": "0.1.0",
-  "description": "Service Windows TeMa — écoute Firestore (media_commands) et pilote VirtualDJ via un pont MIDI virtuel, sans jamais faire transiter le son par TeMa.",
+  "version": "1.0.0",
+  "description": "TeMa Media Service — lecteur audio local pour boutique (VLC CLI), piloté par Firebase. Aucun son ne sort du navigateur.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,8 +9,6 @@
   },
   "dependencies": {
     "firebase-admin": "^12.0.0",
-    "easymidi": "^3.1.0",
-    "chokidar": "^3.6.0",
-    "node-windows": "^1.0.0-beta.8"
+    "node-vlc-http": "^0.5.0"
   }
 }

@@ -1,67 +1,70 @@
-# TeMa Media Service
+# TeMa Media Service V1
 
-Service Windows qui relie **TeMa Media Center** (le navigateur, qui n'envoie que des
-commandes Firestore) à **VirtualDJ** (qui assure la diffusion réelle du son). Le
-navigateur ne joue jamais le son — ce service est la seule pièce qui parle à VirtualDJ.
+Lecteur audio local pour boutique. **C'est la seule pièce du système TeMa qui fait
+réellement sortir du son.** Le navigateur (TeMa Media Center) n'est qu'un centre de
+contrôle : il gère les playlists/pistes et envoie des commandes Firestore — il ne
+joue jamais de son lui-même.
 
-⚠️ **Ce code n'a pas pu être testé contre une vraie installation VirtualDJ** (pas
-d'accès à un poste Windows dans l'environnement où il a été écrit). Considérez-le comme
-un point de départ solide à calibrer et valider sur le poste de diffusion réel.
+⚠️ **Non testé contre une vraie installation VLC/Windows** (pas d'accès à un poste
+Windows physique dans l'environnement où ce code a été écrit). À valider et ajuster
+sur le poste de diffusion réel.
 
 ## Principe
 
-VirtualDJ n'expose pas d'API HTTP universelle sur toutes ses éditions. La méthode
-qui fonctionne sur **toute édition** est un **pont MIDI virtuel** :
+1. Le service lance **VLC** au démarrage avec son interface HTTP officielle
+   (`--intf http`) — c'est l'interface de contrôle en ligne de commande native de VLC,
+   pas une dépendance tierce.
+2. Il écoute `media_commands` (Firestore) filtré par `deviceId`.
+3. Pour `SET_PLAYLIST`/`PLAY`/`NEXT`, il résout `media_playlists` → `media_tracks`,
+   télécharge le MP3 depuis Firebase Storage dans un cache local (`./cache`), puis
+   demande à VLC de le jouer via sa propre file (pas de re-téléchargement si déjà en
+   cache).
+4. Il publie l'état (`media_state/{deviceId}`) et un battement de présence
+   (`media_devices/{deviceId}`) en continu, pour que TeMa Web App affiche le poste
+   comme "en ligne" et sache ce qui est en train de jouer.
 
-1. Ce service envoie des messages MIDI (notes / contrôleurs) sur un port MIDI virtuel.
-2. VirtualDJ "voit" ce port comme un contrôleur MIDI externe.
-3. Dans VirtualDJ (Options > Controllers > MIDI Mapping), on associe une fois chaque
-   note MIDI à une action (Play, Pause, Next, Load Playlist, etc.).
-4. Pour republier le titre en cours vers TeMa, VirtualDJ écrit le morceau en cours dans
-   un fichier texte (fonctionnalité native "Now playing to file", utilisée normalement
-   pour les overlays de stream) ; ce service surveille ce fichier et republie son
-   contenu dans Firestore.
+## Structure
 
-**Si vous avez VirtualDJ Pro Infinity**, son module "Remote" expose une API réseau plus
-riche (lecture de volume/position en plus du contrôle) — ce serait une meilleure base
-que le pont MIDI, mais sa documentation exacte n'a pas pu être consultée ici. Si vous
-confirmez disposer de cette licence, ce service peut être réécrit pour s'y connecter
-directement plutôt que de passer par MIDI.
+```
+/tema-media-service
+ ├── index.js          point d'entrée
+ ├── firebase.js        connexion Firebase Admin SDK
+ ├── player.js           pilotage VLC (HTTP interface)
+ ├── queue.js             résolution playlist → pistes, téléchargement Storage
+ ├── sync.js              écoute media_commands, publication media_state/media_devices
+ ├── config.example.json
+ └── logs/
+```
 
 ## Installation
 
-1. **Node.js** : installer Node.js LTS sur le poste de diffusion.
-2. **loopMIDI** : installer [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)
-   et créer un port virtuel (ex. nommé `loopMIDI Port`).
-3. **Compte de service Firebase** : dans la console Firebase du projet TeMa, générer
-   une clé de compte de service (Paramètres du projet > Comptes de service > Générer
-   une nouvelle clé privée), l'enregistrer comme `service-account.json` dans ce dossier.
-4. **Configuration** : copier `config.example.json` en `config.json`, ajuster :
-   - `midiPortName` : nom exact du port loopMIDI créé.
-   - `nowPlayingFilePath` : chemin du fichier "now playing" exporté par VirtualDJ.
-   - `midiMapping` : notes/contrôleurs choisis (les valeurs par défaut sont arbitraires,
-     à mapper ensuite dans VirtualDJ).
-5. **Dépendances** : `npm install` dans ce dossier.
-6. **Test manuel** : `npm start` — vérifier dans la console que le service se connecte
-   au port MIDI et à Firestore sans erreur.
-7. **Mapper les actions dans VirtualDJ** : dans VirtualDJ, ouvrir la fenêtre de mapping
-   MIDI, déclencher chaque commande depuis TeMa Media Center une à une, et associer
-   la note MIDI reçue à l'action correspondante (Play, Pause, Stop, etc.).
-8. **Fichier "Now playing"** : dans VirtualDJ, activer l'export du titre en cours vers
-   un fichier texte (souvent sous Options > Recording/Broadcast, ou via un skin/plugin
-   dédié selon la version) et pointer `nowPlayingFilePath` vers ce fichier.
-9. **Installer comme service Windows** (démarrage automatique) :
-   `npm run install-service` depuis une invite **administrateur**.
+1. **VLC** : installer VLC Media Player sur le poste de diffusion (la version
+   desktop classique, pas le Store) — noter le chemin de `vlc.exe`.
+2. **Node.js** : installer Node.js LTS.
+3. **Compte de service Firebase** : Console Firebase > Paramètres du projet >
+   Comptes de service > Générer une nouvelle clé privée → l'enregistrer comme
+   `service-account.json` dans ce dossier.
+4. **Configuration** : copier `config.example.json` en `config.json`, renseigner :
+   - `deviceId` : identifiant unique du poste (ex. `boutique-principale-pc1`).
+   - `vlc.binaryPath` : chemin exact vers `vlc.exe`.
+   - `vlc.httpPassword` : mot de passe arbitraire pour l'interface HTTP locale de VLC
+     (reste sur la machine, jamais exposé à internet).
+5. `npm install`
+6. `npm start` — vérifier dans la console que VLC démarre et que le service annonce
+   `online` dans Firestore (`media_devices/{deviceId}`).
+7. (Optionnel) **Démarrage automatique Windows** : `npm install node-windows --save`
+   puis `node install-service.js` depuis une invite **administrateur**.
+
+## Commandes supportées (strictement celles-ci)
+
+`PLAY`, `PAUSE`, `STOP`, `NEXT`, `SET_PLAYLIST` (`params.playlistId`), `SET_VOLUME`
+(`params.volume`, 0-100).
 
 ## Limites connues
 
-- Pas de lecture fiable du **volume réel**, de la **durée** ou du **temps écoulé** sans
-  l'API Remote de VirtualDJ Pro Infinity — ces champs resteront approximatifs (déduits
-  des commandes envoyées) avec le pont MIDI seul.
-- Le mapping MIDI est **unidirectionnel** (TeMa → VirtualDJ) : il ne permet pas de
-  savoir si une commande a réellement été exécutée côté VirtualDJ, seulement qu'elle a
-  été envoyée. Le champ `etatVirtualDJ` reflète donc l'état du pont MIDI, pas une
-  confirmation de VirtualDJ lui-même.
-- La programmation automatique des publicités (toutes les 15/20/30/60 min) n'est pas
-  encore implémentée dans `index.js` — à ajouter en lisant `media_pub_programmation`
-  et en déclenchant `PLAY_ANNOUNCEMENT` à intervalles réguliers.
+- Une seule file de lecture active à la fois par poste (pas de gestion d'erreur si
+  le fichier audio est corrompu au-delà de ce que VLC gère nativement).
+- Le cache local n'est jamais purgé automatiquement — prévoir un nettoyage manuel ou
+  une rotation si la bibliothèque de pistes devient volumineuse.
+- Pas de reprise de téléchargement partiel : un téléchargement interrompu doit être
+  effacé manuellement du dossier `cache` pour être retenté.
