@@ -5196,7 +5196,7 @@ function demarrerListeners() {
   const uMcDevices = db.collection('media_devices').onSnapshot(snap => {
     mcDevices = snap.docs.map(d => ({id: d.id, ...d.data()}));
     if (!mcDeviceActive && mcDevices.length) mcDeviceActive = mcDevices[0].id;
-    if (mcDeviceActive) demarrerListenerEtatMC();
+    if (mcDeviceActive && mcDeviceActive !== '__all__') demarrerListenerEtatMC();
     rafraichirPageActive();
   }, err => console.error('media_devices:', err));
   const uMcPl = db.collection('media_playlists').onSnapshot(snap => {
