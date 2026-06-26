@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 <style>
   :root {
     --primary: #1a5276; --primary-light: #2e86c1; --accent: #f39c12; --accent-dark: #d68910;
@@ -2287,15 +2288,37 @@
         </div>
         <div class="card" style="margin-bottom:14px;background:#1a1e2e;color:#fff">
           <div class="card-body" style="padding:20px">
-            <div style="text-align:center;margin-bottom:6px">
-              <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:4px">Titre en cours</div>
-              <div style="font-size:18px;font-weight:700" id="mc-titre-cours">—</div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+              <div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎵</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase">Titre en cours</div>
+                <div style="font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="mc-titre-cours">—</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.55)" id="mc-artiste-album">—</div>
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <input type="range" id="mc-seek-slider" min="0" max="100" value="0" style="width:100%"
+                     oninput="this.dataset.touched='1';document.getElementById('mc-temps-ecoule').textContent=formaterDureeMC(this.value)"
+                     onchange="envoyerCommandeMC('SEEK',{secondes:Number(this.value)});this.dataset.touched=''">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.55)">
+                <span id="mc-temps-ecoule">0:00</span>
+                <span id="mc-temps-restant">-0:00</span>
+              </div>
             </div>
             <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin:16px 0">
+              <button onclick="envoyerCommandeMC('PREVIOUS')" title="Précédent" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏮</button>
               <button onclick="envoyerCommandeMC('PLAY')" title="Lecture" style="background:var(--accent);border:none;color:#1a1e2e;width:44px;height:44px;border-radius:50%;font-size:16px;cursor:pointer">▶</button>
               <button onclick="envoyerCommandeMC('PAUSE')" title="Pause" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;font-size:15px;cursor:pointer">⏸</button>
               <button onclick="envoyerCommandeMC('STOP')" title="Stop" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;font-size:15px;cursor:pointer">⏹</button>
               <button onclick="envoyerCommandeMC('NEXT')" title="Suivant" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">⏭</button>
+            </div>
+            <div style="display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+              <button class="btn btn-sm" id="mc-btn-shuffle" onclick="toggleShuffleMC()" title="Lecture aléatoire" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔀 Aléatoire</button>
+              <button class="btn btn-sm" id="mc-btn-repeat" onclick="cyclerRepeatMC()" title="Mode de répétition" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔁 Répéter : Aucun</button>
+              <select id="mc-ordre-select" onchange="changerOrdreMC(this.value)" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;padding:6px 10px;font-size:13px">
+                <option value="import">Ordre d'import</option>
+                <option value="alphabetique">Ordre alphabétique</option>
+              </select>
             </div>
             <div style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap">
               <span style="font-size:14px">🔊</span>
@@ -2308,6 +2331,7 @@
           <div class="card-header"><h2>🖥️ État du service de diffusion</h2></div>
           <div class="card-body">
             <table style="font-size:13px;width:100%">
+              <tr><td style="padding:4px 8px;color:var(--text-muted)">État du service</td><td style="padding:4px 8px;font-weight:700" id="mc-etat-service">—</td></tr>
               <tr><td style="padding:4px 8px;color:var(--text-muted)">Dernière synchronisation</td><td style="padding:4px 8px" id="mc-derniere-synchro">—</td></tr>
               <tr><td style="padding:4px 8px;color:var(--text-muted)">Erreur signalée</td><td style="padding:4px 8px" id="mc-erreur-service">—</td></tr>
             </table>
@@ -2319,20 +2343,35 @@
       <div class="caisse-tab" id="mc-tab-bibliotheque">
         <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Les pistes sont stockées sur Firebase Storage. Le navigateur ne les joue jamais : seul TeMa Media Service les télécharge et les lit localement.</div>
         <div class="card" style="margin-bottom:14px">
-          <div class="card-header"><h2>➕ Ajouter une piste</h2></div>
-          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <input type="file" id="mc-track-fichier" accept="audio/*" style="flex:1;min-width:220px">
-            <input type="text" class="form-control" id="mc-track-titre" placeholder="Titre (optionnel)" style="flex:1;min-width:160px">
-            <button class="btn btn-primary" onclick="televerserPisteMC()">⬆ Téléverser</button>
+          <div class="card-header"><h2>➕ Ajouter des pistes</h2></div>
+          <div class="card-body">
+            <div id="mc-dropzone" ondragover="event.preventDefault();this.style.borderColor='var(--primary)'" ondragleave="this.style.borderColor='var(--border,#ddd)'" ondrop="gererDepotMC(event)"
+                 style="border:2px dashed var(--border,#ddd);border-radius:10px;padding:24px;text-align:center;color:var(--text-muted);cursor:pointer;margin-bottom:12px"
+                 onclick="document.getElementById('mc-track-fichiers').click()">
+              📂 Glissez-déposez des fichiers ou un dossier ici, ou cliquez pour choisir
+              <div style="font-size:12px;margin-top:4px">MP3, WAV, FLAC, AAC, OGG — sélection multiple acceptée</div>
+            </div>
+            <input type="file" id="mc-track-fichiers" accept="audio/*" multiple style="display:none" onchange="ajouterFichiersAFileMC(this.files)">
+            <input type="file" id="mc-track-dossier" webkitdirectory style="display:none" onchange="ajouterFichiersAFileMC(this.files)">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('mc-track-fichiers').click()">🎵 Choisir des fichiers</button>
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('mc-track-dossier').click()">📁 Choisir un dossier</button>
+            </div>
           </div>
-          <div class="card-body" id="mc-track-progress" style="display:none;padding-top:0">
-            <div style="background:var(--bg-soft,#eef2f6);border-radius:6px;height:8px;overflow:hidden"><div id="mc-track-progress-bar" style="background:var(--primary);height:100%;width:0%"></div></div>
+          <div class="card-body" id="mc-upload-progress-wrap" style="display:none">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
+              <span id="mc-upload-progress-label">0 / 0 fichiers</span>
+              <span id="mc-upload-progress-eta">—</span>
+              <button class="btn btn-danger btn-sm" style="padding:2px 10px" onclick="annulerImportMC()">✕ Annuler</button>
+            </div>
+            <div style="background:var(--bg-soft,#eef2f6);border-radius:6px;height:8px;overflow:hidden"><div id="mc-upload-progress-bar" style="background:var(--primary);height:100%;width:0%"></div></div>
+            <div id="mc-upload-log" style="font-size:11px;color:var(--text-muted);margin-top:6px;max-height:80px;overflow:auto"></div>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h2>🎵 Pistes <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-track-count"></span></h2></div>
           <div class="card-body table-wrap">
-            <table><thead><tr><th>Titre</th><th>Taille</th><th style="text-align:right">Actions</th></tr></thead>
+            <table><thead><tr><th>Titre</th><th>Artiste</th><th>Durée</th><th>Format</th><th>Taille</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody id="tbody-mc-tracks"></tbody></table>
           </div>
         </div>
@@ -4110,7 +4149,8 @@ let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal
 // media_playlists, media_tracks — aucune autre collection autorisée.
 let mcDeviceActive = null;
 let mcDevices = [];
-let mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null };
+let mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
+  shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu' };
 let mcPlaylists = [], mcTracks = [];
 
 let ecritures = [], releves = [], rapprochements = [];
@@ -5187,6 +5227,7 @@ function demarrerListeners() {
     if (uMcStateUnsub) uMcStateUnsub();
     uMcStateUnsub = db.collection('media_state').doc(mcDeviceActive).onSnapshot(doc => {
       mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
+        shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu',
         ...(doc.exists ? doc.data() : {}) };
       majMediaCenterLecture();
       rafraichirPageActive();
@@ -5552,6 +5593,9 @@ function majHorlogeWelcome() {
   if (td) td.textContent = dateStr;
 }
 setInterval(majHorlogeWelcome, 1000);
+// Rafraîchit le tableau de bord Media Center même sans nouvel événement Firestore,
+// pour que la détection "Hors ligne" (basée sur l'horloge) ne reste jamais figée.
+setInterval(() => { if (document.getElementById('page-media-center')?.classList.contains('active')) renderMediaCenterAdmin(); }, 5000);
 majHorlogeWelcome();
 
 function focusLogin() {
@@ -7979,6 +8023,19 @@ async function envoyerCommandeMC(command, params) {
 
 function envoyerVolumeMC(valeur) { envoyerCommandeMC('SET_VOLUME', { volume: Number(valeur) }); }
 
+// ── Lecture continue (Feature 3) : shuffle/repeat/ordre sont exécutés par la Queue
+// du service (queue.js), jamais par le navigateur — ici on ne fait qu'envoyer le réglage. ──
+function toggleShuffleMC() { envoyerCommandeMC('SET_SHUFFLE', { shuffle: !mcState.shuffle }); }
+
+const MC_REPEAT_MODES = ['aucun', 'piste', 'playlist'];
+const MC_REPEAT_LABELS = { aucun: 'Aucun', piste: 'Piste', playlist: 'Playlist' };
+function cyclerRepeatMC() {
+  const i = MC_REPEAT_MODES.indexOf(mcState.repeat || 'aucun');
+  const suivant = MC_REPEAT_MODES[(i + 1) % MC_REPEAT_MODES.length];
+  envoyerCommandeMC('SET_REPEAT', { repeat: suivant });
+}
+function changerOrdreMC(ordre) { envoyerCommandeMC('SET_ORDER', { ordre }); }
+
 // ── Bibliothèque de pistes (media_tracks) — uploadées vers Firebase Storage pour
 // téléchargement par TeMa Media Service. Jamais lues dans le navigateur. ──
 function devinerMimeTypeAudioMC(filename) {
@@ -7986,33 +8043,137 @@ function devinerMimeTypeAudioMC(filename) {
   return { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4', flac: 'audio/flac', aac: 'audio/aac' }[ext] || 'application/octet-stream';
 }
 
-async function televerserPisteMC() {
+// ── Import en masse (Feature 1) : multi-fichiers, dossiers, drag-and-drop,
+// métadonnées (ID3 via jsmediatags + durée via <audio> hors-écran pour sonder
+// uniquement la durée, jamais pour diffuser), déduplication, annulation. ──
+let mcImportFile = [];
+let mcImportEnCours = false;
+let mcImportAnnule = false;
+let mcImportTacheCourante = null;
+
+function gererDepotMC(event) {
+  event.preventDefault();
+  document.getElementById('mc-dropzone').style.borderColor = 'var(--border,#ddd)';
+  const items = event.dataTransfer.items;
+  if (items && items.length && items[0].webkitGetAsEntry) {
+    const fichiers = [];
+    let enAttente = 0;
+    function lireEntree(entry) {
+      if (entry.isFile) {
+        enAttente++;
+        entry.file(f => { fichiers.push(f); enAttente--; if (enAttente === 0) ajouterFichiersAFileMC(fichiers); });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        enAttente++;
+        reader.readEntries(entries => { entries.forEach(lireEntree); enAttente--; if (enAttente === 0) ajouterFichiersAFileMC(fichiers); });
+      }
+    }
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+      if (entry) lireEntree(entry);
+    }
+  } else {
+    ajouterFichiersAFileMC(event.dataTransfer.files);
+  }
+}
+
+function ajouterFichiersAFileMC(fileList) {
+  const fichiersAudio = Array.from(fileList).filter(f => /\.(mp3|wav|flac|aac|ogg|m4a)$/i.test(f.name));
+  if (!fichiersAudio.length) { showToast('Aucun fichier audio reconnu dans la sélection', 'error'); return; }
+  mcImportFile.push(...fichiersAudio);
+  if (!mcImportEnCours) demarrerImportMC();
+}
+
+function annulerImportMC() {
+  mcImportAnnule = true;
+  if (mcImportTacheCourante) mcImportTacheCourante.cancel();
+}
+
+function lireMetadonneesMC(file) {
+  return new Promise(resolve => {
+    const resultat = { artiste: '', album: '', duree: 0 };
+    const finaliserDuree = () => {
+      const audio = document.createElement('audio');
+      audio.preload = 'metadata';
+      audio.src = URL.createObjectURL(file);
+      audio.onloadedmetadata = () => { resultat.duree = audio.duration || 0; URL.revokeObjectURL(audio.src); resolve(resultat); };
+      audio.onerror = () => { resolve(resultat); };
+      setTimeout(() => resolve(resultat), 4000); // garde-fou si jamais déclenché
+    };
+    if (window.jsmediatags) {
+      window.jsmediatags.read(file, {
+        onSuccess: tag => {
+          resultat.artiste = tag.tags.artist || '';
+          resultat.album = tag.tags.album || '';
+          finaliserDuree();
+        },
+        onError: finaliserDuree
+      });
+    } else finaliserDuree();
+  });
+}
+
+function formaterDureeMC(s) {
+  if (!s) return '—';
+  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+}
+
+async function demarrerImportMC() {
   if (!currentUser?.isAdmin) return;
-  const fileInput = document.getElementById('mc-track-fichier');
-  const file = fileInput.files[0];
-  if (!file) { showToast('Choisissez un fichier audio', 'error'); return; }
-  const titre = document.getElementById('mc-track-titre').value.trim() || file.name.replace(/\.[^.]+$/, '');
-  const progressWrap = document.getElementById('mc-track-progress');
-  const progressBar = document.getElementById('mc-track-progress-bar');
-  progressWrap.style.display = 'block';
-  try {
-    const storageRef = firebase.storage().ref(`media_tracks/${Date.now()}_${file.name}`);
-    const contentType = file.type || devinerMimeTypeAudioMC(file.name);
-    const uploadTask = storageRef.put(file, { contentType });
-    await new Promise((resolve, reject) => {
-      uploadTask.on('state_changed',
-        snap => { progressBar.style.width = Math.round((snap.bytesTransferred / snap.totalBytes) * 100) + '%'; },
-        reject, resolve);
-    });
-    const url = await storageRef.getDownloadURL();
-    await db.collection('media_tracks').add({
-      titre, url, storagePath: storageRef.fullPath, mimeType: contentType, taille: file.size,
-      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast('✓ Piste téléversée');
-    fileInput.value = ''; document.getElementById('mc-track-titre').value = '';
-  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
-  finally { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }
+  mcImportEnCours = true;
+  mcImportAnnule = false;
+  const total = mcImportFile.length;
+  let traites = 0;
+  const debut = Date.now();
+  const wrap = document.getElementById('mc-upload-progress-wrap');
+  const bar = document.getElementById('mc-upload-progress-bar');
+  const label = document.getElementById('mc-upload-progress-label');
+  const eta = document.getElementById('mc-upload-progress-eta');
+  const log = document.getElementById('mc-upload-log');
+  wrap.style.display = 'block';
+  log.innerHTML = '';
+
+  while (mcImportFile.length && !mcImportAnnule) {
+    const file = mcImportFile.shift();
+    traites++;
+    label.textContent = `${traites} / ${total} fichiers`;
+    bar.style.width = Math.round((traites / total) * 100) + '%';
+    const ecoule = (Date.now() - debut) / 1000;
+    const restant = mcImportFile.length;
+    eta.textContent = restant > 0 && traites > 1 ? `~${Math.ceil((ecoule / (traites - 1)) * restant)}s restantes` : '—';
+
+    const titre = file.name.replace(/\.[^.]+$/, '');
+    const dejaPresent = mcTracks.some(t => t.titre === titre && Math.abs((t.taille || 0) - file.size) < 1024);
+    if (dejaPresent) {
+      log.innerHTML += `<div>⏭ "${titre}" déjà présent — ignoré</div>`;
+      continue;
+    }
+    try {
+      const meta = await lireMetadonneesMC(file);
+      const storageRef = firebase.storage().ref(`media_tracks/${Date.now()}_${file.name}`);
+      const contentType = file.type || devinerMimeTypeAudioMC(file.name);
+      const uploadTask = storageRef.put(file, { contentType });
+      mcImportTacheCourante = uploadTask;
+      await new Promise((resolve, reject) => uploadTask.on('state_changed', null, reject, resolve));
+      const url = await storageRef.getDownloadURL();
+      await db.collection('media_tracks').add({
+        titre, url, storagePath: storageRef.fullPath, mimeType: contentType, taille: file.size,
+        artiste: meta.artiste, album: meta.album, duree: meta.duree, format: (file.name.split('.').pop() || '').toUpperCase(),
+        mediaType: 'music', dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      log.innerHTML += `<div>✓ "${titre}"</div>`;
+    } catch (err) {
+      if (err.code === 'storage/canceled') { log.innerHTML += `<div>✕ Import annulé</div>`; break; }
+      log.innerHTML += `<div>✗ "${titre}" — ${err.message}</div>`;
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+
+  mcImportEnCours = false;
+  mcImportTacheCourante = null;
+  if (mcImportAnnule) { mcImportFile = []; showToast('Import annulé'); }
+  else showToast(`✓ Import terminé (${traites} fichier(s) traité(s))`);
+  setTimeout(() => { wrap.style.display = 'none'; }, 2500);
 }
 
 async function supprimerPisteMC(id, storagePath, titre) {
@@ -8110,12 +8271,44 @@ function renderMediaCenterAdmin() {
   const elPl = document.getElementById('mc-kpi-playlist'); if (elPl) elPl.textContent = modeTous ? '— (voir Appareils)' : (playlistActive?.nom || '—');
   const elVol = document.getElementById('mc-kpi-volume'); if (elVol) elVol.textContent = modeTous ? '—' : ((mcState.volume ?? 70) + '%');
   const elTitre = document.getElementById('mc-titre-cours'); if (elTitre) elTitre.textContent = modeTous ? 'Mode synchronisé — voir l\'onglet Appareils pour le détail par poste' : (mcState.nowPlaying || 'Aucune lecture en cours');
+  const elArtisteAlbum = document.getElementById('mc-artiste-album');
+  if (elArtisteAlbum) elArtisteAlbum.textContent = modeTous ? '' : ([mcState.artiste, mcState.album].filter(Boolean).join(' — ') || '—');
+
+  const seekSlider = document.getElementById('mc-seek-slider');
+  if (seekSlider && !modeTous) {
+    seekSlider.max = mcState.duree || 0;
+    if (!seekSlider.dataset.touched) seekSlider.value = mcState.position || 0;
+    document.getElementById('mc-temps-ecoule').textContent = formaterDureeMC(seekSlider.value);
+    document.getElementById('mc-temps-restant').textContent = '-' + formaterDureeMC(Math.max(0, (mcState.duree || 0) - (mcState.position || 0)));
+  }
 
   const volSlider = document.getElementById('mc-volume-slider');
   if (volSlider && !modeTous && !volSlider.dataset.touched) { volSlider.value = mcState.volume ?? 70; document.getElementById('mc-volume-val').textContent = (mcState.volume ?? 70) + '%'; }
 
+  const btnShuffle = document.getElementById('mc-btn-shuffle');
+  if (btnShuffle) btnShuffle.style.background = mcState.shuffle ? 'var(--accent)' : 'rgba(255,255,255,.1)';
+  const btnRepeat = document.getElementById('mc-btn-repeat');
+  if (btnRepeat) {
+    btnRepeat.textContent = `🔁 Répéter : ${MC_REPEAT_LABELS[mcState.repeat || 'aucun']}`;
+    btnRepeat.style.background = (mcState.repeat && mcState.repeat !== 'aucun') ? 'var(--accent)' : 'rgba(255,255,255,.1)';
+  }
+  const ordreSel = document.getElementById('mc-ordre-select');
+  if (ordreSel && document.activeElement !== ordreSel) ordreSel.value = mcState.ordre || 'import';
+
   document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
   document.getElementById('mc-erreur-service').textContent = modeTous ? '—' : (mcState.erreur || 'Aucune');
+
+  // Feature 2 — état réel à 5 valeurs, sans faux positif : si le service n'a pas
+  // republié depuis >15s (2-3 battements manqués), on affiche "Hors ligne" même
+  // si le dernier état connu était "connecté", plutôt que de laisser un état figé.
+  const elEtatService = document.getElementById('mc-etat-service');
+  if (elEtatService && !modeTous) {
+    const synchroMs = mcState.derniereSynchro?.toMillis ? mcState.derniereSynchro.toMillis() : (mcState.derniereSynchro ? new Date(mcState.derniereSynchro).getTime() : 0);
+    const horsLigne = !synchroMs || (Date.now() - synchroMs) > 15000;
+    const etatAffiche = horsLigne ? 'hors_ligne' : (mcState.etatService || 'inconnu');
+    const labels = { connecte: '🟢 Connecté', demarrage: '🟡 Démarrage', synchronisation: '🟠 Synchronisation', hors_ligne: '🔴 Hors ligne', arrete: '⚫ Arrêté', erreur: '🔴 Erreur', inconnu: '⚫ Inconnu (jamais synchronisé)' };
+    elEtatService.textContent = labels[etatAffiche] || etatAffiche;
+  }
 
   // Bibliothèque
   const cntTrack = document.getElementById('mc-track-count'); if (cntTrack) cntTrack.textContent = `(${mcTracks.length})`;
@@ -8124,9 +8317,12 @@ function renderMediaCenterAdmin() {
     tbodyTrack.innerHTML = mcTracks.length ? mcTracks.map(t => `
       <tr>
         <td>🎵 ${t.titre}</td>
+        <td style="font-size:12px">${t.artiste || '—'}</td>
+        <td style="font-size:12px">${formaterDureeMC(t.duree)}</td>
+        <td style="font-size:12px">${t.format || '—'}</td>
         <td style="font-size:12px">${t.taille ? (t.taille / 1024 / 1024).toFixed(1) + ' Mo' : '—'}</td>
         <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="supprimerPisteMC('${t.id}','${(t.storagePath || '').replace(/'/g, "\\'")}','${t.titre.replace(/'/g, "\\'")}')">🗑</button></td>
-      </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
   }
 
   // Playlists (avec gestion des pistes par playlist)
