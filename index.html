@@ -7954,21 +7954,26 @@ function mcNavigate(tab) {
 
 function changerAppareilMediaCenter(deviceId) {
   mcDeviceActive = deviceId;
-  demarrerListenerEtatMC();
+  if (deviceId !== '__all__') demarrerListenerEtatMC();
   renderMediaCenterAdmin();
 }
 
 // Écrit une commande dans media_commands. C'est le SEUL mécanisme de pilotage : le
 // navigateur n'exécute jamais l'action lui-même, TeMa Media Service s'en charge.
 // Commandes strictement autorisées : PLAY, PAUSE, STOP, NEXT, SET_PLAYLIST, SET_VOLUME.
+// Si "__all__" est sélectionné (diffusion synchronisée), la même commande (même
+// timestamp) est écrite pour chaque appareil enregistré.
 async function envoyerCommandeMC(command, params) {
   if (!currentUser?.isAdmin || !mcDeviceActive) return;
+  const timestamp = Date.now();
+  const cibles = mcDeviceActive === '__all__' ? mcDevices.map(d => d.id) : [mcDeviceActive];
+  if (!cibles.length) { showToast('Aucun appareil enregistré', 'error'); return; }
   try {
-    await db.collection('media_commands').add({
-      deviceId: mcDeviceActive, command, params: params || {}, utilisateur: currentUser.label,
-      timestamp: Date.now(), statut: 'en_attente'
-    });
-    showToast(`✓ Commande ${command} envoyée`);
+    await Promise.all(cibles.map(deviceId => db.collection('media_commands').add({
+      deviceId, command, params: params || {}, utilisateur: currentUser.label,
+      timestamp, statut: 'en_attente'
+    })));
+    showToast(`✓ Commande ${command} envoyée${cibles.length > 1 ? ` (${cibles.length} appareils)` : ''}`);
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
@@ -8084,31 +8089,33 @@ function renderMediaCenterAdmin() {
   const deviceSel = document.getElementById('mc-device-select');
   if (deviceSel) {
     deviceSel.innerHTML = mcDevices.length
-      ? mcDevices.map(d => `<option value="${d.id}" ${d.id === mcDeviceActive ? 'selected' : ''}>${d.label || d.id}${d.statut === 'online' ? ' 🟢' : ' 🔴'}</option>`).join('')
+      ? `<option value="__all__" ${mcDeviceActive === '__all__' ? 'selected' : ''}>🔊 Tous les appareils (synchronisé)</option>`
+        + mcDevices.map(d => `<option value="${d.id}" ${d.id === mcDeviceActive ? 'selected' : ''}>${d.label || d.id}${d.statut === 'online' ? ' 🟢' : ' 🔴'}</option>`).join('')
       : '<option value="">Aucun appareil enregistré</option>';
   }
 
-  const diffuse = mcState.status === 'playing';
+  const modeTous = mcDeviceActive === '__all__';
+  const diffuse = !modeTous && mcState.status === 'playing';
   const elDiff = document.getElementById('mc-kpi-diffusion'), elDiffIcon = document.getElementById('mc-kpi-diffusion-icon');
-  if (elDiff) elDiff.textContent = diffuse ? 'Active' : (mcState.status === 'paused' ? 'En pause' : 'Arrêtée');
-  if (elDiffIcon) elDiffIcon.textContent = diffuse ? '🟢' : (mcState.status === 'paused' ? '🟡' : '⚫');
+  if (elDiff) elDiff.textContent = modeTous ? `${mcDevices.length} appareils` : (diffuse ? 'Active' : (mcState.status === 'paused' ? 'En pause' : 'Arrêtée'));
+  if (elDiffIcon) elDiffIcon.textContent = modeTous ? '🔊' : (diffuse ? '🟢' : (mcState.status === 'paused' ? '🟡' : '⚫'));
 
   const deviceActuel = mcDevices.find(d => d.id === mcDeviceActive);
-  const enLigne = deviceActuel?.statut === 'online';
+  const enLigne = modeTous ? mcDevices.some(d => d.statut === 'online') : deviceActuel?.statut === 'online';
   const elPoste = document.getElementById('mc-kpi-poste'), elPosteIcon = document.getElementById('mc-kpi-poste-icon');
-  if (elPoste) elPoste.textContent = enLigne ? 'Connecté' : 'Hors ligne';
+  if (elPoste) elPoste.textContent = modeTous ? `${mcDevices.filter(d => d.statut === 'online').length}/${mcDevices.length} en ligne` : (enLigne ? 'Connecté' : 'Hors ligne');
   if (elPosteIcon) elPosteIcon.textContent = enLigne ? '🟢' : '🔴';
 
   const playlistActive = mcPlaylists.find(p => p.id === mcState.playlistId);
-  const elPl = document.getElementById('mc-kpi-playlist'); if (elPl) elPl.textContent = playlistActive?.nom || '—';
-  const elVol = document.getElementById('mc-kpi-volume'); if (elVol) elVol.textContent = (mcState.volume ?? 70) + '%';
-  const elTitre = document.getElementById('mc-titre-cours'); if (elTitre) elTitre.textContent = mcState.nowPlaying || 'Aucune lecture en cours';
+  const elPl = document.getElementById('mc-kpi-playlist'); if (elPl) elPl.textContent = modeTous ? '— (voir Appareils)' : (playlistActive?.nom || '—');
+  const elVol = document.getElementById('mc-kpi-volume'); if (elVol) elVol.textContent = modeTous ? '—' : ((mcState.volume ?? 70) + '%');
+  const elTitre = document.getElementById('mc-titre-cours'); if (elTitre) elTitre.textContent = modeTous ? 'Mode synchronisé — voir l\'onglet Appareils pour le détail par poste' : (mcState.nowPlaying || 'Aucune lecture en cours');
 
   const volSlider = document.getElementById('mc-volume-slider');
-  if (volSlider && !volSlider.dataset.touched) { volSlider.value = mcState.volume ?? 70; document.getElementById('mc-volume-val').textContent = (mcState.volume ?? 70) + '%'; }
+  if (volSlider && !modeTous && !volSlider.dataset.touched) { volSlider.value = mcState.volume ?? 70; document.getElementById('mc-volume-val').textContent = (mcState.volume ?? 70) + '%'; }
 
-  document.getElementById('mc-derniere-synchro').textContent = formaterDateMC(mcState.derniereSynchro);
-  document.getElementById('mc-erreur-service').textContent = mcState.erreur || 'Aucune';
+  document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
+  document.getElementById('mc-erreur-service').textContent = modeTous ? '—' : (mcState.erreur || 'Aucune');
 
   // Bibliothèque
   const cntTrack = document.getElementById('mc-track-count'); if (cntTrack) cntTrack.textContent = `(${mcTracks.length})`;
