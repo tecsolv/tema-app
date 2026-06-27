@@ -2366,8 +2366,11 @@
           </div>
         </div>
         <div class="card" style="background:#11141f;color:#fff;border:1px solid rgba(255,255,255,.08);overflow:hidden">
-          <div style="background:#1a1e2e;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.08)">
-            <span style="font-size:13px;font-weight:700;letter-spacing:.5px">🎵 PLAYING LIST <span style="font-weight:400;color:rgba(255,255,255,.5)" id="mc-playlist-encours-nom"></span></span>
+          <div style="background:#1a1e2e;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);gap:10px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:700;letter-spacing:.5px">🎵 PLAYING LIST</span>
+            <select id="mc-playinglist-select" onchange="if(this.value) activerSourceMC(this.value)" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;max-width:220px">
+              <option value="">— Choisir un album ou une radio —</option>
+            </select>
           </div>
           <div class="table-wrap" style="max-height:260px;overflow-y:auto">
             <table style="font-size:13px;width:100%">
@@ -8618,14 +8621,22 @@ function renderMediaCenterAdmin() {
   }
 
   // Playlist en cours — façon @MAX Tray Player : liste numérotée, piste active surlignée.
-  const nomPlEnCours = document.getElementById('mc-playlist-encours-nom');
+  // Le menu déroulant permet de choisir directement l'album (playlist) ou la radio
+  // à jouer depuis cette carte, sans passer par l'onglet Radio.
+  const selectPlEnCours = document.getElementById('mc-playinglist-select');
+  if (selectPlEnCours && document.activeElement !== selectPlEnCours) {
+    const options = [
+      ...mcPlaylists.map(p => ({ id: 'playlist:' + p.id, label: '📋 ' + p.nom })),
+      ...mcSources.filter(s => s.sourceType === 'internet_radio').map(s => ({ id: s.id, label: '📡 ' + s.nom }))
+    ];
+    selectPlEnCours.innerHTML = '<option value="">— Choisir un album ou une radio —</option>'
+      + options.map(o => `<option value="${o.id}" ${mcState.sourceId === o.id ? 'selected' : ''}>${o.label}</option>`).join('');
+  }
   const tbodyPlEnCours = document.getElementById('tbody-mc-playlist-encours');
   if (tbodyPlEnCours && !modeTous && mcState.sourceType === 'internet_radio') {
-    if (nomPlEnCours) nomPlEnCours.textContent = '— Radio internet en direct';
     tbodyPlEnCours.innerHTML = `<tr><td style="padding:14px 10px;color:#5ad16f;text-align:center;font-weight:700" colspan="4">📡 ${mcState.nowPlaying || 'Radio en direct'}</td></tr>`;
   } else if (tbodyPlEnCours && !modeTous) {
     const plActive = mcPlaylists.find(p => p.id === mcState.playlistId);
-    if (nomPlEnCours) nomPlEnCours.textContent = plActive ? `— ${plActive.nom}` : '';
     const pistesPl = plActive ? (plActive.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean) : [];
     tbodyPlEnCours.innerHTML = pistesPl.length ? pistesPl.map((t, i) => {
       const enCours = t.titre === mcState.nowPlaying;
