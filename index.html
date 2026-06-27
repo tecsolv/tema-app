@@ -3558,7 +3558,7 @@
      son propre ordinateur) un extrait de ce qui se joue réellement dans la boutique,
      récupéré via Firebase Storage avec un léger délai. Ne diffuse jamais vers la
      boutique — c'est l'inverse du flux normal (boutique → Admin, pas Admin → boutique). -->
-<audio id="mc-monitor-audio" preload="none" crossorigin="anonymous" style="display:none" onended="mcRetourSonActif=false;arreterSpectreMC();renderMediaCenterAdmin()"></audio>
+<audio id="mc-monitor-audio" preload="none" crossorigin="anonymous" style="display:none" onended="poursuivreEnchainementRetourSonMC();renderMediaCenterAdmin()"></audio>
 
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
@@ -8522,18 +8522,13 @@ function togglePreEcouteMC(trackId, url) {
   renderMediaCenterAdmin();
 }
 
-// ── "Retour de Son" : le spectre visuel et le son audible sont DEUX choses
-// séparées. Le spectre (AnalyserNode) capte le signal AVANT le nœud de volume
-// local — il réagit donc au volume réel de diffusion dans la boutique, jamais
-// au réglage d'écoute de l'Admin. Dès qu'un nouvel extrait arrive (publié par le
-// service toutes les ~20s) et que la boutique est en train de jouer, le spectre
-// se met à jour automatiquement (lecture en sourdine, gain local à 0) — pas
-// besoin de cliquer pour le voir s'animer. Le bouton "Retour Son" ne fait que
-// monter/couper le gain LOCAL pour entendre ou pas, sans jamais toucher au signal
-// analysé. Léger délai (l'intervalle de capture côté service) — pas un flux
-// temps réel pur. ──
+// ── "Retour de Son" : simple Lecture/Arrêt. Clic pour écouter → lit le dernier
+// extrait, PUIS enchaîne automatiquement sur chaque nouvel extrait publié par le
+// service (continuité réelle, jamais de répétition du même contenu). Clic pour
+// couper → arrêt net, plus aucun son ni animation. Léger délai inhérent à
+// l'intervalle de capture côté service (~20s) — pas un flux temps réel pur. ──
 const MC_SPECTRE_FREQS_LABELS = ['40Hz','100Hz','300Hz','600Hz','1kHz','2kHz','4kHz','6kHz','9kHz','12kHz'];
-let mcAudioCtxSpectre = null, mcAnalyseurSpectre = null, mcSourceSpectre = null, mcGainEcouteSpectre = null, mcAnimationSpectre = null;
+let mcAudioCtxSpectre = null, mcAnalyseurSpectre = null, mcSourceSpectre = null, mcAnimationSpectre = null;
 let mcDernierMonitorUrlCharge = null;
 
 function initialiserGrapheSpectreMC() {
@@ -8543,30 +8538,31 @@ function initialiserGrapheSpectreMC() {
   mcSourceSpectre = mcAudioCtxSpectre.createMediaElementSource(audio); // une seule fois par élément <audio>
   mcAnalyseurSpectre = mcAudioCtxSpectre.createAnalyser();
   mcAnalyseurSpectre.fftSize = 256;
-  mcGainEcouteSpectre = mcAudioCtxSpectre.createGain();
-  mcGainEcouteSpectre.gain.value = 0; // muet par défaut : le spectre tourne, mais on n'entend rien sans clic explicite
-  // source → analyser (pour le visuel, toujours en amont du gain) → gain (écoute) → enceintes locales
+  // source → analyser (visuel) → enceintes locales. Plus de nœud de gain séparé :
+  // le volume audible est directement celui de l'élément <audio> (toujours à 100%,
+  // contrôlé uniquement par Lecture/Arrêt, jamais en sourdine en arrière-plan).
   mcSourceSpectre.connect(mcAnalyseurSpectre);
-  mcAnalyseurSpectre.connect(mcGainEcouteSpectre);
-  mcGainEcouteSpectre.connect(mcAudioCtxSpectre.destination);
+  mcAnalyseurSpectre.connect(mcAudioCtxSpectre.destination);
 }
 
-// Charge automatiquement chaque nouvel extrait publié par le service, dès que la
-// boutique diffuse — c'est ce qui rend le spectre "live" sans action de l'Admin.
-function synchroniserSpectreAvecExtraitMC() {
-  if (!mcState.monitorUrl || mcState.monitorUrl === mcDernierMonitorUrlCharge) return;
-  if (mcState.status !== 'playing') return; // rien à visualiser si la boutique ne diffuse pas
+// Lit le dernier extrait connu. Appelé au clic initial, puis ré-appelé à chaque
+// nouvel extrait tant que mcRetourSonActif reste vrai (enchaînement, pas de boucle).
+function jouerExtraitCourantMC() {
+  if (!mcState.monitorUrl) return;
+  if (mcState.monitorUrl === mcDernierMonitorUrlCharge) return; // déjà en cours de lecture
   initialiserGrapheSpectreMC();
   const audio = document.getElementById('mc-monitor-audio');
   mcDernierMonitorUrlCharge = mcState.monitorUrl;
-  audio.muted = true; // autorise la lecture automatique sans geste utilisateur (politique des navigateurs)
+  audio.muted = false;
+  audio.loop = false;
   audio.src = mcState.monitorUrl;
-  audio.play().then(demarrerAnimationSpectreMC).catch(() => { /* sera retenté au prochain extrait */ });
+  if (mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
+  audio.play().then(demarrerAnimationSpectreMC).catch(err => showToast('Retour Son impossible : ' + err.message, 'error'));
 }
 
 function demarrerAnimationSpectreMC() {
-  if (mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
   document.getElementById('mc-spectrum-wrap').style.display = 'flex';
+  if (mcAnimationSpectre) return; // déjà en cours
 
   const canvas = document.getElementById('mc-spectrum-canvas');
   const ctx = canvas.getContext('2d');
@@ -8574,7 +8570,6 @@ function demarrerAnimationSpectreMC() {
   const nbBarres = MC_SPECTRE_FREQS_LABELS.length;
   const largeurBarre = canvas.width / nbBarres;
 
-  if (mcAnimationSpectre) return; // déjà en cours
   function dessiner() {
     mcAnimationSpectre = requestAnimationFrame(dessiner);
     mcAnalyseurSpectre.getByteFrequencyData(donnees);
@@ -8604,16 +8599,25 @@ function arreterSpectreMC() {
   if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Le bouton ne contrôle plus que le volume D'ÉCOUTE local (gain), jamais le spectre
-// lui-même, qui continue de tourner en arrière-plan dès qu'un extrait est disponible.
+// Tant que mcRetourSonActif est vrai, chaque nouvel extrait publié déclenche
+// automatiquement la suite de la lecture (enchaînement). Appelé depuis le rendu.
+function poursuivreEnchainementRetourSonMC() {
+  if (!mcRetourSonActif) return;
+  jouerExtraitCourantMC();
+}
+
 function toggleRetourSonMC() {
-  if (!mcGainEcouteSpectre) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
-  // L'AudioContext créé automatiquement (sans clic, dès qu'un extrait arrive) démarre
-  // "suspendu" par la politique des navigateurs — il ne traite aucun son ni n'anime le
-  // spectre jusqu'à ce qu'un vrai clic le débloque. C'est ce clic-ci qui le fait.
-  if (mcAudioCtxSpectre && mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
-  mcRetourSonActif = !mcRetourSonActif;
-  mcGainEcouteSpectre.gain.value = mcRetourSonActif ? 1 : 0;
+  const audio = document.getElementById('mc-monitor-audio');
+  if (mcRetourSonActif) {
+    audio.pause();
+    mcRetourSonActif = false;
+    arreterSpectreMC();
+  } else {
+    if (!mcState.monitorUrl) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
+    mcDernierMonitorUrlCharge = null; // force la (re)lecture même si c'est le même extrait qu'avant
+    mcRetourSonActif = true;
+    jouerExtraitCourantMC();
+  }
   renderMediaCenterAdmin();
 }
 
@@ -8789,11 +8793,11 @@ function renderMediaCenterAdmin() {
       majRetourSon.textContent = `Extrait d'il y a ${secondesEcoulees}s`;
     }
   }
-  // Spectre "live" : se synchronise tout seul dès qu'un nouvel extrait arrive et que
-  // la boutique diffuse — l'Admin n'a plus besoin de cliquer pour le voir s'animer.
+  // Tant que l'Admin écoute (mcRetourSonActif), chaque nouvel extrait publié
+  // enchaîne automatiquement la lecture — jamais de boucle sur le même contenu.
   if (!modeTous) {
-    if (mcState.status === 'playing') synchroniserSpectreAvecExtraitMC();
-    else arreterSpectreMC();
+    if (mcState.status === 'playing') poursuivreEnchainementRetourSonMC();
+    else if (mcRetourSonActif) { document.getElementById('mc-monitor-audio').pause(); mcRetourSonActif = false; arreterSpectreMC(); }
   }
 
   document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
