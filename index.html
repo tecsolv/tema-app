@@ -3558,7 +3558,7 @@
      son propre ordinateur) un extrait de ce qui se joue réellement dans la boutique,
      récupéré via Firebase Storage avec un léger délai. Ne diffuse jamais vers la
      boutique — c'est l'inverse du flux normal (boutique → Admin, pas Admin → boutique). -->
-<audio id="mc-monitor-audio" preload="none" style="display:none" onended="mcRetourSonActif=false;arreterSpectreMC();renderMediaCenterAdmin()"></audio>
+<audio id="mc-monitor-audio" preload="none" crossorigin="anonymous" style="display:none" onended="mcRetourSonActif=false;arreterSpectreMC();renderMediaCenterAdmin()"></audio>
 
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
