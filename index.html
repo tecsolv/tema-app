@@ -3541,6 +3541,12 @@
   </div>
 </div>
 
+<!-- Pré-écoute locale (Bibliothèque Media Center, Admin uniquement) : ce lecteur ne
+     diffuse JAMAIS dans la boutique — il joue uniquement sur le poste où l'Admin est
+     connecté (casque/haut-parleurs de son propre ordinateur), pour choisir des pistes
+     sans déranger les clients. Totalement indépendant de TeMa Media Service. -->
+<audio id="mc-preview-audio" preload="none" style="display:none" onended="mcPreEcouteId=null;renderMediaCenterAdmin()"></audio>
+
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
   <div class="modal" style="max-width:380px">
@@ -8331,6 +8337,7 @@ let mcImportEnCours = false;
 let mcImportAnnule = false;
 let mcImportTacheCourante = null;
 let mcSelectionTracks = new Set(); // pistes cochées dans la Bibliothèque, pour création rapide de playlist
+let mcPreEcouteId = null; // id de la piste en cours de pré-écoute LOCALE (casque Admin), jamais diffusée en boutique
 
 function gererDepotMC(event) {
   event.preventDefault();
@@ -8481,6 +8488,23 @@ function toggleSelectionToutesTracksMC(coche) {
 
 function viderSelectionTracksMC() {
   mcSelectionTracks.clear();
+  renderMediaCenterAdmin();
+}
+
+// ── Pré-écoute locale (Bibliothèque) — joue UNIQUEMENT sur le poste Admin via
+// l'élément <audio> #mc-preview-audio, totalement séparé de TeMa Media Service.
+// Ne diffuse jamais dans la boutique : c'est juste un contrôle qualité avant
+// d'ajouter une piste à une playlist. ──
+function togglePreEcouteMC(trackId, url) {
+  const audio = document.getElementById('mc-preview-audio');
+  if (mcPreEcouteId === trackId) {
+    audio.pause();
+    mcPreEcouteId = null;
+  } else {
+    audio.src = url;
+    audio.play().catch(err => showToast('Pré-écoute impossible : ' + err.message, 'error'));
+    mcPreEcouteId = trackId;
+  }
   renderMediaCenterAdmin();
 }
 
@@ -8705,7 +8729,10 @@ function renderMediaCenterAdmin() {
         <td style="font-size:12px">${formaterDureeMC(t.duree)}</td>
         <td style="font-size:12px">${t.format || '—'}</td>
         <td style="font-size:12px">${t.taille ? (t.taille / 1024 / 1024).toFixed(1) + ' Mo' : '—'}</td>
-        <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="supprimerPisteMC('${t.id}','${(t.storagePath || '').replace(/'/g, "\\'")}','${t.titre.replace(/'/g, "\\'")}')">🗑</button></td>
+        <td style="text-align:right">
+          <button class="btn btn-outline btn-sm" onclick="togglePreEcouteMC('${t.id}','${(t.url || '').replace(/'/g, "\\'")}')" title="Pré-écoute locale (casque Admin uniquement, jamais diffusé en boutique)">${mcPreEcouteId === t.id ? '⏸' : '🎧'}</button>
+          <button class="btn btn-danger btn-sm" onclick="supprimerPisteMC('${t.id}','${(t.storagePath || '').replace(/'/g, "\\'")}','${t.titre.replace(/'/g, "\\'")}')">🗑</button>
+        </td>
       </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
   }
   const barreSelection = document.getElementById('mc-selection-bar-wrap');
