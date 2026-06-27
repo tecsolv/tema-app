@@ -2327,6 +2327,9 @@
               <input type="range" id="mc-volume-slider" min="0" max="100" value="70" oninput="this.dataset.touched='1';document.getElementById('mc-volume-val').textContent=this.value+'%'" onchange="envoyerVolumeMC(this.value)" style="width:160px">
               <span style="font-size:12px;min-width:34px" id="mc-volume-val">70%</span>
             </div>
+            <div id="mc-spectrum-wrap" style="display:none;justify-content:center;margin-top:12px">
+              <canvas id="mc-spectrum-canvas" width="320" height="90"></canvas>
+            </div>
             <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
               <button class="btn btn-sm" id="mc-btn-retoursson" onclick="toggleRetourSonMC()" title="Écouter un extrait de ce qui se joue réellement dans la boutique (avec un léger délai, sur ce poste uniquement)" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔊 Retour Son</button>
               <span style="font-size:11px;color:rgba(255,255,255,.4)" id="mc-retoursson-maj"></span>
@@ -3555,7 +3558,7 @@
      son propre ordinateur) un extrait de ce qui se joue réellement dans la boutique,
      récupéré via Firebase Storage avec un léger délai. Ne diffuse jamais vers la
      boutique — c'est l'inverse du flux normal (boutique → Admin, pas Admin → boutique). -->
-<audio id="mc-monitor-audio" preload="none" style="display:none" onended="mcRetourSonActif=false;renderMediaCenterAdmin()"></audio>
+<audio id="mc-monitor-audio" preload="none" style="display:none" onended="mcRetourSonActif=false;arreterSpectreMC();renderMediaCenterAdmin()"></audio>
 
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
@@ -8519,21 +8522,98 @@ function togglePreEcouteMC(trackId, url) {
   renderMediaCenterAdmin();
 }
 
-// ── "Retour de Son" : joue, UNIQUEMENT sur ce poste (casque/haut-parleurs de
-// l'Admin), le dernier extrait de ce qui se joue réellement dans la boutique,
-// publié par TeMa Media Service via Firebase Storage. Léger délai (l'intervalle
-// de capture côté service, ~20s) — pas un flux temps réel pur. ──
-function toggleRetourSonMC() {
+// ── "Retour de Son" : le spectre visuel et le son audible sont DEUX choses
+// séparées. Le spectre (AnalyserNode) capte le signal AVANT le nœud de volume
+// local — il réagit donc au volume réel de diffusion dans la boutique, jamais
+// au réglage d'écoute de l'Admin. Dès qu'un nouvel extrait arrive (publié par le
+// service toutes les ~20s) et que la boutique est en train de jouer, le spectre
+// se met à jour automatiquement (lecture en sourdine, gain local à 0) — pas
+// besoin de cliquer pour le voir s'animer. Le bouton "Retour Son" ne fait que
+// monter/couper le gain LOCAL pour entendre ou pas, sans jamais toucher au signal
+// analysé. Léger délai (l'intervalle de capture côté service) — pas un flux
+// temps réel pur. ──
+const MC_SPECTRE_FREQS_LABELS = ['40Hz','100Hz','300Hz','600Hz','1kHz','2kHz','4kHz','6kHz','9kHz','12kHz'];
+let mcAudioCtxSpectre = null, mcAnalyseurSpectre = null, mcSourceSpectre = null, mcGainEcouteSpectre = null, mcAnimationSpectre = null;
+let mcDernierMonitorUrlCharge = null;
+
+function initialiserGrapheSpectreMC() {
+  if (mcAudioCtxSpectre) return;
   const audio = document.getElementById('mc-monitor-audio');
-  if (mcRetourSonActif) {
-    audio.pause();
-    mcRetourSonActif = false;
-  } else {
-    if (!mcState.monitorUrl) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
-    audio.src = mcState.monitorUrl;
-    audio.play().catch(err => showToast('Retour Son impossible : ' + err.message, 'error'));
-    mcRetourSonActif = true;
+  mcAudioCtxSpectre = new (window.AudioContext || window.webkitAudioContext)();
+  mcSourceSpectre = mcAudioCtxSpectre.createMediaElementSource(audio); // une seule fois par élément <audio>
+  mcAnalyseurSpectre = mcAudioCtxSpectre.createAnalyser();
+  mcAnalyseurSpectre.fftSize = 256;
+  mcGainEcouteSpectre = mcAudioCtxSpectre.createGain();
+  mcGainEcouteSpectre.gain.value = 0; // muet par défaut : le spectre tourne, mais on n'entend rien sans clic explicite
+  // source → analyser (pour le visuel, toujours en amont du gain) → gain (écoute) → enceintes locales
+  mcSourceSpectre.connect(mcAnalyseurSpectre);
+  mcAnalyseurSpectre.connect(mcGainEcouteSpectre);
+  mcGainEcouteSpectre.connect(mcAudioCtxSpectre.destination);
+}
+
+// Charge automatiquement chaque nouvel extrait publié par le service, dès que la
+// boutique diffuse — c'est ce qui rend le spectre "live" sans action de l'Admin.
+function synchroniserSpectreAvecExtraitMC() {
+  if (!mcState.monitorUrl || mcState.monitorUrl === mcDernierMonitorUrlCharge) return;
+  if (mcState.status !== 'playing') return; // rien à visualiser si la boutique ne diffuse pas
+  initialiserGrapheSpectreMC();
+  const audio = document.getElementById('mc-monitor-audio');
+  mcDernierMonitorUrlCharge = mcState.monitorUrl;
+  audio.muted = true; // autorise la lecture automatique sans geste utilisateur (politique des navigateurs)
+  audio.src = mcState.monitorUrl;
+  audio.play().then(demarrerAnimationSpectreMC).catch(() => { /* sera retenté au prochain extrait */ });
+}
+
+function demarrerAnimationSpectreMC() {
+  if (mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
+  document.getElementById('mc-spectrum-wrap').style.display = 'flex';
+
+  const canvas = document.getElementById('mc-spectrum-canvas');
+  const ctx = canvas.getContext('2d');
+  const donnees = new Uint8Array(mcAnalyseurSpectre.frequencyBinCount);
+  const nbBarres = MC_SPECTRE_FREQS_LABELS.length;
+  const largeurBarre = canvas.width / nbBarres;
+
+  if (mcAnimationSpectre) return; // déjà en cours
+  function dessiner() {
+    mcAnimationSpectre = requestAnimationFrame(dessiner);
+    mcAnalyseurSpectre.getByteFrequencyData(donnees);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const pas = Math.floor(donnees.length / nbBarres);
+    for (let i = 0; i < nbBarres; i++) {
+      const valeur = donnees[i * pas] || 0;
+      const hauteur = Math.max(2, (valeur / 255) * (canvas.height - 16));
+      const couleur = valeur > 200 ? '#e74c3c' : valeur > 130 ? '#f1c40f' : '#2ecc71';
+      ctx.fillStyle = couleur;
+      ctx.fillRect(i * largeurBarre + 2, canvas.height - 16 - hauteur, largeurBarre - 4, hauteur);
+      ctx.fillStyle = 'rgba(255,255,255,.4)';
+      ctx.font = '8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(MC_SPECTRE_FREQS_LABELS[i], i * largeurBarre + largeurBarre / 2, canvas.height - 4);
+    }
   }
+  dessiner();
+}
+
+function arreterSpectreMC() {
+  if (mcAnimationSpectre) cancelAnimationFrame(mcAnimationSpectre);
+  mcAnimationSpectre = null;
+  const wrap = document.getElementById('mc-spectrum-wrap');
+  if (wrap) wrap.style.display = 'none';
+  const canvas = document.getElementById('mc-spectrum-canvas');
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Le bouton ne contrôle plus que le volume D'ÉCOUTE local (gain), jamais le spectre
+// lui-même, qui continue de tourner en arrière-plan dès qu'un extrait est disponible.
+function toggleRetourSonMC() {
+  if (!mcGainEcouteSpectre) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
+  // L'AudioContext créé automatiquement (sans clic, dès qu'un extrait arrive) démarre
+  // "suspendu" par la politique des navigateurs — il ne traite aucun son ni n'anime le
+  // spectre jusqu'à ce qu'un vrai clic le débloque. C'est ce clic-ci qui le fait.
+  if (mcAudioCtxSpectre && mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
+  mcRetourSonActif = !mcRetourSonActif;
+  mcGainEcouteSpectre.gain.value = mcRetourSonActif ? 1 : 0;
   renderMediaCenterAdmin();
 }
 
@@ -8700,7 +8780,7 @@ function renderMediaCenterAdmin() {
   if (ordreSel && document.activeElement !== ordreSel) ordreSel.value = mcState.ordre || 'import';
 
   const btnRetourSon = document.getElementById('mc-btn-retoursson');
-  if (btnRetourSon) btnRetourSon.textContent = mcRetourSonActif ? '⏸ Retour Son' : '🔊 Retour Son';
+  if (btnRetourSon) btnRetourSon.textContent = mcRetourSonActif ? '🔇 Couper le son' : '🔊 Écouter le son';
   const majRetourSon = document.getElementById('mc-retoursson-maj');
   if (majRetourSon) {
     if (!mcState.monitorUpdatedAt) majRetourSon.textContent = 'Aucun extrait encore';
@@ -8708,6 +8788,12 @@ function renderMediaCenterAdmin() {
       const secondesEcoulees = Math.round((Date.now() - mcState.monitorUpdatedAt) / 1000);
       majRetourSon.textContent = `Extrait d'il y a ${secondesEcoulees}s`;
     }
+  }
+  // Spectre "live" : se synchronise tout seul dès qu'un nouvel extrait arrive et que
+  // la boutique diffuse — l'Admin n'a plus besoin de cliquer pour le voir s'animer.
+  if (!modeTous) {
+    if (mcState.status === 'playing') synchroniserSpectreAvecExtraitMC();
+    else arreterSpectreMC();
   }
 
   document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
