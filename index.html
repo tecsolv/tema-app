@@ -2327,6 +2327,10 @@
               <input type="range" id="mc-volume-slider" min="0" max="100" value="70" oninput="this.dataset.touched='1';document.getElementById('mc-volume-val').textContent=this.value+'%'" onchange="envoyerVolumeMC(this.value)" style="width:160px">
               <span style="font-size:12px;min-width:34px" id="mc-volume-val">70%</span>
             </div>
+            <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn btn-sm" id="mc-btn-retoursson" onclick="toggleRetourSonMC()" title="Écouter un extrait de ce qui se joue réellement dans la boutique (avec un léger délai, sur ce poste uniquement)" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔊 Retour Son</button>
+              <span style="font-size:11px;color:rgba(255,255,255,.4)" id="mc-retoursson-maj"></span>
+            </div>
 
             <!-- Console Audio fusionnée directement ici (façon Winamp/@MAX) — un seul
                  écran, pas d'onglet séparé. ⚠️ L'EQ/balance sont appliqués par VLC sur
@@ -3547,6 +3551,12 @@
      sans déranger les clients. Totalement indépendant de TeMa Media Service. -->
 <audio id="mc-preview-audio" preload="none" style="display:none" onended="mcPreEcouteId=null;renderMediaCenterAdmin()"></audio>
 
+<!-- "Retour de Son" : joue UNIQUEMENT sur le poste de l'Admin (casque/haut-parleurs de
+     son propre ordinateur) un extrait de ce qui se joue réellement dans la boutique,
+     récupéré via Firebase Storage avec un léger délai. Ne diffuse jamais vers la
+     boutique — c'est l'inverse du flux normal (boutique → Admin, pas Admin → boutique). -->
+<audio id="mc-monitor-audio" preload="none" style="display:none" onended="mcRetourSonActif=false;renderMediaCenterAdmin()"></audio>
+
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
   <div class="modal" style="max-width:380px">
@@ -4284,7 +4294,7 @@ let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal
 let mcDeviceActive = null;
 let mcDevices = [];
 let mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
-  shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist' };
+  shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist', monitorUrl: null, monitorUpdatedAt: null };
 let mcPlaylists = [], mcTracks = [], mcSources = [];
 
 let ecritures = [], releves = [], rapprochements = [];
@@ -5361,7 +5371,7 @@ function demarrerListeners() {
     if (uMcStateUnsub) uMcStateUnsub();
     uMcStateUnsub = db.collection('media_state').doc(mcDeviceActive).onSnapshot(doc => {
       mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
-        shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist',
+        shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist', monitorUrl: null, monitorUpdatedAt: null,
         ...(doc.exists ? doc.data() : {}) };
       majMediaCenterLecture();
       rafraichirPageActive();
@@ -8338,6 +8348,7 @@ let mcImportAnnule = false;
 let mcImportTacheCourante = null;
 let mcSelectionTracks = new Set(); // pistes cochées dans la Bibliothèque, pour création rapide de playlist
 let mcPreEcouteId = null; // id de la piste en cours de pré-écoute LOCALE (casque Admin), jamais diffusée en boutique
+let mcRetourSonActif = false; // lecture en cours du dernier extrait "Retour de Son" (casque Admin uniquement)
 
 function gererDepotMC(event) {
   event.preventDefault();
@@ -8508,6 +8519,24 @@ function togglePreEcouteMC(trackId, url) {
   renderMediaCenterAdmin();
 }
 
+// ── "Retour de Son" : joue, UNIQUEMENT sur ce poste (casque/haut-parleurs de
+// l'Admin), le dernier extrait de ce qui se joue réellement dans la boutique,
+// publié par TeMa Media Service via Firebase Storage. Léger délai (l'intervalle
+// de capture côté service, ~20s) — pas un flux temps réel pur. ──
+function toggleRetourSonMC() {
+  const audio = document.getElementById('mc-monitor-audio');
+  if (mcRetourSonActif) {
+    audio.pause();
+    mcRetourSonActif = false;
+  } else {
+    if (!mcState.monitorUrl) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
+    audio.src = mcState.monitorUrl;
+    audio.play().catch(err => showToast('Retour Son impossible : ' + err.message, 'error'));
+    mcRetourSonActif = true;
+  }
+  renderMediaCenterAdmin();
+}
+
 async function creerPlaylistDepuisSelectionMC() {
   if (!currentUser?.isAdmin) return;
   const nom = document.getElementById('mc-selection-playlist-nom').value.trim();
@@ -8669,6 +8698,17 @@ function renderMediaCenterAdmin() {
   }
   const ordreSel = document.getElementById('mc-ordre-select');
   if (ordreSel && document.activeElement !== ordreSel) ordreSel.value = mcState.ordre || 'import';
+
+  const btnRetourSon = document.getElementById('mc-btn-retoursson');
+  if (btnRetourSon) btnRetourSon.textContent = mcRetourSonActif ? '⏸ Retour Son' : '🔊 Retour Son';
+  const majRetourSon = document.getElementById('mc-retoursson-maj');
+  if (majRetourSon) {
+    if (!mcState.monitorUpdatedAt) majRetourSon.textContent = 'Aucun extrait encore';
+    else {
+      const secondesEcoulees = Math.round((Date.now() - mcState.monitorUpdatedAt) / 1000);
+      majRetourSon.textContent = `Extrait d'il y a ${secondesEcoulees}s`;
+    }
+  }
 
   document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
   document.getElementById('mc-erreur-service').textContent = modeTous ? '—' : (mcState.erreur || 'Aucune');
