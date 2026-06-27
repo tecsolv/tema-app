@@ -2271,6 +2271,7 @@
         <button class="btn btn-sm caisse-tab-btn active" id="mc-tab-btn-dashboard" onclick="mcNavigate('dashboard')" style="flex:1;min-width:120px">📊 Tableau de bord</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-bibliotheque" onclick="mcNavigate('bibliotheque')" style="flex:1;min-width:120px">🎵 Bibliothèque</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-playlists" onclick="mcNavigate('playlists')" style="flex:1;min-width:120px">📋 Playlists</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-sources" onclick="mcNavigate('sources')" style="flex:1;min-width:120px">📡 Sources Audio</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-annonces" onclick="mcNavigate('annonces')" style="flex:1;min-width:120px">📢 Annonces</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-appareils" onclick="mcNavigate('appareils')" style="flex:1;min-width:120px">🖥️ Appareils</button>
       </div>
@@ -2437,6 +2438,31 @@
         <div class="card">
           <div class="card-header"><h2>📋 Playlists <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-playlist-count"></span></h2></div>
           <div class="card-body" id="mc-playlists-liste"></div>
+        </div>
+      </div>
+
+      <!-- ONGLET : SOURCES AUDIO (Feature 7 — remplace l'idée "Radio FM" par un
+           sélecteur unique de sources ; le moteur ne sait jamais s'il joue une
+           playlist ou une radio, juste "la source active"). -->
+      <div class="caisse-tab" id="mc-tab-sources">
+        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Une seule commande pilote toutes les sources (playlist, radio internet, et plus tard Spotify/Deezer/etc.) — le service résout le type en interne. VLC lit le flux radio directement, aucun téléchargement.</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Ajouter une radio internet</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nom</label><input type="text" class="form-control" id="mc-radio-nom" placeholder="Ex: Radio JAM"></div>
+              <div class="form-group"><label>Catégorie</label><input type="text" class="form-control" id="mc-radio-categorie" placeholder="Ex: Variétés"></div>
+            </div>
+            <div class="form-group"><label>URL du flux</label><input type="text" class="form-control" id="mc-radio-url" placeholder="https://..."></div>
+            <button class="btn btn-primary" onclick="creerRadioMC()">➕ Ajouter</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📡 Sources disponibles <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-source-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th></th><th>Source</th><th>Type</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-mc-sources"></tbody></table>
+          </div>
         </div>
       </div>
 
@@ -4241,8 +4267,8 @@ let produits = [], fournisseurs = [], commandes = [], utilisateurs = [], journal
 let mcDeviceActive = null;
 let mcDevices = [];
 let mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
-  shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu' };
-let mcPlaylists = [], mcTracks = [];
+  shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist' };
+let mcPlaylists = [], mcTracks = [], mcSources = [];
 
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
@@ -5318,7 +5344,7 @@ function demarrerListeners() {
     if (uMcStateUnsub) uMcStateUnsub();
     uMcStateUnsub = db.collection('media_state').doc(mcDeviceActive).onSnapshot(doc => {
       mcState = { status: 'stopped', nowPlaying: '', playlistId: null, volume: 70, derniereSynchro: null, erreur: null,
-        shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu',
+        shuffle: false, repeat: 'aucun', ordre: 'import', artiste: '', album: '', position: 0, etatService: 'inconnu', sourceId: null, sourceType: 'playlist',
         ...(doc.exists ? doc.data() : {}) };
       majMediaCenterLecture();
       rafraichirPageActive();
@@ -5339,7 +5365,11 @@ function demarrerListeners() {
     mcTracks = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('media_tracks:', err));
-  unsubscribers.push(uMcDevices, uMcPl, uMcTracks);
+  const uMcSources = db.collection('media_sources').onSnapshot(snap => {
+    mcSources = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    rafraichirPageActive();
+  }, err => console.error('media_sources:', err));
+  unsubscribers.push(uMcDevices, uMcPl, uMcTracks, uMcSources);
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -8437,7 +8467,7 @@ async function creerPlaylistMC() {
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
-function activerPlaylistMC(playlistId) { envoyerCommandeMC('SET_PLAYLIST', { playlistId }); }
+function activerPlaylistMC(playlistId) { envoyerCommandeMC('SET_SOURCE', { sourceId: 'playlist:' + playlistId }); }
 
 async function ajouterPisteAPlaylistMC(playlistId, trackId) {
   if (!currentUser?.isAdmin || !trackId) return;
@@ -8459,6 +8489,44 @@ async function supprimerPlaylistMC(id, nom) {
   if (!currentUser?.isAdmin) return;
   if (!confirm(`Supprimer la playlist "${nom}" ?`)) return;
   try { await db.collection('media_playlists').doc(id).delete(); showToast('✓ Playlist supprimée'); }
+  catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+// ── Feature 7 : Sources Audio — pattern "Source Provider". Une seule commande
+// (SET_SOURCE) pilote toutes les sources ; le moteur résout le type en interne.
+// Convention d'identifiant : "playlist:<id>" pour une playlist existante, sinon
+// l'id du document media_sources (radios internet aujourd'hui, Spotify/Deezer/
+// Apple Music/podcasts demain — sans jamais changer cette commande ni ce moteur).
+async function creerRadioMC() {
+  if (!currentUser?.isAdmin) return;
+  const nom = document.getElementById('mc-radio-nom').value.trim();
+  const url = document.getElementById('mc-radio-url').value.trim();
+  const categorie = document.getElementById('mc-radio-categorie').value.trim();
+  if (!nom || !url) { showToast('Nom et URL requis', 'error'); return; }
+  try {
+    await db.collection('media_sources').add({
+      nom, sourceType: 'internet_radio', config: { url, categorie }, favori: false, actif: true,
+      dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✓ Radio ajoutée');
+    document.getElementById('mc-radio-nom').value = '';
+    document.getElementById('mc-radio-url').value = '';
+    document.getElementById('mc-radio-categorie').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function activerSourceMC(sourceId) { envoyerCommandeMC('SET_SOURCE', { sourceId }); }
+function testerRadioMC(url) { window.open(url, '_blank', 'noopener'); }
+
+async function toggleFavoriSourceMC(id, favori) {
+  if (!currentUser?.isAdmin) return;
+  try { await db.collection('media_sources').doc(id).update({ favori }); } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function supprimerSourceMC(id, nom) {
+  if (!currentUser?.isAdmin) return;
+  if (!confirm(`Supprimer la source "${nom}" ?`)) return;
+  try { await db.collection('media_sources').doc(id).delete(); showToast('✓ Source supprimée'); }
   catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
@@ -8552,7 +8620,10 @@ function renderMediaCenterAdmin() {
   // Playlist en cours — façon @MAX Tray Player : liste numérotée, piste active surlignée.
   const nomPlEnCours = document.getElementById('mc-playlist-encours-nom');
   const tbodyPlEnCours = document.getElementById('tbody-mc-playlist-encours');
-  if (tbodyPlEnCours && !modeTous) {
+  if (tbodyPlEnCours && !modeTous && mcState.sourceType === 'internet_radio') {
+    if (nomPlEnCours) nomPlEnCours.textContent = '— Radio internet en direct';
+    tbodyPlEnCours.innerHTML = `<tr><td style="padding:14px 10px;color:#5ad16f;text-align:center;font-weight:700" colspan="4">📡 ${mcState.nowPlaying || 'Radio en direct'}</td></tr>`;
+  } else if (tbodyPlEnCours && !modeTous) {
     const plActive = mcPlaylists.find(p => p.id === mcState.playlistId);
     if (nomPlEnCours) nomPlEnCours.textContent = plActive ? `— ${plActive.nom}` : '';
     const pistesPl = plActive ? (plActive.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean) : [];
@@ -8612,6 +8683,28 @@ function renderMediaCenterAdmin() {
         </div>
       </div>`;
     }).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune playlist</p>';
+  }
+
+  // Sources Audio (Feature 7) — combine playlists (id "playlist:<id>") et radios
+  // internet (media_sources), pour une activation unifiée via SET_SOURCE.
+  const sourcesCombinees = [
+    ...mcPlaylists.map(p => ({ id: 'playlist:' + p.id, nom: p.nom, sourceType: 'playlist', estRadio: false })),
+    ...mcSources.map(s => ({ id: s.id, nom: s.nom, sourceType: s.sourceType, favori: s.favori, url: s.config?.url, categorie: s.config?.categorie, estRadio: true }))
+  ];
+  const cntSource = document.getElementById('mc-source-count'); if (cntSource) cntSource.textContent = `(${sourcesCombinees.length})`;
+  const tbodySource = document.getElementById('tbody-mc-sources');
+  if (tbodySource) {
+    tbodySource.innerHTML = sourcesCombinees.length ? sourcesCombinees.map(s => `
+      <tr${mcState.sourceId === s.id ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
+        <td>${s.estRadio ? `<input type="checkbox" ${s.favori ? 'checked' : ''} onchange="toggleFavoriSourceMC('${s.id}', this.checked)" title="Favori">` : ''}</td>
+        <td>${s.sourceType === 'playlist' ? '📋' : '📡'} ${s.nom} ${mcState.sourceId === s.id ? '<span style="color:var(--primary);font-size:11px">· ACTIVE</span>' : ''}${s.categorie ? ` <span style="color:var(--text-muted);font-size:11px">(${s.categorie})</span>` : ''}</td>
+        <td style="font-size:12px">${s.sourceType === 'playlist' ? 'Playlist' : 'Radio internet'}</td>
+        <td style="text-align:right">
+          ${s.estRadio ? `<button class="btn btn-outline btn-sm" onclick="testerRadioMC('${s.url}')">↗ Tester</button>` : ''}
+          <button class="btn btn-primary btn-sm" onclick="activerSourceMC('${s.id}')">▶ Charger</button>
+          ${s.estRadio ? `<button class="btn btn-danger btn-sm" onclick="supprimerSourceMC('${s.id}','${s.nom.replace(/'/g, "\\'")}')">🗑</button>` : ''}
+        </td>
+      </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucune source — créez une playlist ou ajoutez une radio</td></tr>';
   }
 
   // Annonces (Feature 5)
