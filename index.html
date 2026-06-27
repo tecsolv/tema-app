@@ -2271,6 +2271,7 @@
         <button class="btn btn-sm caisse-tab-btn active" id="mc-tab-btn-dashboard" onclick="mcNavigate('dashboard')" style="flex:1;min-width:120px">📊 Tableau de bord</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-bibliotheque" onclick="mcNavigate('bibliotheque')" style="flex:1;min-width:120px">🎵 Bibliothèque</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-playlists" onclick="mcNavigate('playlists')" style="flex:1;min-width:120px">📋 Playlists</button>
+        <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-annonces" onclick="mcNavigate('annonces')" style="flex:1;min-width:120px">📢 Annonces</button>
         <button class="btn btn-sm caisse-tab-btn" id="mc-tab-btn-appareils" onclick="mcNavigate('appareils')" style="flex:1;min-width:120px">🖥️ Appareils</button>
       </div>
 
@@ -2324,6 +2325,42 @@
               <span style="font-size:14px">🔊</span>
               <input type="range" id="mc-volume-slider" min="0" max="100" value="70" oninput="this.dataset.touched='1';document.getElementById('mc-volume-val').textContent=this.value+'%'" onchange="envoyerVolumeMC(this.value)" style="width:160px">
               <span style="font-size:12px;min-width:34px" id="mc-volume-val">70%</span>
+            </div>
+
+            <!-- Console Audio fusionnée directement ici (façon Winamp/@MAX) — un seul
+                 écran, pas d'onglet séparé. ⚠️ L'EQ/balance sont appliqués par VLC sur
+                 le poste de diffusion (jamais dans le navigateur) — à valider sur site. -->
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin-top:16px;padding-top:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleConsoleAudioMC()">
+                <span style="font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase">🎚️ Égaliseur & Effets</span>
+                <span id="mc-console-toggle-icon" style="font-size:12px;color:rgba(255,255,255,.5)">▼</span>
+              </div>
+              <div id="mc-console-audio-body" style="display:none;margin-top:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+                  <select id="mc-eq-preset" onchange="appliquerPresetEQMC(this.value)" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;padding:5px 8px;font-size:12px">
+                    <option value="">— Personnalisé —</option>
+                    <option value="normal">Normal</option><option value="pop">Pop</option><option value="afrobeat">Afrobeat</option>
+                    <option value="dance">Dance</option><option value="jazz">Jazz</option><option value="bass">Bass Boost</option>
+                    <option value="treble">Treble Boost</option><option value="speech">Speech</option><option value="lounge">Lounge</option>
+                    <option value="soft">Soft</option><option value="classique">Classique</option><option value="cinema">Cinéma</option>
+                  </select>
+                  <span style="font-size:11px;color:rgba(255,255,255,.5)">Préampli <span id="mc-preamp-val">0</span> dB
+                    <input type="range" id="mc-preamp-slider" min="-20" max="20" value="0" oninput="document.getElementById('mc-preamp-val').textContent=this.value" onchange="envoyerEQMC()" style="width:80px;vertical-align:middle;margin-left:4px">
+                  </span>
+                </div>
+                <div id="mc-eq-bands" style="display:flex;gap:6px;justify-content:space-between;flex-wrap:nowrap;margin-bottom:10px;overflow-x:auto"></div>
+                <div style="margin-bottom:10px">
+                  <span style="font-size:11px;color:rgba(255,255,255,.5)">⬅ Balance ➡ (<span id="mc-balance-val">Centre</span>)</span>
+                  <input type="range" id="mc-balance-slider" min="-100" max="100" value="0" oninput="majAfficheBalanceMC(this.value)" onchange="envoyerCommandeMC('SET_BALANCE',{valeur:Number(this.value)})" style="width:100%">
+                </div>
+                <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.8)">
+                  <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="mc-normalize" onchange="envoyerCommandeMC('SET_NORMALIZE',{actif:this.checked})"> Normaliser</label>
+                  <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="mc-limiter" onchange="envoyerCommandeMC('SET_LIMITER',{actif:this.checked})"> Limiteur</label>
+                  <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="mc-duck-auto" checked> Duck Audio (annonces)</label>
+                  <button class="btn btn-sm" onclick="envoyerCommandeMC('FADE_OUT',{dureeMs:3000})" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔉 Fade Out</button>
+                  <button class="btn btn-sm" onclick="envoyerCommandeMC('FADE_IN',{dureeMs:3000})" style="background:rgba(255,255,255,.1);border:none;color:#fff">🔊 Fade In</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2389,6 +2426,49 @@
         <div class="card">
           <div class="card-header"><h2>📋 Playlists <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-playlist-count"></span></h2></div>
           <div class="card-body" id="mc-playlists-liste"></div>
+        </div>
+      </div>
+
+      <!-- ONGLET : ANNONCES COMMERCIALES (Feature 5) -->
+      <div class="caisse-tab" id="mc-tab-annonces">
+        <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Les annonces sont des pistes spéciales (mediaType = "announcement") dans la même bibliothèque — déclenchées ponctuellement ou planifiées, en mettant la musique en pause puis en reprenant automatiquement.</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>➕ Nouvelle annonce</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Titre</label><input type="text" class="form-control" id="mc-annonce-titre" placeholder="Ex: Promo fournitures scolaires"></div>
+              <div class="form-group"><label>Priorité</label>
+                <select class="form-control" id="mc-annonce-priorite"><option value="normale">Normale</option><option value="haute">Haute</option><option value="basse">Basse</option></select>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+              <input type="file" id="mc-annonce-fichier" accept="audio/*">
+              <span style="color:var(--text-muted);font-size:12px">— ou —</span>
+              <button class="btn btn-outline btn-sm" id="mc-btn-enregistrer" onclick="toggleEnregistrementAnnonceMC()">🎙️ Enregistrer depuis le micro</button>
+              <span id="mc-enregistrement-statut" style="font-size:12px;color:var(--danger);display:none">⏺ Enregistrement en cours...</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Créneau actif — début (optionnel)</label><input type="time" class="form-control" id="mc-annonce-heure-debut"></div>
+              <div class="form-group"><label>Créneau actif — fin (optionnel)</label><input type="time" class="form-control" id="mc-annonce-heure-fin"></div>
+            </div>
+            <div class="form-group" style="max-width:320px">
+              <label>Répétition automatique</label>
+              <select class="form-control" id="mc-annonce-frequence">
+                <option value="">Aucune (déclenchement manuel uniquement)</option>
+                <option value="15">Toutes les 15 minutes</option>
+                <option value="30">Toutes les 30 minutes</option>
+                <option value="60">Toutes les heures</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="creerAnnonceMC()">➕ Ajouter</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📢 Annonces <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-annonce-count"></span></h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr><th>Titre</th><th>Priorité</th><th>Créneau</th><th>Répétition</th><th>Actif</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tbody-mc-annonces"></tbody></table>
+          </div>
         </div>
       </div>
 
@@ -6965,7 +7045,7 @@ const pageTitles = {
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   reinitialisation:'Réinitialisation avant Ouverture (Admin)', support:'Support — Messages des Employés (Admin)',
-  'media-center':'TeMa Media Center — Pilotage VirtualDJ (Admin)',
+  'media-center':'TeMa Media Center — Diffusion Audio Boutique (Admin)',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
@@ -7996,6 +8076,17 @@ function mcNavigate(tab) {
   renderMediaCenterAdmin();
 }
 
+// Console Audio repliable, fusionnée directement dans le tableau de bord (façon
+// Winamp/@MAX) plutôt qu'un onglet séparé, pour une interface plus simple.
+function toggleConsoleAudioMC() {
+  const body = document.getElementById('mc-console-audio-body');
+  const icon = document.getElementById('mc-console-toggle-icon');
+  const ouvert = body.style.display !== 'none';
+  body.style.display = ouvert ? 'none' : 'block';
+  icon.textContent = ouvert ? '▼' : '▲';
+  if (!ouvert) construireEQBandsMC();
+}
+
 function changerAppareilMediaCenter(deviceId) {
   mcDeviceActive = deviceId;
   if (deviceId !== '__all__') demarrerListenerEtatMC();
@@ -8035,6 +8126,143 @@ function cyclerRepeatMC() {
   envoyerCommandeMC('SET_REPEAT', { repeat: suivant });
 }
 function changerOrdreMC(ordre) { envoyerCommandeMC('SET_ORDER', { ordre }); }
+
+// ── Feature 5 : Annonces commerciales (vocales pré-enregistrées ou micro) ──
+// Une annonce est une piste media_tracks avec mediaType:'announcement' — même
+// bibliothèque, même Storage, mais un comportement différent au moment de la
+// diffusion (le service met la musique en pause, joue l'annonce, puis reprend).
+let mcEnregistrementActif = false;
+let mcEnregistreur = null;
+let mcAnnonceBlobEnregistre = null;
+
+async function toggleEnregistrementAnnonceMC() {
+  const btn = document.getElementById('mc-btn-enregistrer');
+  const statut = document.getElementById('mc-enregistrement-statut');
+  if (!mcEnregistrementActif) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mcEnregistreur = new MediaRecorder(stream);
+      const morceaux = [];
+      mcEnregistreur.ondataavailable = e => morceaux.push(e.data);
+      mcEnregistreur.onstop = () => {
+        mcAnnonceBlobEnregistre = new Blob(morceaux, { type: 'audio/webm' });
+        stream.getTracks().forEach(t => t.stop());
+        showToast('✓ Enregistrement terminé — prêt à être ajouté');
+      };
+      mcEnregistreur.start();
+      mcEnregistrementActif = true;
+      btn.textContent = '⏹ Arrêter l\'enregistrement';
+      statut.style.display = 'inline';
+    } catch (err) { showToast('Micro inaccessible : ' + err.message, 'error'); }
+  } else {
+    mcEnregistreur.stop();
+    mcEnregistrementActif = false;
+    btn.textContent = '🎙️ Enregistrer depuis le micro';
+    statut.style.display = 'none';
+  }
+}
+
+async function creerAnnonceMC() {
+  if (!currentUser?.isAdmin) return;
+  const titre = document.getElementById('mc-annonce-titre').value.trim();
+  if (!titre) { showToast('Titre requis', 'error'); return; }
+  const fileInput = document.getElementById('mc-annonce-fichier');
+  const file = fileInput.files[0] || (mcAnnonceBlobEnregistre ? new File([mcAnnonceBlobEnregistre], titre + '.webm', { type: 'audio/webm' }) : null);
+  if (!file) { showToast('Choisissez un fichier ou enregistrez depuis le micro', 'error'); return; }
+
+  const priorite = document.getElementById('mc-annonce-priorite').value;
+  const heureDebut = document.getElementById('mc-annonce-heure-debut').value || null;
+  const heureFin = document.getElementById('mc-annonce-heure-fin').value || null;
+  const frequenceMin = document.getElementById('mc-annonce-frequence').value ? Number(document.getElementById('mc-annonce-frequence').value) : null;
+
+  try {
+    const meta = await lireMetadonneesMC(file);
+    const storageRef = firebase.storage().ref(`media_tracks/${Date.now()}_${file.name}`);
+    const contentType = file.type || devinerMimeTypeAudioMC(file.name);
+    const uploadTask = storageRef.put(file, { contentType });
+    await new Promise((resolve, reject) => uploadTask.on('state_changed', null, reject, resolve));
+    const url = await storageRef.getDownloadURL();
+    await db.collection('media_tracks').add({
+      titre, url, storagePath: storageRef.fullPath, mimeType: contentType, taille: file.size,
+      duree: meta.duree, mediaType: 'announcement', priorite, actif: true,
+      planning: { actif: !!(heureDebut || heureFin || frequenceMin), heureDebut, heureFin, frequenceMin },
+      dateAjout: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✓ Annonce ajoutée');
+    document.getElementById('mc-annonce-titre').value = '';
+    fileInput.value = ''; mcAnnonceBlobEnregistre = null;
+    document.getElementById('mc-annonce-heure-debut').value = '';
+    document.getElementById('mc-annonce-heure-fin').value = '';
+    document.getElementById('mc-annonce-frequence').value = '';
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+function declencherAnnonceMC(trackId) { envoyerCommandeMC('PLAY_ANNOUNCEMENT', { trackId }); }
+
+async function toggleActifAnnonceMC(id, actif) {
+  if (!currentUser?.isAdmin) return;
+  try { await db.collection('media_tracks').doc(id).update({ actif }); } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+async function supprimerAnnonceMC(id, storagePath, titre) {
+  if (!currentUser?.isAdmin) return;
+  if (!confirm(`Supprimer l'annonce "${titre}" ?`)) return;
+  try {
+    if (storagePath) await firebase.storage().ref(storagePath).delete().catch(() => {});
+    await db.collection('media_tracks').doc(id).delete();
+    showToast('✓ Annonce supprimée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+// ── Feature 4 : Console audio professionnelle (EQ/preamp/balance/effets) ──
+// Tout est exécuté par VLC côté service — le navigateur n'envoie que des réglages.
+const MC_EQ_FREQS = ['31Hz', '62Hz', '125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz', '16kHz'];
+const MC_EQ_PRESETS = {
+  normal:    [0,0,0,0,0,0,0,0,0,0],
+  pop:       [-1,-1,0,2,4,4,2,0,-1,-1],
+  afrobeat:  [3,3,2,1,0,0,1,2,3,3],
+  dance:     [4,3,1,0,-1,-1,0,2,3,4],
+  jazz:      [2,2,1,1,0,0,1,2,2,3],
+  bass:      [6,5,4,2,0,0,0,0,0,0],
+  treble:    [0,0,0,0,0,0,2,4,5,6],
+  speech:    [-2,-1,0,2,4,4,3,1,0,-1],
+  lounge:    [1,1,0,-1,-1,0,1,2,2,1],
+  soft:      [-1,0,0,1,1,1,0,0,-1,-1],
+  classique: [2,1,0,0,-1,-1,0,1,2,3],
+  cinema:    [3,2,1,0,0,1,2,3,3,2]
+};
+
+function construireEQBandsMC() {
+  const wrap = document.getElementById('mc-eq-bands');
+  if (!wrap || wrap.dataset.built) return;
+  wrap.innerHTML = MC_EQ_FREQS.map((f, i) => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:26px;flex-shrink:0">
+      <div style="height:64px;width:26px;display:flex;align-items:center;justify-content:center">
+        <input type="range" id="mc-eq-band-${i}" min="-12" max="12" value="0"
+               style="width:64px;transform:rotate(-90deg)" oninput="document.getElementById('mc-eq-preset').value=''" onchange="envoyerEQMC()">
+      </div>
+      <span style="font-size:9px;color:rgba(255,255,255,.5)">${f}</span>
+    </div>`).join('');
+  wrap.dataset.built = '1';
+}
+
+function appliquerPresetEQMC(nom) {
+  const valeurs = MC_EQ_PRESETS[nom];
+  if (!valeurs) return;
+  valeurs.forEach((v, i) => { const el = document.getElementById('mc-eq-band-' + i); if (el) el.value = v; });
+  envoyerEQMC();
+}
+
+function envoyerEQMC() {
+  const bands = MC_EQ_FREQS.map((_, i) => Number(document.getElementById('mc-eq-band-' + i)?.value || 0));
+  const preamp = Number(document.getElementById('mc-preamp-slider')?.value || 0);
+  envoyerCommandeMC('SET_EQ', { bands, preamp });
+}
+
+function majAfficheBalanceMC(valeur) {
+  const v = Number(valeur);
+  document.getElementById('mc-balance-val').textContent = v === 0 ? 'Centre' : (v < 0 ? `Gauche ${Math.abs(v)}%` : `Droite ${v}%`);
+}
 
 // ── Bibliothèque de pistes (media_tracks) — uploadées vers Firebase Storage pour
 // téléchargement par TeMa Media Service. Jamais lues dans le navigateur. ──
@@ -8310,11 +8538,12 @@ function renderMediaCenterAdmin() {
     elEtatService.textContent = labels[etatAffiche] || etatAffiche;
   }
 
-  // Bibliothèque
-  const cntTrack = document.getElementById('mc-track-count'); if (cntTrack) cntTrack.textContent = `(${mcTracks.length})`;
+  // Bibliothèque (musique uniquement — les annonces ont leur propre onglet)
+  const mcTracksMusique = mcTracks.filter(t => t.mediaType !== 'announcement');
+  const cntTrack = document.getElementById('mc-track-count'); if (cntTrack) cntTrack.textContent = `(${mcTracksMusique.length})`;
   const tbodyTrack = document.getElementById('tbody-mc-tracks');
   if (tbodyTrack) {
-    tbodyTrack.innerHTML = mcTracks.length ? mcTracks.map(t => `
+    tbodyTrack.innerHTML = mcTracksMusique.length ? mcTracksMusique.map(t => `
       <tr>
         <td>🎵 ${t.titre}</td>
         <td style="font-size:12px">${t.artiste || '—'}</td>
@@ -8331,7 +8560,7 @@ function renderMediaCenterAdmin() {
   if (listePl) {
     listePl.innerHTML = mcPlaylists.length ? mcPlaylists.map(p => {
       const pistes = (p.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean);
-      const optionsRestantes = mcTracks.filter(t => !(p.trackIds || []).includes(t.id));
+      const optionsRestantes = mcTracksMusique.filter(t => !(p.trackIds || []).includes(t.id));
       return `
       <div class="card" style="margin-bottom:10px${mcState.playlistId === p.id ? ';border:2px solid var(--primary)' : ''}">
         <div class="card-body">
@@ -8352,6 +8581,25 @@ function renderMediaCenterAdmin() {
         </div>
       </div>`;
     }).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune playlist</p>';
+  }
+
+  // Annonces (Feature 5)
+  const mcAnnonces = mcTracks.filter(t => t.mediaType === 'announcement');
+  const cntAnnonce = document.getElementById('mc-annonce-count'); if (cntAnnonce) cntAnnonce.textContent = `(${mcAnnonces.length})`;
+  const tbodyAnnonce = document.getElementById('tbody-mc-annonces');
+  if (tbodyAnnonce) {
+    tbodyAnnonce.innerHTML = mcAnnonces.length ? mcAnnonces.map(a => `
+      <tr>
+        <td>📢 ${a.titre}</td>
+        <td style="font-size:12px">${({haute:'🔴 Haute',normale:'🟡 Normale',basse:'🟢 Basse'})[a.priorite] || a.priorite || '—'}</td>
+        <td style="font-size:12px">${a.planning?.heureDebut && a.planning?.heureFin ? `${a.planning.heureDebut} - ${a.planning.heureFin}` : 'Toute la journée'}</td>
+        <td style="font-size:12px">${a.planning?.frequenceMin ? `Toutes les ${a.planning.frequenceMin} min` : 'Manuel'}</td>
+        <td><input type="checkbox" ${a.actif ? 'checked' : ''} onchange="toggleActifAnnonceMC('${a.id}', this.checked)"></td>
+        <td style="text-align:right">
+          <button class="btn btn-primary btn-sm" onclick="declencherAnnonceMC('${a.id}')">▶ Déclencher</button>
+          <button class="btn btn-danger btn-sm" onclick="supprimerAnnonceMC('${a.id}','${(a.storagePath || '').replace(/'/g, "\\'")}','${a.titre.replace(/'/g, "\\'")}')">🗑</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Aucune annonce</td></tr>';
   }
 
   // Appareils
