@@ -2420,10 +2420,18 @@
             <div id="mc-upload-log" style="font-size:11px;color:var(--text-muted);margin-top:6px;max-height:80px;overflow:auto"></div>
           </div>
         </div>
+        <div class="card" id="mc-selection-bar-wrap" style="display:none;margin-bottom:14px;background:var(--bg-soft,#eef2f6)">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:13px;font-weight:600"><span id="mc-selection-count">0</span> piste(s) sélectionnée(s)</span>
+            <input type="text" class="form-control" id="mc-selection-playlist-nom" placeholder="Nom de la nouvelle playlist" style="flex:1;min-width:200px">
+            <button class="btn btn-primary btn-sm" onclick="creerPlaylistDepuisSelectionMC()">📋 Créer la playlist</button>
+            <button class="btn btn-outline btn-sm" onclick="viderSelectionTracksMC()">✕ Annuler la sélection</button>
+          </div>
+        </div>
         <div class="card">
           <div class="card-header"><h2>🎵 Pistes <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-track-count"></span></h2></div>
           <div class="card-body table-wrap">
-            <table><thead><tr><th>Titre</th><th>Artiste</th><th>Durée</th><th>Format</th><th>Taille</th><th style="text-align:right">Actions</th></tr></thead>
+            <table><thead><tr><th style="width:30px"><input type="checkbox" id="mc-selection-toutes" onchange="toggleSelectionToutesTracksMC(this.checked)" title="Tout sélectionner"></th><th>Titre</th><th>Artiste</th><th>Durée</th><th>Format</th><th>Taille</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody id="tbody-mc-tracks"></tbody></table>
           </div>
         </div>
@@ -8322,6 +8330,7 @@ let mcImportFile = [];
 let mcImportEnCours = false;
 let mcImportAnnule = false;
 let mcImportTacheCourante = null;
+let mcSelectionTracks = new Set(); // pistes cochées dans la Bibliothèque, pour création rapide de playlist
 
 function gererDepotMC(event) {
   event.preventDefault();
@@ -8455,6 +8464,38 @@ async function supprimerPisteMC(id, storagePath, titre) {
     if (storagePath) await firebase.storage().ref(storagePath).delete().catch(() => {});
     await db.collection('media_tracks').doc(id).delete();
     showToast('✓ Piste supprimée');
+  } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
+}
+
+// ── Sélection multiple de pistes (Bibliothèque) → création rapide de playlist ──
+function toggleSelectionTrackMC(id, coche) {
+  if (coche) mcSelectionTracks.add(id); else mcSelectionTracks.delete(id);
+  renderMediaCenterAdmin();
+}
+
+function toggleSelectionToutesTracksMC(coche) {
+  if (coche) mcTracks.filter(t => t.mediaType !== 'announcement').forEach(t => mcSelectionTracks.add(t.id));
+  else mcSelectionTracks.clear();
+  renderMediaCenterAdmin();
+}
+
+function viderSelectionTracksMC() {
+  mcSelectionTracks.clear();
+  renderMediaCenterAdmin();
+}
+
+async function creerPlaylistDepuisSelectionMC() {
+  if (!currentUser?.isAdmin) return;
+  const nom = document.getElementById('mc-selection-playlist-nom').value.trim();
+  if (!nom) { showToast('Indiquez un nom de playlist', 'error'); return; }
+  if (!mcSelectionTracks.size) { showToast('Sélectionnez au moins une piste', 'error'); return; }
+  try {
+    await db.collection('media_playlists').add({
+      nom, trackIds: Array.from(mcSelectionTracks), dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✓ Playlist "${nom}" créée avec ${mcSelectionTracks.size} piste(s)`);
+    mcSelectionTracks.clear();
+    document.getElementById('mc-selection-playlist-nom').value = '';
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
@@ -8657,15 +8698,23 @@ function renderMediaCenterAdmin() {
   const tbodyTrack = document.getElementById('tbody-mc-tracks');
   if (tbodyTrack) {
     tbodyTrack.innerHTML = mcTracksMusique.length ? mcTracksMusique.map(t => `
-      <tr>
+      <tr${mcSelectionTracks.has(t.id) ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
+        <td><input type="checkbox" ${mcSelectionTracks.has(t.id) ? 'checked' : ''} onchange="toggleSelectionTrackMC('${t.id}', this.checked)"></td>
         <td>🎵 ${t.titre}</td>
         <td style="font-size:12px">${t.artiste || '—'}</td>
         <td style="font-size:12px">${formaterDureeMC(t.duree)}</td>
         <td style="font-size:12px">${t.format || '—'}</td>
         <td style="font-size:12px">${t.taille ? (t.taille / 1024 / 1024).toFixed(1) + ' Mo' : '—'}</td>
         <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="supprimerPisteMC('${t.id}','${(t.storagePath || '').replace(/'/g, "\\'")}','${t.titre.replace(/'/g, "\\'")}')">🗑</button></td>
-      </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Bibliothèque vide</td></tr>';
   }
+  const barreSelection = document.getElementById('mc-selection-bar-wrap');
+  if (barreSelection) {
+    barreSelection.style.display = mcSelectionTracks.size ? 'block' : 'none';
+    document.getElementById('mc-selection-count').textContent = mcSelectionTracks.size;
+  }
+  const checkToutes = document.getElementById('mc-selection-toutes');
+  if (checkToutes) checkToutes.checked = mcTracksMusique.length > 0 && mcTracksMusique.every(t => mcSelectionTracks.has(t.id));
 
   // Playlists (avec gestion des pistes par playlist)
   const cntPl = document.getElementById('mc-playlist-count'); if (cntPl) cntPl.textContent = `(${mcPlaylists.length})`;
