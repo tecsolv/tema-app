@@ -2364,14 +2364,25 @@
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><h2>🖥️ État du service de diffusion</h2></div>
-          <div class="card-body">
+        <div class="card" style="background:#11141f;color:#fff;border:1px solid rgba(255,255,255,.08);overflow:hidden">
+          <div style="background:#1a1e2e;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.08)">
+            <span style="font-size:13px;font-weight:700;letter-spacing:.5px">🎵 PLAYING LIST <span style="font-weight:400;color:rgba(255,255,255,.5)" id="mc-playlist-encours-nom"></span></span>
+          </div>
+          <div class="table-wrap" style="max-height:260px;overflow-y:auto">
             <table style="font-size:13px;width:100%">
-              <tr><td style="padding:4px 8px;color:var(--text-muted)">État du service</td><td style="padding:4px 8px;font-weight:700" id="mc-etat-service">—</td></tr>
-              <tr><td style="padding:4px 8px;color:var(--text-muted)">Dernière synchronisation</td><td style="padding:4px 8px" id="mc-derniere-synchro">—</td></tr>
-              <tr><td style="padding:4px 8px;color:var(--text-muted)">Erreur signalée</td><td style="padding:4px 8px" id="mc-erreur-service">—</td></tr>
+              <thead><tr style="color:rgba(255,255,255,.45);font-size:11px;text-transform:uppercase">
+                <th style="padding:6px 10px;text-align:left">#</th>
+                <th style="padding:6px 10px;text-align:left">Titre</th>
+                <th style="padding:6px 10px;text-align:left">Artiste</th>
+                <th style="padding:6px 10px;text-align:right">Durée</th>
+              </tr></thead>
+              <tbody id="tbody-mc-playlist-encours"></tbody>
             </table>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.4);display:flex;gap:14px;flex-wrap:wrap">
+            <span>Service : <strong id="mc-etat-service">—</strong></span>
+            <span>Synchro : <span id="mc-derniere-synchro">—</span></span>
+            <span>Erreur : <span id="mc-erreur-service">—</span></span>
           </div>
         </div>
       </div>
@@ -8536,6 +8547,26 @@ function renderMediaCenterAdmin() {
     const etatAffiche = horsLigne ? 'hors_ligne' : (mcState.etatService || 'inconnu');
     const labels = { connecte: '🟢 Connecté', demarrage: '🟡 Démarrage', synchronisation: '🟠 Synchronisation', hors_ligne: '🔴 Hors ligne', arrete: '⚫ Arrêté', erreur: '🔴 Erreur', inconnu: '⚫ Inconnu (jamais synchronisé)' };
     elEtatService.textContent = labels[etatAffiche] || etatAffiche;
+  }
+
+  // Playlist en cours — façon @MAX Tray Player : liste numérotée, piste active surlignée.
+  const nomPlEnCours = document.getElementById('mc-playlist-encours-nom');
+  const tbodyPlEnCours = document.getElementById('tbody-mc-playlist-encours');
+  if (tbodyPlEnCours && !modeTous) {
+    const plActive = mcPlaylists.find(p => p.id === mcState.playlistId);
+    if (nomPlEnCours) nomPlEnCours.textContent = plActive ? `— ${plActive.nom}` : '';
+    const pistesPl = plActive ? (plActive.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean) : [];
+    tbodyPlEnCours.innerHTML = pistesPl.length ? pistesPl.map((t, i) => {
+      const enCours = t.titre === mcState.nowPlaying;
+      const couleur = enCours ? '#5ad16f' : 'rgba(255,255,255,.85)'; // vert façon Winamp pour la piste active
+      return `
+      <tr${enCours ? ' style="background:rgba(255,255,255,.06)"' : ''}>
+        <td style="padding:4px 10px;width:28px;color:rgba(255,255,255,.35)">${i + 1}.</td>
+        <td style="padding:4px 10px;color:${couleur};font-weight:${enCours ? '700' : '400'}">${enCours ? '▶ ' : ''}${t.titre}</td>
+        <td style="padding:4px 10px;color:rgba(255,255,255,.55);font-size:12px">${t.artiste || '—'}</td>
+        <td style="padding:4px 10px;text-align:right;color:rgba(255,255,255,.55);font-size:12px">${formaterDureeMC(t.duree)}</td>
+      </tr>`;
+    }).join('') : '<tr><td style="padding:14px 10px;color:rgba(255,255,255,.4);text-align:center" colspan="4">Aucune playlist active</td></tr>';
   }
 
   // Bibliothèque (musique uniquement — les annonces ont leur propre onglet)
