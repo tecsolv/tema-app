@@ -2518,6 +2518,37 @@
             <button class="btn btn-primary" onclick="creerAnnonceMC()">➕ Ajouter</button>
           </div>
         </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>🪄 Générer une annonce par IA (texte → voix)</h2></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Tapez le texte de l'annonce, l'IA (ElevenLabs) la transforme en voix et l'ajoute automatiquement à la liste ci-dessous. Génération en 10-20 secondes — pas besoin d'enregistrer un micro.</div>
+            <div class="form-group"><label>Titre (optionnel — déduit du texte sinon)</label><input type="text" class="form-control" id="mc-tts-titre" placeholder="Ex: Promo fournitures scolaires"></div>
+            <div class="form-group"><label>Texte de l'annonce</label><textarea class="form-control" id="mc-tts-texte" rows="3" placeholder="Ex: Profitez de notre promotion sur les fournitures scolaires jusqu'à dimanche !"></textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label>Voix</label>
+                <select class="form-control" id="mc-tts-voix"><option value="">Voix par défaut (configurée sur le service)</option></select>
+              </div>
+              <div class="form-group"><label>Priorité</label>
+                <select class="form-control" id="mc-tts-priorite"><option value="normale">Normale</option><option value="haute">Haute</option><option value="basse">Basse</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Créneau actif — début (optionnel)</label><input type="time" class="form-control" id="mc-tts-heure-debut"></div>
+              <div class="form-group"><label>Créneau actif — fin (optionnel)</label><input type="time" class="form-control" id="mc-tts-heure-fin"></div>
+            </div>
+            <div class="form-group" style="max-width:320px">
+              <label>Répétition automatique</label>
+              <select class="form-control" id="mc-tts-frequence">
+                <option value="">Aucune (déclenchement manuel uniquement)</option>
+                <option value="15">Toutes les 15 minutes</option>
+                <option value="30">Toutes les 30 minutes</option>
+                <option value="60">Toutes les heures</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="genererAnnonceIAMC()">🪄 Générer l'annonce vocale</button>
+            <span id="mc-tts-statut" style="font-size:12px;color:var(--text-muted);margin-left:10px"></span>
+          </div>
+        </div>
         <div class="card">
           <div class="card-header"><h2>📢 Annonces <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-annonce-count"></span></h2></div>
           <div class="card-body table-wrap">
@@ -3558,7 +3589,7 @@
      son propre ordinateur) un extrait de ce qui se joue réellement dans la boutique,
      récupéré via Firebase Storage avec un léger délai. Ne diffuse jamais vers la
      boutique — c'est l'inverse du flux normal (boutique → Admin, pas Admin → boutique). -->
-<audio id="mc-monitor-audio" preload="none" crossorigin="anonymous" style="display:none" onended="poursuivreEnchainementRetourSonMC();renderMediaCenterAdmin()"></audio>
+<audio id="mc-monitor-audio" preload="none" crossorigin="anonymous" style="display:none"></audio>
 
 <!-- Modale globale, lecture seule, visible par tous les rôles — Media Center -->
 <div class="modal-overlay" id="modal-media-center-lecture">
@@ -8268,6 +8299,26 @@ async function creerAnnonceMC() {
   } catch (err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
+// ── Annonces générées par IA (texte → voix, ElevenLabs côté service) ──
+// Le navigateur n'appelle jamais l'API ElevenLabs directement (la clé doit rester
+// secrète, côté tema-media-service) : on envoie juste une commande, comme pour
+// n'importe quelle autre action du service.
+async function genererAnnonceIAMC() {
+  if (!currentUser?.isAdmin) return;
+  const texte = document.getElementById('mc-tts-texte').value.trim();
+  if (!texte) { showToast('Texte requis', 'error'); return; }
+  const titre = document.getElementById('mc-tts-titre').value.trim() || texte.slice(0, 40);
+  const voiceId = document.getElementById('mc-tts-voix').value || null;
+  const priorite = document.getElementById('mc-tts-priorite').value;
+  const heureDebut = document.getElementById('mc-tts-heure-debut').value || null;
+  const heureFin = document.getElementById('mc-tts-heure-fin').value || null;
+  const frequenceMin = document.getElementById('mc-tts-frequence').value ? Number(document.getElementById('mc-tts-frequence').value) : null;
+  envoyerCommandeMC('GENERATE_TTS_ANNOUNCEMENT', { texte, titre, voiceId, priorite, heureDebut, heureFin, frequenceMin });
+  document.getElementById('mc-tts-statut').textContent = '⏳ Génération en cours… (10-20s)';
+  document.getElementById('mc-tts-texte').value = '';
+  document.getElementById('mc-tts-titre').value = '';
+}
+
 function declencherAnnonceMC(trackId) { envoyerCommandeMC('PLAY_ANNOUNCEMENT', { trackId }); }
 
 async function toggleActifAnnonceMC(id, actif) {
@@ -8522,14 +8573,16 @@ function togglePreEcouteMC(trackId, url) {
   renderMediaCenterAdmin();
 }
 
-// ── "Retour de Son" : simple Lecture/Arrêt. Clic pour écouter → lit le dernier
-// extrait, PUIS enchaîne automatiquement sur chaque nouvel extrait publié par le
-// service (continuité réelle, jamais de répétition du même contenu). Clic pour
-// couper → arrêt net, plus aucun son ni animation. Léger délai inhérent à
-// l'intervalle de capture côté service (~20s) — pas un flux temps réel pur. ──
+// ── "Retour de Son" — flux temps réel continu via TeMa Media Relay (serveur
+// indépendant, hors Firebase ; voir tema-media-relay/). Le navigateur ouvre une
+// connexion WebSocket vers le relais et alimente l'élément <audio> au fil de
+// l'eau avec l'API MediaSource Extensions (MSE), pour une lecture sans coupure
+// synchronisée avec le son réel de la boutique. ⚠️ Remplacez cette URL par celle
+// de votre propre relais déployé (voir tema-media-relay/README.md).
+const MC_RELAY_BASE_URL = 'wss://tema-media-relay.onrender.com/';
 const MC_SPECTRE_FREQS_LABELS = ['40Hz','100Hz','300Hz','600Hz','1kHz','2kHz','4kHz','6kHz','9kHz','12kHz'];
 let mcAudioCtxSpectre = null, mcAnalyseurSpectre = null, mcSourceSpectre = null, mcAnimationSpectre = null;
-let mcDernierMonitorUrlCharge = null;
+let mcRelayWs = null, mcMediaSource = null, mcSourceBuffer = null, mcRelayQueue = [];
 
 function initialiserGrapheSpectreMC() {
   if (mcAudioCtxSpectre) return;
@@ -8538,26 +8591,87 @@ function initialiserGrapheSpectreMC() {
   mcSourceSpectre = mcAudioCtxSpectre.createMediaElementSource(audio); // une seule fois par élément <audio>
   mcAnalyseurSpectre = mcAudioCtxSpectre.createAnalyser();
   mcAnalyseurSpectre.fftSize = 256;
-  // source → analyser (visuel) → enceintes locales. Plus de nœud de gain séparé :
-  // le volume audible est directement celui de l'élément <audio> (toujours à 100%,
-  // contrôlé uniquement par Lecture/Arrêt, jamais en sourdine en arrière-plan).
+  // source → analyser (visuel) → enceintes locales. Le volume audible est celui
+  // de l'élément <audio> lui-même (100%), contrôlé uniquement par Lecture/Arrêt.
   mcSourceSpectre.connect(mcAnalyseurSpectre);
   mcAnalyseurSpectre.connect(mcAudioCtxSpectre.destination);
 }
 
-// Lit le dernier extrait connu. Appelé au clic initial, puis ré-appelé à chaque
-// nouvel extrait tant que mcRetourSonActif reste vrai (enchaînement, pas de boucle).
-function jouerExtraitCourantMC() {
-  if (!mcState.monitorUrl) return;
-  if (mcState.monitorUrl === mcDernierMonitorUrlCharge) return; // déjà en cours de lecture
+function viderFileAttenteRelaisMC() {
+  if (!mcSourceBuffer || mcSourceBuffer.updating || !mcRelayQueue.length) return;
+  try { mcSourceBuffer.appendBuffer(mcRelayQueue.shift()); } catch (err) { console.error('[RETOUR SON] appendBuffer :', err.message); }
+}
+
+// Repart d'un tampon de lecture neuf (nouveau MediaSource) sans toucher à la
+// connexion WebSocket — appelé quand le service signale un changement de source,
+// pour ne jamais continuer à jouer le son de l'ancienne source par inadvertance.
+function viderEtRedemarrerTamponRelaisMC() {
+  mcRelayQueue = [];
+  const audio = document.getElementById('mc-monitor-audio');
+  mcMediaSource = new MediaSource();
+  audio.src = URL.createObjectURL(mcMediaSource);
+  mcMediaSource.addEventListener('sourceopen', () => {
+    mcSourceBuffer = mcMediaSource.addSourceBuffer('audio/mpeg');
+    mcSourceBuffer.addEventListener('updateend', viderFileAttenteRelaisMC);
+  });
+  audio.play().catch(err => { if (err.name !== 'AbortError') console.error('[RETOUR SON] reprise après reset :', err.message); });
+}
+
+// Connecte le navigateur au relais en mode écoute et alimente l'<audio> en continu.
+function demarrerEcouteRelaisMC() {
+  if (mcDeviceActive === '__all__' || !mcDeviceActive) {
+    showToast('Choisissez un appareil précis (pas "Tous les appareils") pour le Retour de Son', 'error');
+    return;
+  }
+  if (!window.MediaSource || !MediaSource.isTypeSupported('audio/mpeg')) {
+    showToast('Ce navigateur ne supporte pas la lecture audio en flux continu (MediaSource) — essayez Chrome ou Firefox', 'error');
+    return;
+  }
   initialiserGrapheSpectreMC();
   const audio = document.getElementById('mc-monitor-audio');
-  mcDernierMonitorUrlCharge = mcState.monitorUrl;
+  mcMediaSource = new MediaSource();
+  mcRelayQueue = [];
   audio.muted = false;
-  audio.loop = false;
-  audio.src = mcState.monitorUrl;
+  audio.src = URL.createObjectURL(mcMediaSource);
+  mcMediaSource.addEventListener('sourceopen', () => {
+    mcSourceBuffer = mcMediaSource.addSourceBuffer('audio/mpeg');
+    mcSourceBuffer.addEventListener('updateend', viderFileAttenteRelaisMC);
+  });
   if (mcAudioCtxSpectre.state === 'suspended') mcAudioCtxSpectre.resume();
-  audio.play().then(demarrerAnimationSpectreMC).catch(err => showToast('Retour Son impossible : ' + err.message, 'error'));
+  audio.play().then(demarrerAnimationSpectreMC).catch(err => {
+    // "interrupted by a call to pause()" est une erreur bénigne du navigateur quand
+    // on clique deux fois rapidement (le second clic interrompt le premier play()) —
+    // pas une vraie panne, on ne l'affiche donc pas comme une erreur.
+    if (err.name === 'AbortError') return;
+    showToast('Retour Son impossible : ' + err.message, 'error');
+  });
+
+  const url = `${MC_RELAY_BASE_URL}?role=listen&deviceId=${encodeURIComponent(mcDeviceActive)}`;
+  mcRelayWs = new WebSocket(url);
+  mcRelayWs.binaryType = 'arraybuffer';
+  mcRelayWs.onmessage = ev => {
+    // Le service envoie un message texte (JSON) quand la source change (ex:
+    // playlist → radio) pour qu'on vide tout ce qui restait en attente — sinon
+    // l'ancien son resterait "en stock" et continuerait à se jouer un moment.
+    if (typeof ev.data === 'string') {
+      try {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === 'reset') viderEtRedemarrerTamponRelaisMC();
+      } catch { /* message texte non reconnu, ignoré */ }
+      return;
+    }
+    mcRelayQueue.push(ev.data);
+    viderFileAttenteRelaisMC();
+  };
+  mcRelayWs.onerror = () => showToast('Connexion au relais impossible — vérifiez qu\'il est bien déployé et accessible', 'error');
+  mcRelayWs.onclose = () => { if (mcRetourSonActif) { mcRetourSonActif = false; arreterEcouteRelaisMC(); renderMediaCenterAdmin(); } };
+}
+
+function arreterEcouteRelaisMC() {
+  if (mcRelayWs) { mcRelayWs.onclose = null; mcRelayWs.close(); mcRelayWs = null; }
+  const audio = document.getElementById('mc-monitor-audio');
+  audio.pause();
+  arreterSpectreMC();
 }
 
 function demarrerAnimationSpectreMC() {
@@ -8599,24 +8713,13 @@ function arreterSpectreMC() {
   if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Tant que mcRetourSonActif est vrai, chaque nouvel extrait publié déclenche
-// automatiquement la suite de la lecture (enchaînement). Appelé depuis le rendu.
-function poursuivreEnchainementRetourSonMC() {
-  if (!mcRetourSonActif) return;
-  jouerExtraitCourantMC();
-}
-
 function toggleRetourSonMC() {
-  const audio = document.getElementById('mc-monitor-audio');
   if (mcRetourSonActif) {
-    audio.pause();
     mcRetourSonActif = false;
-    arreterSpectreMC();
+    arreterEcouteRelaisMC();
   } else {
-    if (!mcState.monitorUrl) { showToast('Aucun extrait disponible encore — le service doit en publier un premier', 'error'); return; }
-    mcDernierMonitorUrlCharge = null; // force la (re)lecture même si c'est le même extrait qu'avant
     mcRetourSonActif = true;
-    jouerExtraitCourantMC();
+    demarrerEcouteRelaisMC();
   }
   renderMediaCenterAdmin();
 }
@@ -8784,24 +8887,26 @@ function renderMediaCenterAdmin() {
   if (ordreSel && document.activeElement !== ordreSel) ordreSel.value = mcState.ordre || 'import';
 
   const btnRetourSon = document.getElementById('mc-btn-retoursson');
-  if (btnRetourSon) btnRetourSon.textContent = mcRetourSonActif ? '🔇 Couper le son' : '🔊 Écouter le son';
+  if (btnRetourSon) btnRetourSon.textContent = mcRetourSonActif ? '🔇 Couper le son' : '🔊 Retour Son';
   const majRetourSon = document.getElementById('mc-retoursson-maj');
   if (majRetourSon) {
-    if (!mcState.monitorUpdatedAt) majRetourSon.textContent = 'Aucun extrait encore';
+    if (!mcRetourSonActif) majRetourSon.textContent = '';
     else {
-      const secondesEcoulees = Math.round((Date.now() - mcState.monitorUpdatedAt) / 1000);
-      majRetourSon.textContent = `Extrait d'il y a ${secondesEcoulees}s`;
+      const etatWs = mcRelayWs ? ['Connexion...', 'En direct', 'Fermeture...', 'Déconnecté'][mcRelayWs.readyState] : 'Déconnecté';
+      majRetourSon.textContent = `Relais : ${etatWs}`;
     }
-  }
-  // Tant que l'Admin écoute (mcRetourSonActif), chaque nouvel extrait publié
-  // enchaîne automatiquement la lecture — jamais de boucle sur le même contenu.
-  if (!modeTous) {
-    if (mcState.status === 'playing') poursuivreEnchainementRetourSonMC();
-    else if (mcRetourSonActif) { document.getElementById('mc-monitor-audio').pause(); mcRetourSonActif = false; arreterSpectreMC(); }
   }
 
   document.getElementById('mc-derniere-synchro').textContent = modeTous ? '—' : formaterDateMC(mcState.derniereSynchro);
   document.getElementById('mc-erreur-service').textContent = modeTous ? '—' : (mcState.erreur || 'Aucune');
+
+  const ttsStatutEl = document.getElementById('mc-tts-statut');
+  if (ttsStatutEl && !modeTous) {
+    if (mcState.ttsStatut === 'en_cours') ttsStatutEl.textContent = '⏳ Génération en cours…';
+    else if (mcState.ttsStatut === 'erreur') ttsStatutEl.textContent = '✗ Erreur : ' + (mcState.ttsErreur || 'inconnue');
+    else if (mcState.ttsStatut === 'succes') ttsStatutEl.textContent = '✓ Annonce générée';
+    else ttsStatutEl.textContent = '';
+  }
 
   // Feature 2 — état réel à 5 valeurs, sans faux positif : si le service n'a pas
   // republié depuis >15s (2-3 battements manqués), on affiche "Hors ligne" même
