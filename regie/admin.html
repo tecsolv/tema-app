@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeMa-Boutique — Régie Publicitaire</title>
+  <style>
+    /* ═══ TOKENS — alignés sur les couleurs ERP TeMa ═══ */
+    :root {
+      --gold:       #f39c12;   /* ERP --accent */
+      --gold-light: #FEF3CD;
+      --gold-dim:   #d68910;   /* ERP --accent-dark */
+      --teal:       #1a5276;   /* ERP --primary */
+      --teal-light: #D6EAF8;
+      --teal-dim:   #154360;
+      --ink:        #1a5276;   /* header = ERP primary */
+      --muted:      #7f8c8d;   /* ERP --text-muted */
+      --border:     #dce3ea;   /* ERP --border */
+      --surface:    #f0f3f7;   /* ERP --bg */
+      --white:      #FFFFFF;
+      --red:        #e74c3c;   /* ERP --danger */
+      --red-bg:     #FDEDEC;
+      --green:      #27ae60;   /* ERP --success */
+      --green-bg:   #E9F7EF;
+      --radius:     14px;
+      --shadow:     0 2px 12px rgba(0,0,0,0.08);
+      --font:       'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ═══ LOGIN ═══ */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--ink);
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px;
+      width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-logo {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .login-logo span { color: var(--teal); }
+    .login-logo em { color: var(--gold); font-style: normal; }
+
+    .login-sub {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 16px;
+    }
+    .field-input:focus { border-color: var(--gold); }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--gold);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--gold-dim); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ═══ APP SHELL ═══ */
+    #app { display: block; }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--ink);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--white);
+    }
+    .header-logo span { color: #2e86c1; }   /* ERP --primary-light, lisible sur fond navy */
+    .header-logo em { color: var(--gold); font-style: normal; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-badge {
+      font-size: 11px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.06em;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-family: var(--font);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: rgba(255,255,255,0.5); color: var(--white); }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+    }
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--gold);
+      background: var(--gold-light);
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .upload-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .upload-hint {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .upload-hint em {
+      font-style: normal;
+      color: var(--gold-dim);
+      font-weight: 600;
+    }
+
+    #file-input { display: none; }
+
+    /* ── UPLOAD PROGRESS ── */
+    .upload-progress-wrap {
+      margin-top: 14px;
+      display: none;
+    }
+    .upload-progress-wrap.visible { display: block; }
+
+    .upload-progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.2s;
+    }
+
+    /* ── FORM FIELDS ── */
+    .form-row {
+      margin-top: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    select.field-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    /* ── SCREEN SELECTOR ── */
+    .screen-selector {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .screen-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--muted);
+      user-select: none;
+    }
+    .screen-chip input { display: none; }
+    .screen-chip.checked {
+      border-color: var(--teal);
+      background: var(--teal-light);
+      color: var(--teal-dim);
+    }
+
+    .screen-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .screen-chip.checked .screen-dot { background: var(--teal); }
+
+    /* ── BTN UPLOAD FINAL ── */
+    .btn-upload {
+      width: 100%;
+      background: var(--teal);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      margin-top: 16px;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-upload:hover { background: var(--teal-dim); }
+    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 500;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
+
+    /* ── PLAYLIST ── */
+    .playlist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .playlist-count {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface);
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .playlist-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }
+    .playlist-empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .playlist-empty-msg  { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .playlist-empty-sub  { font-size: 12px; margin-top: 4px; }
+
+    /* ── ITEM CARTE ── */
+    .playlist-item {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+      background: var(--white);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .playlist-item:hover {
+      border-color: #D1D5DB;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .playlist-item.inactive {
+      background: var(--surface);
+      opacity: 0.55;
+    }
+
+    .item-thumb {
+      width: 72px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .item-thumb img,
+    .item-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .item-info { min-width: 0; }
+
+    .item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .item-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .meta-tag.type-image { background: #EFF6FF; color: #1D4ED8; }
+    .meta-tag.type-video { background: #FDF4FF; color: #7E22CE; }
+    .meta-tag.screen     { background: var(--teal-light); color: var(--teal-dim); }
+    .meta-tag.duration   { background: var(--gold-light); color: var(--gold-dim); }
+
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      color: var(--muted);
+    }
+    .btn-icon:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-icon.danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-icon.move:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* Toggle active */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .toggle {
+      width: 32px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--border);
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--teal); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--white);
+      top: 2.5px;
+      left: 2.5px;
+      transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle.on::after { left: calc(100% - 15.5px); }
+    .toggle-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .toggle.on + .toggle-label { color: var(--teal); }
+
+    /* ── SCREENS STATUS ── */
+    .screens-status {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+    /* Écrans non encore installés — visuellement distincts */
+    .screen-status-card.pending {
+      background: var(--surface);
+      border-style: dashed;
+      opacity: 0.6;
+    }
+
+    .screen-status-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      background: var(--surface);
+    }
+
+    .screen-status-id {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .screen-status-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .screen-status-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--teal);
+      margin-top: 6px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 800px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+
+  <header class="header">
+    <div class="header-logo">Te<span>Ma</span>-<em>Boutique</em></div>
+    <div class="header-right">
+      <div class="header-badge">Régie Publicitaire</div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- ── COLONNE GAUCHE : UPLOAD ── -->
+    <div>
+      <div class="section-title">Ajouter un média</div>
+      <div class="card">
+
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          <div class="upload-icon">📤</div>
+          <div class="upload-label">Glissez un fichier ici</div>
+          <div class="upload-hint">
+            ou <em>cliquez pour parcourir</em><br>
+            Images : JPG, PNG, WEBP, GIF<br>
+            Vidéos : MP4, WEBM<br>
+            <em>PowerPoint → exporter en MP4 ou en images PNG</em>
+          </div>
+          <input type="file" id="file-input" accept="image/*,video/*" onchange="handleFile(this.files[0])">
+        </div>
+
+        <div class="upload-progress-wrap" id="progress-wrap">
+          <div class="upload-progress-label">
+            <span id="progress-filename">—</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Prévisualisation -->
+        <div id="preview-area" style="margin-top:14px;display:none;">
+          <div class="field-label">Aperçu</div>
+          <div id="preview-container" style="border-radius:10px;overflow:hidden;max-height:160px;background:#000;display:flex;align-items:center;justify-content:center;">
+          </div>
+        </div>
+
+        <!-- Nom -->
+        <div class="form-row">
+          <div class="field-label">Nom du média</div>
+          <input type="text" id="media-name" class="field-input" placeholder="Ex: Promo fournitures rentrée">
+        </div>
+
+        <!-- Durée + Type -->
+        <div class="form-grid">
+          <div>
+            <div class="field-label">Durée d'affichage</div>
+            <select id="media-duration" class="field-input">
+              <option value="0" selected>♾ Continu (boucle)</option>
+              <option value="5">5 secondes</option>
+              <option value="8">8 secondes</option>
+              <option value="10">10 secondes</option>
+              <option value="15">15 secondes</option>
+              <option value="20">20 secondes</option>
+              <option value="30">30 secondes</option>
+              <option value="60">1 minute</option>
+              <option value="120">2 minutes</option>
+              <option value="300">5 minutes</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Type détecté</div>
+            <input type="text" id="media-type-display" class="field-input" readonly style="background:var(--surface);color:var(--muted);" value="—">
+          </div>
+        </div>
+
+        <!-- Écrans -->
+        <div class="form-row">
+          <div class="field-label">Diffuser sur</div>
+          <div class="screen-selector">
+            <label class="screen-chip checked" id="chip-1">
+              <input type="checkbox" value="1" checked onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 1</div><div style="font-size:9px;opacity:0.6;font-weight:400">Zone A — Informatique</div></div>
+            </label>
+            <label class="screen-chip checked" id="chip-2">
+              <input type="checkbox" value="2" checked onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 2</div><div style="font-size:9px;opacity:0.6;font-weight:400">Zone B — Fournitures</div></div>
+            </label>
+            <label class="screen-chip" id="chip-3">
+              <input type="checkbox" value="3" onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 3</div><div style="font-size:9px;opacity:0.6;font-weight:400">Zone C — Enfants</div></div>
+            </label>
+            <label class="screen-chip checked" id="chip-4">
+              <input type="checkbox" value="4" checked onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 4</div><div style="font-size:9px;opacity:0.6;font-weight:400">Zone D — Épicerie</div></div>
+            </label>
+            <label class="screen-chip" id="chip-5">
+              <input type="checkbox" value="5" onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 5</div><div style="font-size:9px;opacity:0.6;font-weight:400">Pâtisserie</div></div>
+            </label>
+            <label class="screen-chip" id="chip-6">
+              <input type="checkbox" value="6" onchange="toggleChip(this)">
+              <div class="screen-dot"></div>
+              <div><div>Écran 6</div><div style="font-size:9px;opacity:0.6;font-weight:400">Libre — Réserve</div></div>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-upload" id="btn-upload" onclick="uploadMedia()" disabled>
+          ↑ Publier sur les écrans
+        </button>
+      </div>
+
+      <!-- ── STATUT ÉCRANS ── -->
+      <div class="section-title" style="margin-top:24px;">Statut des écrans</div>
+      <div class="card">
+        <div class="screens-status" id="screens-status">
+          <div class="screen-status-card">
+            <div class="screen-status-id">1</div>
+            <div class="screen-status-label">Zone A — Informatique</div>
+            <div class="screen-status-count" id="s1-count">— médias</div>
+          </div>
+          <div class="screen-status-card">
+            <div class="screen-status-id">2</div>
+            <div class="screen-status-label">Zone B — Fournitures</div>
+            <div class="screen-status-count" id="s2-count">— médias</div>
+          </div>
+          <div class="screen-status-card">
+            <div class="screen-status-id" style="color:var(--muted)">3</div>
+            <div class="screen-status-label">Zone C — Enfants</div>
+            <div class="screen-status-count" id="s3-count" style="color:var(--muted)">Prévu</div>
+          </div>
+          <div class="screen-status-card">
+            <div class="screen-status-id">4</div>
+            <div class="screen-status-label">Zone D — Épicerie</div>
+            <div class="screen-status-count" id="s4-count">— médias</div>
+          </div>
+          <div class="screen-status-card">
+            <div class="screen-status-id" style="color:var(--muted)">5</div>
+            <div class="screen-status-label">Pâtisserie</div>
+            <div class="screen-status-count" id="s5-count" style="color:var(--muted)">Prévu</div>
+          </div>
+          <div class="screen-status-card">
+            <div class="screen-status-id" style="color:var(--muted)">6</div>
+            <div class="screen-status-label">Libre — Réserve</div>
+            <div class="screen-status-count" id="s6-count" style="color:var(--muted)">Réserve</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COLONNE DROITE : PLAYLIST ── -->
+    <div>
+      <div class="playlist-header">
+        <div class="section-title" style="margin-bottom:0;flex:1">Playlist active</div>
+        <div class="playlist-count" id="playlist-count">0 médias</div>
+      </div>
+      <div id="playlist-container">
+        <div class="playlist-empty">
+          <div class="playlist-empty-icon">📺</div>
+          <div class="playlist-empty-msg">Aucun média en playlist</div>
+          <div class="playlist-empty-sub">Uploadez votre premier contenu à gauche</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ── FIREBASE SDK ── -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  🔧 CONFIG FIREBASE — À remplir par Kodi avec les vraies valeurs
+// ════════════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyADOBJVhaBEMbGCLqw-J_9W-tIIN4_vYes",
+  authDomain:        "tema-boutique.firebaseapp.com",
+  projectId:         "tema-boutique",
+  storageBucket:     "tema-boutique.firebasestorage.app",
+  messagingSenderId: "384084902486",
+  appId:             "1:384084902486:web:13ae76b5102abe4b2931f7"
+};
+// ════════════════════════════════════════════════════════════════
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+let selectedFile  = null;
+let detectedType  = null;
+let playlistItems = [];
+
+// Auth anonyme — accès direct sans écran de connexion
+// satisfait les règles Firestore/Storage : request.auth != null
+auth.signInAnonymously().catch(() => {});
+auth.onAuthStateChanged(user => {
+  if (user) loadPlaylist();
+});
+
+// ═══ DRAG & DROP ═══
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('dragover');
+}
+function handleDragLeave(e) {
+  document.getElementById('upload-zone').classList.remove('dragover');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+
+  selectedFile = file;
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+
+  if (!isVideo && !isImage) {
+    showToast('Format non supporté. Utilisez JPG, PNG, WEBP, GIF, MP4, ou WEBM.', 'error');
+    return;
+  }
+
+  detectedType = isVideo ? 'video' : 'image';
+  document.getElementById('media-type-display').value = isVideo ? '🎬 Vidéo' : '🖼 Image';
+  document.getElementById('media-name').value         = file.name.replace(/\.[^.]+$/, '');
+
+  // Prévisualisation
+  const preview = document.getElementById('preview-container');
+  const previewArea = document.getElementById('preview-area');
+  preview.innerHTML = '';
+  previewArea.style.display = 'block';
+
+  const url = URL.createObjectURL(file);
+  if (isVideo) {
+    const v = document.createElement('video');
+    v.src = url; v.controls = true; v.muted = true;
+    v.style.cssText = 'max-height:160px;max-width:100%;border-radius:10px;';
+    preview.appendChild(v);
+  } else {
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-height:160px;max-width:100%;object-fit:contain;border-radius:10px;';
+    preview.appendChild(img);
+  }
+
+  document.getElementById('btn-upload').disabled = false;
+}
+
+// ═══ SCREEN CHIPS ═══
+function toggleChip(input) {
+  const chip = input.closest('.screen-chip');
+  if (input.checked) {
+    chip.classList.add('checked');
+  } else {
+    chip.classList.remove('checked');
+  }
+}
+
+function getSelectedScreens() {
+  const checks = document.querySelectorAll('.screen-chip input:checked');
+  return Array.from(checks).map(c => c.value);
+}
+
+// ═══ UPLOAD ═══
+function uploadMedia() {
+  if (!selectedFile || !detectedType) return;
+
+  const name     = document.getElementById('media-name').value.trim() || selectedFile.name;
+  const duration = parseInt(document.getElementById('media-duration').value);
+  const screens  = getSelectedScreens();
+
+  if (screens.length === 0) {
+    showToast('Sélectionnez au moins un écran.', 'error');
+    return;
+  }
+
+  const btn      = document.getElementById('btn-upload');
+  btn.disabled   = true;
+  btn.textContent = 'Upload en cours…';
+
+  const progressWrap = document.getElementById('progress-wrap');
+  const progressFill = document.getElementById('progress-fill');
+  const progressPct  = document.getElementById('progress-pct');
+  const progressFile = document.getElementById('progress-filename');
+
+  progressWrap.classList.add('visible');
+  progressFile.textContent = name;
+
+  const ext      = selectedFile.name.split('.').pop();
+  const path     = `media/${Date.now()}_${name.replace(/\s+/g, '_')}.${ext}`;
+  const ref      = storage.ref(path);
+  const task     = ref.put(selectedFile);
+
+  task.on('state_changed',
+    snapshot => {
+      const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      progressFill.style.width = pct + '%';
+      progressPct.textContent  = pct + '%';
+    },
+    err => {
+      showToast('Erreur upload : ' + err.message, 'error');
+      btn.disabled   = false;
+      btn.textContent = '↑ Publier sur les écrans';
+      progressWrap.classList.remove('visible');
+    },
+    async () => {
+      const url = await ref.getDownloadURL();
+
+      // Obtenir le prochain ordre
+      const nextOrder = playlistItems.length > 0
+        ? Math.max(...playlistItems.map(i => i.order || 0)) + 1
+        : 0;
+
+      await db.collection('playlist').add({
+        name,
+        url,
+        type:      detectedType,
+        duration,
+        screens,
+        active:    true,
+        order:     nextOrder,
+        storagePath: path,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showToast(`"${name}" publié sur les écrans !`, 'success');
+      btn.disabled    = false;
+      btn.textContent = '↑ Publier sur les écrans';
+      progressWrap.classList.remove('visible');
+      progressFill.style.width = '0%';
+
+      // Reset
+      selectedFile  = null;
+      detectedType  = null;
+      document.getElementById('media-name').value        = '';
+      document.getElementById('media-type-display').value = '—';
+      document.getElementById('preview-area').style.display = 'none';
+      document.getElementById('file-input').value        = '';
+    }
+  );
+}
+
+// ═══ CHARGER LA PLAYLIST ═══
+function loadPlaylist() {
+  db.collection('playlist')
+    .orderBy('order', 'asc')
+    .onSnapshot(snapshot => {
+      playlistItems = [];
+      snapshot.forEach(doc => {
+        playlistItems.push({ id: doc.id, ...doc.data() });
+      });
+      renderPlaylist();
+      updateScreenCounts();
+    });
+}
+
+function updateScreenCounts() {
+  const active = playlistItems.filter(i => i.active);
+  // Écrans actifs (1, 2, 4) — les autres (3, 5, 6) sont "Prévu" ou "Réserve"
+  ['1','2','4'].forEach(s => {
+    const count = active.filter(i => (i.screens || []).includes(s)).length;
+    const el = document.getElementById(`s${s}-count`);
+    if (el) {
+      el.textContent    = `${count} média${count !== 1 ? 's' : ''} actif${count !== 1 ? 's' : ''}`;
+      el.style.color    = count > 0 ? 'var(--teal)' : 'var(--muted)';
+    }
+  });
+  // Écrans futurs — mise à jour si du contenu leur est déjà assigné
+  ['3','5','6'].forEach(s => {
+    const count = active.filter(i => (i.screens || []).includes(s)).length;
+    const el = document.getElementById(`s${s}-count`);
+    if (el && count > 0) {
+      el.textContent = `${count} média${count !== 1 ? 's' : ''} actif${count !== 1 ? 's' : ''}`;
+      el.style.color = 'var(--teal)';
+    }
+  });
+}
+
+function renderPlaylist() {
+  const container = document.getElementById('playlist-container');
+  const countEl   = document.getElementById('playlist-count');
+
+  countEl.textContent = `${playlistItems.length} média${playlistItems.length !== 1 ? 's' : ''}`;
+
+  if (playlistItems.length === 0) {
+    container.innerHTML = `<div class="playlist-empty">
+      <div class="playlist-empty-icon">📺</div>
+      <div class="playlist-empty-msg">Aucun média en playlist</div>
+      <div class="playlist-empty-sub">Uploadez votre premier contenu à gauche</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = playlistItems.map((item, idx) => {
+    const screenTags = (item.screens || [])
+      .map(s => `<span class="meta-tag screen">Écran ${s}</span>`)
+      .join('');
+
+    const typeTag = `<span class="meta-tag type-${item.type}">${item.type === 'video' ? '🎬 Vidéo' : '🖼 Image'}</span>`;
+    const durTag  = item.duration === 0 || item.duration === undefined
+      ? `<span class="meta-tag duration">♾ Continu</span>`
+      : `<span class="meta-tag duration">⏱ ${item.duration}s</span>`;
+
+    const thumbContent = item.type === 'video'
+      ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;"></video>`
+      : `<img src="${item.url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">`;
+
+    const isFirst = idx === 0;
+    const isLast  = idx === playlistItems.length - 1;
+
+    return `<div class="playlist-item ${item.active ? '' : 'inactive'}" id="item-${item.id}">
+      <div class="item-thumb">${thumbContent}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name || 'Sans titre'}</div>
+        <div class="item-meta">
+          ${typeTag}${durTag}${screenTags}
+        </div>
+      </div>
+      <div class="item-actions">
+        <div class="action-row">
+          <button class="btn-icon move" title="Monter" onclick="moveItem('${item.id}', -1)" ${isFirst ? 'disabled style="opacity:0.3"' : ''}>↑</button>
+          <button class="btn-icon move" title="Descendre" onclick="moveItem('${item.id}', 1)" ${isLast ? 'disabled style="opacity:0.3"' : ''}>↓</button>
+          <button class="btn-icon danger" title="Supprimer" onclick="deleteItem('${item.id}', '${item.storagePath || ''}')">🗑</button>
+        </div>
+        <div class="toggle-wrap" onclick="toggleActive('${item.id}', ${item.active})">
+          <div class="toggle ${item.active ? 'on' : ''}"></div>
+          <span class="toggle-label">${item.active ? 'Actif' : 'Inactif'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ ACTIONS PLAYLIST ═══
+function toggleActive(id, current) {
+  db.collection('playlist').doc(id).update({ active: !current })
+    .then(() => showToast(current ? 'Média désactivé' : 'Média activé', 'success'))
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
+function moveItem(id, dir) {
+  const idx     = playlistItems.findIndex(i => i.id === id);
+  const target  = idx + dir;
+  if (target < 0 || target >= playlistItems.length) return;
+
+  const batch   = db.batch();
+  const itemRef = db.collection('playlist').doc(playlistItems[idx].id);
+  const swapRef = db.collection('playlist').doc(playlistItems[target].id);
+
+  batch.update(itemRef, { order: playlistItems[target].order });
+  batch.update(swapRef, { order: playlistItems[idx].order });
+
+  batch.commit()
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
+function deleteItem(id, storagePath) {
+  if (!confirm('Supprimer ce média ? Cette action est irréversible.')) return;
+
+  const deleteDB = db.collection('playlist').doc(id).delete();
+  const tasks    = [deleteDB];
+
+  if (storagePath) {
+    tasks.push(storage.ref(storagePath).delete().catch(() => {}));
+  }
+
+  Promise.all(tasks)
+    .then(() => showToast('Média supprimé', 'success'))
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
+// ═══ TOAST ═══
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+</script>
+</body>
+</html>

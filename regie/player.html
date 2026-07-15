@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeMa Display Player</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: sans-serif;
+      cursor: none;
+    }
+
+    /* ── SLIDES ── */
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.9s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    .slide.active { opacity: 1; }
+
+    .slide img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+    }
+
+    .slide video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+    }
+
+    /* ── BARRE DE PROGRESSION ── */
+    #progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: #C8981A;
+      z-index: 200;
+      transition: width linear;
+    }
+
+    /* ── BADGE OFFLINE ── */
+    #offline-badge {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: rgba(200, 50, 0, 0.85);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      z-index: 300;
+      display: none;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── ÉTAT VIDE ── */
+    #empty-state {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0D0D0D;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: rgba(255,255,255,0.25);
+    }
+    #empty-state.visible { display: flex; }
+
+    .empty-logo {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #C8981A;
+      opacity: 0.6;
+    }
+
+    .empty-logo span { color: #1A7A6E; }
+
+    .empty-msg {
+      font-size: 15px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .empty-sub {
+      font-size: 11px;
+      opacity: 0.5;
+    }
+
+    /* ── INFOS DE DEBUG (cachées en production) ── */
+    #debug {
+      position: fixed;
+      bottom: 10px;
+      left: 12px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.15);
+      font-family: monospace;
+      z-index: 200;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="slide-a" class="slide"></div>
+<div id="slide-b" class="slide"></div>
+
+<div id="progress-bar"></div>
+<div id="offline-badge">⚠ Hors ligne — cache local actif</div>
+<div id="empty-state">
+  <div class="empty-logo">Te<span>Ma</span></div>
+  <div class="empty-msg">En attente de contenu</div>
+  <div class="empty-sub">Connectez-vous à l'Admin Panel pour ajouter des médias</div>
+</div>
+<div id="debug"></div>
+
+<!-- ── FIREBASE SDK v8 ── -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  🔧 CONFIG FIREBASE — À remplir par Kodi avec les vraies valeurs
+// ════════════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyADOBJVhaBEMbGCLqw-J_9W-tIIN4_vYes",
+  authDomain:        "tema-boutique.firebaseapp.com",
+  projectId:         "tema-boutique",
+  storageBucket:     "tema-boutique.firebasestorage.app",
+  messagingSenderId: "384084902486",
+  appId:             "1:384084902486:web:13ae76b5102abe4b2931f7"
+};
+// ════════════════════════════════════════════════════════════════
+
+// ID de l'écran — passer via URL : player.html?screen=1 ou ?screen=2 ou ?screen=3
+const PARAMS    = new URLSearchParams(window.location.search);
+const SCREEN_ID = PARAMS.get('screen') || '1';
+const CACHE_KEY = `tema_playlist_s${SCREEN_ID}`;
+
+// ── Init Firebase
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+db.enablePersistence().catch(() => {}); // cache offline natif Firestore
+
+// ── DOM
+const slideA    = document.getElementById('slide-a');
+const slideB    = document.getElementById('slide-b');
+const progress  = document.getElementById('progress-bar');
+const offline   = document.getElementById('offline-badge');
+const emptyEl   = document.getElementById('empty-state');
+const debugEl   = document.getElementById('debug');
+
+// ── État
+let playlist    = [];
+let current     = 0;
+let activeSlide = 'A';
+let imgTimer    = null;
+let progressAnim = null;
+
+// ── Cache local (fallback réseau coupé)
+function saveCache(items) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(items)); } catch(e) {}
+}
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch(e) { return []; }
+}
+
+// ── Remplir un slide avec un item
+function renderItem(slide, item) {
+  slide.innerHTML = '';
+
+  if (!item) return;
+
+  if (item.type === 'video') {
+    const v = document.createElement('video');
+    v.src       = item.url;
+    v.autoplay  = true;
+    v.muted     = true;
+    v.playsInline = true;
+    v.loop      = true;   // boucle continue jusqu'à changement explicite
+    v.onerror   = nextItem;
+    slide.appendChild(v);
+  } else {
+    // image ou gif
+    const img = document.createElement('img');
+    img.src     = item.url;
+    img.alt     = item.name || '';
+    img.onerror = nextItem;
+    slide.appendChild(img);
+  }
+}
+
+// ── Barre de progression pour les images
+function startProgress(durationMs) {
+  progress.style.transition = 'none';
+  progress.style.width      = '0%';
+  clearTimeout(progressAnim);
+  requestAnimationFrame(() => {
+    progress.style.transition = `width ${durationMs}ms linear`;
+    progress.style.width      = '100%';
+  });
+}
+
+// ── Afficher un slide (crossfade)
+function showItem(index) {
+  if (playlist.length === 0) {
+    emptyEl.classList.add('visible');
+    return;
+  }
+  emptyEl.classList.remove('visible');
+
+  const item    = playlist[index];
+  const current_el = activeSlide === 'A' ? slideA : slideB;
+  const next_el    = activeSlide === 'A' ? slideB : slideA;
+
+  renderItem(next_el, item);
+
+  requestAnimationFrame(() => {
+    next_el.classList.add('active');
+    current_el.classList.remove('active');
+    activeSlide = activeSlide === 'A' ? 'B' : 'A';
+  });
+
+  debugEl.textContent = `Écran ${SCREEN_ID} · ${index + 1}/${playlist.length} · ${item.name || ''}`;
+
+  // Durée 0 = Continu (boucle infinie) — sinon avance après N secondes
+  clearTimeout(imgTimer);
+  if (item.duration && item.duration > 0) {
+    const dur = item.duration * 1000;
+    startProgress(dur);
+    imgTimer = setTimeout(nextItem, dur);
+  } else {
+    progress.style.width = '0%';
+  }
+}
+
+function nextItem() {
+  clearTimeout(imgTimer);
+  current = (current + 1) % playlist.length;
+  showItem(current);
+}
+
+// ── Charger la playlist depuis Firestore
+function fetchPlaylist() {
+  db.collection('playlist')
+    .where('active', '==', true)
+    .orderBy('order', 'asc')
+    .onSnapshot(snapshot => {
+      const items = [];
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const screens = d.screens || ['1', '2', '3'];
+        // Inclure si assigné à cet écran ou à tous
+        if (screens.includes(SCREEN_ID) || screens.includes('all')) {
+          items.push({ id: doc.id, ...d });
+        }
+      });
+
+      offline.style.display = 'none';
+
+      if (items.length > 0) {
+        saveCache(items);
+        const wasEmpty = playlist.length === 0;
+        playlist = items;
+        if (wasEmpty) {
+          current = 0;
+          showItem(0);
+        }
+        // Si la playlist a changé, redémarrer proprement
+        else {
+          clearTimeout(imgTimer);
+          current = 0;
+          showItem(0);
+        }
+      } else {
+        playlist = [];
+        emptyEl.classList.add('visible');
+      }
+
+    }, err => {
+      // Firestore inaccessible — mode cache
+      console.warn('Offline:', err.message);
+      offline.style.display = 'block';
+      const cached = loadCache();
+      if (cached.length > 0 && playlist.length === 0) {
+        playlist = cached;
+        current  = 0;
+        showItem(0);
+      }
+    });
+}
+
+// ── Empêcher la mise en veille de Windows
+setInterval(() => {
+  document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+}, 55000);
+
+// ── Démarrage
+fetchPlaylist();
+</script>
+</body>
+</html>
