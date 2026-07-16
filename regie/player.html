@@ -105,11 +105,15 @@ let emergencyMode  = false;
 
 // ═══ HEARTBEAT — statut live des écrans ═══
 function sendHeartbeat() {
+  const currentItem = playlist[current];
   db.collection('screens').doc(SCREEN_ID).set({
-    online:       true,
-    lastSeen:     firebase.firestore.FieldValue.serverTimestamp(),
-    currentMedia: playlist[current]?.name || null,
-    screenId:     SCREEN_ID
+    online:           true,
+    playing:          playlist.length > 0,
+    lastSeen:         firebase.firestore.FieldValue.serverTimestamp(),
+    currentMedia:     currentItem?.name  || null,
+    currentMediaUrl:  currentItem?.url   || null,
+    currentMediaType: currentItem?.type  || null,
+    screenId:         SCREEN_ID
   }, { merge: true });
 }
 sendHeartbeat();
