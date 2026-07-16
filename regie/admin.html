@@ -313,6 +313,24 @@
     .preview-empty i { font-size: 36px; }
     .preview-empty p { font-size: 12px; text-align: center; line-height: 1.6; }
 
+    .preview-now-playing {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; height: 100%; text-align: center; padding: 16px;
+    }
+    .preview-play-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(200,152,26,0.15); border: 2px solid rgba(200,152,26,0.35);
+      color: var(--gold); font-size: 18px;
+      display: flex; align-items: center; justify-content: center; padding-left: 3px;
+    }
+    .preview-media-title {
+      font-size: 14px; font-weight: 700; color: var(--gold);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .preview-media-sub {
+      font-size: 11px; color: rgba(255,255,255,0.35); margin-top: -4px;
+    }
+
     .player-controls { display: flex; gap: 8px; margin-top: 10px; }
     .pctrl-btn {
       flex: 1; background: var(--surface); color: var(--muted);
@@ -451,6 +469,9 @@
 
   <!-- ═══ COLONNE GAUCHE ═══ -->
   <div class="col-left">
+
+    <!-- Label section upload -->
+    <div class="section-label">Ajouter un média</div>
 
     <!-- Upload compact -->
     <div class="upload-compact" id="upload-compact"
@@ -1065,17 +1086,14 @@ function renderPreview(screenId) {
     ? `<div class="player-badge-live">● EN DIRECT</div>`
     : `<div class="player-badge-idle">Dernière diffusion connue</div>`;
 
-  if (sd?.currentMediaUrl && sd?.currentMediaType) {
-    if (sd.currentMediaType === 'video') {
-      container.innerHTML = `${badge}
-        <video src="${sd.currentMediaUrl}" controls autoplay muted playsinline
-          style="width:100%;height:100%;object-fit:contain;border-radius:10px;"></video>`;
-    } else {
-      container.innerHTML = `${badge}
-        <img src="${sd.currentMediaUrl}"
-          style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
-    }
-    if (label) label.textContent = sd.currentMedia || 'Contenu en cours';
+  if (sd?.currentMedia) {
+    container.innerHTML = `${badge}
+      <div class="preview-now-playing">
+        <div class="preview-play-icon">▶</div>
+        <div class="preview-media-title">${sd.currentMedia}</div>
+        <div class="preview-media-sub">Lecture en cours sur l'écran ${screenId}</div>
+      </div>`;
+    if (label) label.textContent = sd.currentMedia;
   } else {
     container.innerHTML = `
       <div class="preview-empty">
