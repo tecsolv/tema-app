@@ -897,10 +897,6 @@ function loadPlaylist() {
   db.collection('playlist').orderBy('order', 'asc').onSnapshot(snap => {
     playlistItems = snap.docs.map(d => ({id: d.id, ...d.data()}));
     renderScreenCards();
-    if (selectedScreen) {
-      renderPreview(selectedScreen);
-      renderScreenPlaylist(selectedScreen);
-    }
   });
 }
 
@@ -910,14 +906,20 @@ function loadPlaylist() {
 
 function listenScreens() {
   db.collection('screens').onSnapshot(snap => {
-    screensLiveData = {};
     snap.forEach(doc => { screensLiveData[doc.id] = doc.data(); });
-    renderScreenCards();
-    if (selectedScreen) {
-      renderPreview(selectedScreen);
-      updateRightHeaderStatus(selectedScreen);
-    }
+    updateScreenCardStatuses();
   }, () => {});
+}
+
+function updateScreenCardStatuses() {
+  Object.keys(SCREEN_CONFIG).forEach(screenId => {
+    const pill = document.querySelector(`.screen-card[data-screen-id="${screenId}"] .status-pill`);
+    if (!pill) return;
+    const status = getScreenStatus(screenId);
+    pill.className = `status-pill ${status.class}`;
+    pill.querySelector('.dot-status').className = `dot-status ${status.dotClass}`;
+    pill.querySelector('.status-text').textContent = status.text;
+  });
 }
 
 function getScreenStatus(screenId) {
@@ -960,7 +962,7 @@ function renderScreenCards() {
           <div class="sc-zone">${cfg.label}</div>
           <div class="status-pill ${status.class}">
             <div class="dot-status ${status.dotClass}"></div>
-            ${status.text}
+            <span class="status-text">${status.text}</span>
           </div>
         </div>
       </div>
@@ -1019,14 +1021,11 @@ function renderRightPanel(screenId) {
     </div>
     <div id="preview-container"></div>
     <div class="player-controls">
-      <button class="pctrl-btn" onclick="previewPrev()">
+      <button class="pctrl-btn" onclick="prevScreen()">
         <i class="ti ti-player-skip-back"></i> Précédent
       </button>
-      <button class="pctrl-btn" onclick="previewNext()">
+      <button class="pctrl-btn" onclick="nextScreen()">
         <i class="ti ti-player-skip-forward"></i> Suivant
-      </button>
-      <button class="pctrl-btn" onclick="window.open('player.html?screen=${screenId}','_blank')">
-        <i class="ti ti-eye"></i> Voir en plein écran
       </button>
     </div>
 
@@ -1034,10 +1033,7 @@ function renderRightPanel(screenId) {
       <div class="pl-title">Contenus de l'Écran ${screenId}</div>
       <div class="pl-count" id="screen-media-count">—</div>
     </div>
-    <div id="screen-playlist-items"></div>
-    <div class="assign-btn" onclick="openUploadForScreen('${screenId}')">
-      + Assigner un nouveau média à cet écran
-    </div>`;
+    <div id="screen-playlist-items"></div>`;
 
   renderPreview(screenId);
   renderScreenPlaylist(screenId);
@@ -1107,20 +1103,19 @@ function renderPreviewItem(item) {
   if (label) label.textContent = item.name || 'Sans titre';
 }
 
-function previewPrev() {
-  if (!selectedScreen) return;
-  const items = playlistItems.filter(i => (i.screens || []).includes(selectedScreen));
-  if (items.length === 0) return;
-  previewIndex = (previewIndex - 1 + items.length) % items.length;
-  renderPreviewItem(items[previewIndex]);
+const navigableScreens = Object.entries(SCREEN_CONFIG)
+  .filter(([, cfg]) => cfg.installé)
+  .map(([id]) => id)
+  .sort();
+
+function prevScreen() {
+  const idx = navigableScreens.indexOf(selectedScreen);
+  if (idx > 0) selectScreen(navigableScreens[idx - 1]);
 }
 
-function previewNext() {
-  if (!selectedScreen) return;
-  const items = playlistItems.filter(i => (i.screens || []).includes(selectedScreen));
-  if (items.length === 0) return;
-  previewIndex = (previewIndex + 1) % items.length;
-  renderPreviewItem(items[previewIndex]);
+function nextScreen() {
+  const idx = navigableScreens.indexOf(selectedScreen);
+  if (idx < navigableScreens.length - 1) selectScreen(navigableScreens[idx + 1]);
 }
 
 // ════════════════════════════════════════
