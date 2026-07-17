@@ -2272,7 +2272,6 @@
 
     <!-- MODULE ADMIN — TEMA MEDIA CENTER (centre de contrôle ; aucun son dans le navigateur) -->
     <div class="page" id="page-media-center">
-      <div class="alert alert-info no-print">🎵 TeMa Media Center est un centre de contrôle uniquement. La diffusion réelle est assurée par <strong>TeMa Media Service</strong> (lecteur VLC local sur le poste de diffusion). <strong>Aucun son ne sort du navigateur.</strong></div>
 
       <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
         <button class="btn btn-sm caisse-tab-btn active" id="mc-tab-btn-dashboard" onclick="mcNavigate('dashboard')" style="flex:1;min-width:120px">📊 Tableau de bord</button>
@@ -2403,29 +2402,6 @@
             <span>Service : <strong id="mc-etat-service">—</strong></span>
             <span>Synchro : <span id="mc-derniere-synchro">—</span></span>
             <span>Erreur : <span id="mc-erreur-service">—</span></span>
-          </div>
-        </div>
-        <!-- Section Écrans — Régie Publicitaire -->
-        <div class="card" style="margin-top:14px;background:#11141f;color:#fff;border:1px solid rgba(255,255,255,.08);overflow:hidden">
-          <div style="background:#1a1e2e;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08)">
-            <span style="font-size:13px;font-weight:700;letter-spacing:.5px">📺 ÉCRANS BOUTIQUE</span>
-          </div>
-          <div style="padding:14px 16px">
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
-              <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:22px;font-weight:800;color:#C8981A" id="regie-ecrans-connectes">—</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px">Installés</div>
-              </div>
-              <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:22px;font-weight:800;color:#1A7A6E" id="regie-medias-actifs">—</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px">Médias actifs</div>
-              </div>
-              <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);word-break:break-word;min-height:22px" id="regie-dernier-media">—</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px">Dernier uploadé</div>
-              </div>
-            </div>
-            <div id="regie-screens-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div>
           </div>
         </div>
       </div>
@@ -5470,43 +5446,6 @@ function demarrerListeners() {
     rafraichirPageActive();
   }, err => console.error('media_sources:', err));
   unsubscribers.push(uMcDevices, uMcPl, uMcTracks, uMcSources);
-  const uRegiePlaylist = db.collection('playlist').where('active', '==', true)
-    .onSnapshot(snap => {
-      const items = snap.docs.map(d => ({id: d.id, ...d.data()}));
-      const SCREENS = [
-        {id:'1',label:'Zone A — Informatique',installed:true},
-        {id:'2',label:'Zone B — Fournitures',installed:true},
-        {id:'3',label:'Zone C — Enfants',installed:false},
-        {id:'4',label:'Zone D — Épicerie',installed:true},
-        {id:'5',label:'Pâtisserie',installed:false},
-        {id:'6',label:'Réserve',installed:false}
-      ];
-      const elEc   = document.getElementById('regie-ecrans-connectes');
-      const elMed  = document.getElementById('regie-medias-actifs');
-      const elDer  = document.getElementById('regie-dernier-media');
-      const elGrid = document.getElementById('regie-screens-grid');
-      if (elEc)   elEc.textContent  = SCREENS.filter(s => s.installed).length + ' / 6';
-      if (elMed)  elMed.textContent = items.length;
-      if (elDer) {
-        const sorted = [...items].sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
-        elDer.textContent = sorted[0]?.name || '—';
-      }
-      if (elGrid) {
-        elGrid.innerHTML = SCREENS.map(s => {
-          const count = items.filter(i => (i.screens||[]).includes(s.id)).length;
-          const active = s.installed && count > 0;
-          const bdr = s.installed ? (active ? '#1A7A6E' : 'rgba(255,255,255,.15)') : 'rgba(255,255,255,.06)';
-          return `<div style="border:1px solid ${bdr};border-radius:8px;padding:10px 8px;text-align:center;background:rgba(0,0,0,.2)">
-            <div style="font-size:20px;font-weight:800;color:${s.installed ? '#C8981A' : 'rgba(255,255,255,.2)'}">${s.id}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.4);margin:3px 0;line-height:1.2">${s.label}</div>
-            <div style="font-size:11px;font-weight:600;color:${active ? '#1A7A6E' : 'rgba(255,255,255,.25)'}">
-              ${s.installed ? (count > 0 ? count + ' média' + (count > 1 ? 's' : '') : 'Vide') : 'Prévu'}
-            </div>
-          </div>`;
-        }).join('');
-      }
-    }, err => console.error('playlist:', err));
-  unsubscribers.push(uRegiePlaylist);
 
   // Listener comptes utilisateurs (admin uniquement, mais on écoute pour tous pour rafraîchir si besoin)
   if (currentUser.isAdmin) {
@@ -7226,7 +7165,7 @@ const pageTitles = {
   fournisseurs:'Gestion des Fournisseurs', commandes:'Commandes Fournisseurs', rapports:'Rapports & Statistiques', alertes:'Alertes de Stock',
   comptes:'Gestion de Comptes (Admin)', journal:"Journal d'Activité (Admin)", tresorerie:'Trésorerie & Comptabilité (Admin)',
   reinitialisation:'Réinitialisation avant Ouverture (Admin)', support:'Support — Messages des Employés (Admin)',
-  'media-center':'TeMa Media Center — Diffusion Audio Boutique (Admin)',
+  'media-center':'TeMa Media Center',
   comptabilite:'Comptabilité OHADA', rapprochement:'Trésorerie — Rapprochement',
   mobilemoney:'Mobile Money — Transactions & Commissions',
   services:'Services Numériques', rentabilite:'Rentabilité Avancée',
