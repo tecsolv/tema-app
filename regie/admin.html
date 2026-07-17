@@ -627,6 +627,94 @@
       padding: 11px; font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer;
     }
     .btn-trigger:hover { background: #b91c1c; }
+
+    /* ── SURVEILLANCE ── */
+    .right-panel-header { display: flex; justify-content: flex-end; padding-bottom: 4px; flex-shrink: 0; }
+    .btn-surveillance {
+      font-size: 10px; font-weight: 600; padding: 5px 12px; border-radius: 7px;
+      cursor: pointer; font-family: inherit;
+      background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4); transition: all 0.15s;
+    }
+    .btn-surveillance:hover { background: rgba(26,122,110,0.1); border-color: rgba(26,122,110,0.3); color: #4ecdc4; }
+    .btn-surveillance.active { background: rgba(26,122,110,0.15); border-color: #1A7A6E; color: #4ecdc4; }
+    #surveillance-progress { height: 2px; width: 0%; background: var(--teal); border-radius: 0 0 4px 4px; display: none; }
+    #surveillance-indicator { display: none; align-items: center; gap: 8px; font-size: 10px; padding: 5px 0; }
+
+    /* ── ALERTES HORS LIGNE ── */
+    #alerts-zone { display: none; flex-direction: column; gap: 6px; }
+    .alert-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      border-radius: 9px; border: 0.5px solid rgba(239,68,68,0.25);
+      background: rgba(239,68,68,0.05); animation: alertPulse 2s ease-in-out infinite;
+    }
+    @keyframes alertPulse {
+      0%, 100% { border-color: rgba(239,68,68,0.25); }
+      50%       { border-color: rgba(239,68,68,0.5);  }
+    }
+    .alert-icon  { font-size: 16px; color: #ef4444; flex-shrink: 0; }
+    .alert-body  { flex: 1; min-width: 0; }
+    .alert-title { font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .alert-meta  { font-size: 9px; color: rgba(255,255,255,0.3); }
+    .alert-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .alert-btn-view {
+      font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 5px;
+      background: rgba(239,68,68,0.12); color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.25); cursor: pointer; font-family: inherit;
+    }
+    .alert-btn-dismiss {
+      font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 5px;
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.08); cursor: pointer; font-family: inherit;
+    }
+    .screen-row { position: relative; }
+    .alert-badge {
+      position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+      border-radius: 50%; background: #ef4444;
+      box-shadow: 0 0 0 2px rgba(239,68,68,0.3);
+      animation: badgePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.3); }
+      50%       { box-shadow: 0 0 0 5px rgba(239,68,68,0.1); }
+    }
+
+    /* ── TRANSFER POPOVER ── */
+    .transfer-popover {
+      background: #0f1623; border: 1px solid rgba(200,152,26,0.3);
+      border-radius: 10px; padding: 12px; margin: 6px 0 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .tp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .tp-title  { font-size: 11px; font-weight: 700; color: #fff; }
+    .tp-close  { color: rgba(255,255,255,0.3); cursor: pointer; font-size: 14px; line-height: 1; }
+    .tp-close:hover { color: #fff; }
+    .tp-subtitle {
+      font-size: 9px; color: rgba(255,255,255,0.3); line-height: 1.6;
+      margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    }
+    .tp-list { display: flex; flex-direction: column; gap: 4px; }
+    .tp-row {
+      display: flex; align-items: center; gap: 10px; padding: 7px 8px;
+      border-radius: 7px; border: 0.5px solid rgba(255,255,255,0.05); transition: background 0.1s;
+    }
+    .tp-row:hover { background: rgba(255,255,255,0.04); }
+    .tp-num  { font-size: 13px; font-weight: 800; color: #C8981A; min-width: 18px; }
+    .tp-zone { font-size: 10px; color: rgba(255,255,255,0.5); flex: 1; }
+    .tp-status  { flex-shrink: 0; }
+    .tp-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .tp-btn {
+      font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 5px;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    .tp-btn-move { background: rgba(200,152,26,0.12); color: #C8981A; border: 1px solid rgba(200,152,26,0.25); }
+    .tp-btn-move:hover { background: rgba(200,152,26,0.22); }
+    .tp-btn-copy { background: rgba(26,122,110,0.12); color: #4ecdc4; border: 1px solid rgba(26,122,110,0.25); }
+    .tp-btn-copy:hover { background: rgba(26,122,110,0.22); }
   </style>
 </head>
 <body>
@@ -671,6 +759,18 @@
     <!-- ═══ COLONNE DROITE ═══ -->
     <div class="regie-right">
 
+      <!-- Header panneau droit -->
+      <div class="right-panel-header">
+        <button class="btn-surveillance" id="btn-surveillance"
+          onclick="toggleSurveillance()"
+          title="Surveiller automatiquement tous les écrans">
+          👁 Surveillance
+        </button>
+      </div>
+
+      <!-- Alertes hors ligne -->
+      <div id="alerts-zone"></div>
+
       <!-- Empty state -->
       <div id="right-empty">
         <i class="ti ti-device-tv"></i>
@@ -686,6 +786,8 @@
             <p>Aucune diffusion en cours</p>
           </div>
         </div>
+        <div id="surveillance-progress"></div>
+        <div id="surveillance-indicator"></div>
         <div class="preview-controls">
           <button class="preview-nav-btn" id="btn-prev-screen" onclick="prevScreen()">
             <i class="ti ti-player-skip-back"></i> Précédent
@@ -948,6 +1050,7 @@ let emDuration      = 15;
 auth.signInAnonymously().catch(() => {});
 auth.onAuthStateChanged(user => {
   if (user) {
+    requestNotificationPermission();
     listenScreens();
     listenPlaylist();
     listenEmergency();
@@ -962,6 +1065,7 @@ function listenScreens() {
   db.collection('screens').onSnapshot(snapshot => {
     snapshot.forEach(doc => { screensLiveData[doc.id] = doc.data(); });
     updateAllStatusPills();
+    checkOfflineAlerts(screensLiveData);
     if (selectedScreen) {
       updateSelectedInfo(selectedScreen);
       renderPreview(selectedScreen);
@@ -1077,6 +1181,12 @@ function selectScreen(screenId) {
   const status = getScreenStatus(screenId);
   if (!status.clickable) return;
 
+  if (surveillanceMode) {
+    clearTimeout(surveillanceTimer);
+    const btn = document.getElementById('btn-surveillance');
+    if (btn) btn.textContent = '👁 Reprendre';
+  }
+
   selectedScreen = screenId;
 
   document.querySelectorAll('.screen-row').forEach(row => {
@@ -1109,9 +1219,17 @@ function deselectScreen() {
     if (num) num.classList.remove('active');
   });
   updateSelectedInfo(null);
-  document.getElementById('right-empty').style.display      = '';
-  document.getElementById('preview-section').style.display  = 'none';
   document.getElementById('playlist-section').style.display = 'none';
+  if (surveillanceMode) {
+    document.getElementById('right-empty').style.display     = 'none';
+    document.getElementById('preview-section').style.display = 'flex';
+    const btn = document.getElementById('btn-surveillance');
+    if (btn) { btn.classList.add('active'); btn.textContent = '👁 Surveillance ON'; }
+    rotateSurveillance();
+  } else {
+    document.getElementById('right-empty').style.display     = '';
+    document.getElementById('preview-section').style.display = 'none';
+  }
 }
 
 function toggleScreenPause() {
@@ -1269,6 +1387,8 @@ function renderScreenPlaylist(screenId) {
           <button class="btn-icon move" title="Descendre"
             onclick="moveItem('${item.id}', 1)"
             ${isLast ? 'disabled' : ''}>↓</button>
+          <button class="btn-icon transfer-btn" title="Transférer / Copier vers un autre écran"
+            onclick="event.stopPropagation(); toggleTransferPopover('${item.id}', '${screenId}')">⇄</button>
           <button class="btn-icon danger" title="Retirer de cet écran"
             onclick="removeFromScreen('${item.id}', '${screenId}')">✕</button>
           <button class="btn-icon danger" title="Supprimer définitivement"
@@ -1597,6 +1717,274 @@ function listenEmergency() {
       btn.classList.remove('active-emergency');
     }
   }, () => {});
+}
+
+// ════════════════════════════════════════
+//  TRANSFER & COPY
+// ════════════════════════════════════════
+
+let openTransferPopover = null;
+
+function toggleTransferPopover(itemId, fromScreen) {
+  if (openTransferPopover === itemId) {
+    closeTransferPopover();
+    return;
+  }
+  closeTransferPopover();
+  openTransferPopover = itemId;
+
+  const rowId = `row-${itemId}`;
+  const row   = document.getElementById(rowId);
+  if (!row) return;
+
+  const targets = Object.entries(SCREEN_CONFIG)
+    .filter(([id]) => id !== fromScreen && SCREEN_CONFIG[id].installé)
+    .map(([id, cfg]) => `
+      <div class="tp-row">
+        <span class="tp-num">Écran ${id}</span>
+        <span class="tp-zone">${cfg.zone || ''}</span>
+        <button class="tp-btn-move" onclick="transferMedia('${itemId}','${fromScreen}','${id}','move')">Déplacer</button>
+        <button class="tp-btn-copy" onclick="transferMedia('${itemId}','${fromScreen}','${id}','copy')">Copier</button>
+      </div>`).join('');
+
+  const pop = document.createElement('div');
+  pop.className = 'transfer-popover';
+  pop.id        = `tp-${itemId}`;
+  pop.innerHTML = `
+    <div class="tp-header">
+      <span class="tp-title">Transférer / Copier</span>
+      <button class="tp-close" onclick="closeTransferPopover()">✕</button>
+    </div>
+    <div class="tp-subtitle">Vers quel écran ?</div>
+    <div class="tp-list">${targets || '<div style="color:rgba(255,255,255,0.35);font-size:11px">Aucun autre écran disponible</div>'}</div>`;
+  row.insertAdjacentElement('afterend', pop);
+}
+
+function closeTransferPopover() {
+  if (openTransferPopover) {
+    const el = document.getElementById(`tp-${openTransferPopover}`);
+    if (el) el.remove();
+    openTransferPopover = null;
+  }
+}
+
+async function transferMedia(itemId, fromScreen, toScreen, mode) {
+  closeTransferPopover();
+  try {
+    const docRef  = db.collection('playlist').doc(itemId);
+    const snap    = await docRef.get();
+    if (!snap.exists) { showToast('Média introuvable', 'error'); return; }
+    const data    = snap.data();
+    const screens = data.screens || ['1','2','3'];
+
+    if (mode === 'move') {
+      const newScreens = screens.filter(s => s !== fromScreen);
+      if (!newScreens.includes(toScreen)) newScreens.push(toScreen);
+      await docRef.update({ screens: newScreens });
+      showToast(`Déplacé vers Écran ${toScreen}`, 'success');
+    } else {
+      if (!screens.includes(toScreen)) {
+        await docRef.update({ screens: [...screens, toScreen] });
+      }
+      showToast(`Copié vers Écran ${toScreen}`, 'success');
+    }
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('click', e => {
+  if (openTransferPopover && !e.target.closest('.transfer-popover') && !e.target.closest('.transfer-btn')) {
+    closeTransferPopover();
+  }
+});
+
+// ════════════════════════════════════════
+//  SURVEILLANCE MODE
+// ════════════════════════════════════════
+
+let surveillanceMode     = false;
+let surveillanceTimer    = null;
+let surveillanceIndex    = 0;
+const surveillanceInterval = 10; // secondes par écran
+
+function getSurveillanceScreens() {
+  return Object.entries(SCREEN_CONFIG)
+    .filter(([, cfg]) => cfg.installé)
+    .map(([id]) => id);
+}
+
+function toggleSurveillance() {
+  if (surveillanceMode) { stopSurveillance(); } else { startSurveillance(); }
+}
+
+function startSurveillance() {
+  const screens = getSurveillanceScreens();
+  if (screens.length === 0) { showToast('Aucun écran installé', 'error'); return; }
+  surveillanceMode  = true;
+  surveillanceIndex = 0;
+  const btn = document.getElementById('btn-surveillance');
+  if (btn) { btn.classList.add('active'); btn.textContent = '👁 Surveillance ON'; }
+  deselectScreen();
+  rotateSurveillance();
+}
+
+function stopSurveillance() {
+  surveillanceMode = false;
+  clearTimeout(surveillanceTimer);
+  const btn  = document.getElementById('btn-surveillance');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '👁 Surveillance'; }
+  const prog = document.getElementById('surveillance-progress');
+  const ind  = document.getElementById('surveillance-indicator');
+  if (prog) { prog.style.display = 'none'; prog.style.width = '0%'; }
+  if (ind)  ind.style.display = 'none';
+}
+
+function rotateSurveillance() {
+  if (!surveillanceMode) return;
+  const screens = getSurveillanceScreens();
+  if (screens.length === 0) { stopSurveillance(); return; }
+  surveillanceIndex = surveillanceIndex % screens.length;
+  const screenId = screens[surveillanceIndex];
+  selectScreen(screenId);
+  updateSurveillanceIndicator(screenId, surveillanceIndex + 1, screens.length);
+  animateSurveillanceBar(surveillanceInterval * 1000);
+  surveillanceTimer = setTimeout(() => {
+    surveillanceIndex = (surveillanceIndex + 1) % screens.length;
+    rotateSurveillance();
+  }, surveillanceInterval * 1000);
+}
+
+function animateSurveillanceBar(durationMs) {
+  const prog = document.getElementById('surveillance-progress');
+  if (!prog) return;
+  prog.style.display    = 'block';
+  prog.style.transition = 'none';
+  prog.style.width      = '0%';
+  requestAnimationFrame(() => {
+    prog.style.transition = `width ${durationMs}ms linear`;
+    prog.style.width      = '100%';
+  });
+}
+
+function updateSurveillanceIndicator(screenId, current, total) {
+  const ind = document.getElementById('surveillance-indicator');
+  if (!ind) return;
+  const cfg   = SCREEN_CONFIG[screenId] || {};
+  const label = cfg.zone ? `${cfg.zone}` : `Écran ${screenId}`;
+  ind.style.display  = 'flex';
+  ind.innerHTML = `
+    <span style="width:6px;height:6px;border-radius:50%;background:#4ecdc4;animation:badgePulse 1.5s ease-in-out infinite;flex-shrink:0"></span>
+    <span style="color:rgba(255,255,255,0.5)">Surveillance</span>
+    <span style="color:#4ecdc4;font-weight:600">${label}</span>
+    <span style="color:rgba(255,255,255,0.3)">${current}/${total}</span>`;
+}
+
+// ════════════════════════════════════════
+//  OFFLINE ALERTS
+// ════════════════════════════════════════
+
+const activeAlerts       = {};
+const dismissedAlerts    = new Set();
+const OFFLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min
+
+function checkOfflineAlerts(screensData) {
+  const now = Date.now();
+  let changed = false;
+
+  Object.entries(screensData).forEach(([id, data]) => {
+    if (!SCREEN_CONFIG[id]?.installé) return;
+    const lastSeen = data.lastSeen?.toMillis?.() || 0;
+    const isOffline = (now - lastSeen) > OFFLINE_THRESHOLD_MS;
+
+    if (isOffline && !activeAlerts[id] && !dismissedAlerts.has(id)) {
+      activeAlerts[id] = {
+        screenId:    id,
+        label:       SCREEN_CONFIG[id]?.zone || `Écran ${id}`,
+        lastMedia:   data.currentMedia || null,
+        since:       new Date(lastSeen)
+      };
+      triggerBrowserNotification(id, activeAlerts[id].label, activeAlerts[id].lastMedia);
+      changed = true;
+    } else if (!isOffline && activeAlerts[id]) {
+      delete activeAlerts[id];
+      dismissedAlerts.delete(id);
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    renderAlertsZone();
+    updateScreenCardAlertBadges();
+  }
+}
+
+function renderAlertsZone() {
+  const zone = document.getElementById('alerts-zone');
+  if (!zone) return;
+  const alerts = Object.values(activeAlerts);
+  if (alerts.length === 0) {
+    zone.style.display = 'none';
+    zone.innerHTML = '';
+    return;
+  }
+  zone.style.display = 'flex';
+  zone.innerHTML = alerts.map(a => {
+    const sinceStr = a.since && a.since.getTime() > 0
+      ? a.since.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : 'inconnu';
+    return `
+    <div class="alert-item" id="alert-${a.screenId}">
+      <div class="alert-icon">📡</div>
+      <div class="alert-body">
+        <div class="alert-title">Écran ${a.screenId} — ${a.label} hors ligne</div>
+        <div class="alert-meta">Dernier signal : ${sinceStr}${a.lastMedia ? ' · ' + a.lastMedia : ''}</div>
+      </div>
+      <div class="alert-actions">
+        <button class="btn-alert-watch" onclick="selectScreen('${a.screenId}')">Voir</button>
+        <button class="btn-alert-dismiss" onclick="dismissAlert('${a.screenId}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dismissAlert(screenId) {
+  dismissedAlerts.add(screenId);
+  delete activeAlerts[screenId];
+  renderAlertsZone();
+  updateScreenCardAlertBadges();
+}
+
+function updateScreenCardAlertBadges() {
+  document.querySelectorAll('.screen-row').forEach(row => {
+    const id = row.dataset.screenId;
+    const badge = row.querySelector('.alert-badge');
+    if (!id) return;
+    if (activeAlerts[id]) {
+      if (!badge) {
+        const b = document.createElement('div');
+        b.className = 'alert-badge';
+        row.appendChild(b);
+      }
+    } else {
+      if (badge) badge.remove();
+    }
+  });
+}
+
+function triggerBrowserNotification(screenId, label, lastMedia) {
+  if (Notification.permission !== 'granted') return;
+  new Notification(`⚠ ${label} hors ligne`, {
+    body: lastMedia ? `Dernier média : ${lastMedia}` : 'Aucun signal reçu depuis 5 min',
+    icon: '/favicon.ico',
+    tag:  `offline-${screenId}`
+  });
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 
 // ════════════════════════════════════════
