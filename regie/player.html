@@ -217,12 +217,12 @@ function applyPlaylist(items) {
 
 function fetchPlaylist() {
   db.collection('playlist')
-    .where('active', '==', true)
     .orderBy('order', 'asc')
     .onSnapshot(snapshot => {
       const items = [];
       snapshot.forEach(doc => {
         const d       = doc.data();
+        if (!d.active) return;
         const screens = d.screens || ['1','2','3'];
         if (screens.includes(SCREEN_ID) || screens.includes('all')) {
           items.push({ id: doc.id, ...d });
