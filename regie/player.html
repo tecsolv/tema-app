@@ -230,7 +230,7 @@ function fetchPlaylist() {
       });
       offline.style.display = 'none';
       if (items.length > 0) saveCache(items);
-      applyPlaylist(items.length > 0 ? items : loadCache());
+      applyPlaylist(items);
     }, err => {
       console.warn('Offline:', err.message);
       offline.style.display = 'block';
