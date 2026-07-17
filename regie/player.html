@@ -102,6 +102,7 @@ let current        = 0;
 let activeSlide    = 'A';
 let imgTimer       = null;
 let emergencyMode  = false;
+let isPaused       = false;
 
 // ═══ HEARTBEAT — statut live des écrans ═══
 function sendHeartbeat() {
@@ -116,6 +117,7 @@ function sendHeartbeat() {
     screenId:         SCREEN_ID
   }, { merge: true });
 }
+db.collection('screens').doc(SCREEN_ID).set({ paused: false }, { merge: true });
 sendHeartbeat();
 setInterval(sendHeartbeat, 30000);
 
@@ -172,6 +174,7 @@ function startProgress(durationMs) {
 }
 
 function showItem(index) {
+  if (isPaused) return;
   if (playlist.length === 0) { emptyEl.classList.add('visible'); return; }
   emptyEl.classList.remove('visible');
 
@@ -280,6 +283,26 @@ db.collection('config').doc('emergency').onSnapshot(doc => {
     showEmergency(data);
   } else {
     if (emergencyMode) hideEmergency();
+  }
+}, () => {});
+
+// ═══ CONTRÔLE PAUSE DEPUIS LA RÉGIE ═══
+db.collection('screens').doc(SCREEN_ID).onSnapshot(doc => {
+  const data = doc.data();
+  if (!data) return;
+  const shouldPause = data.paused === true;
+
+  if (shouldPause && !isPaused) {
+    isPaused = true;
+    clearTimeout(imgTimer);
+    progress.style.transition = 'none';
+    progress.style.width = '0%';
+    const activeEl = activeSlide === 'A' ? slideA : slideB;
+    const video = activeEl.querySelector('video');
+    if (video) video.pause();
+  } else if (!shouldPause && isPaused) {
+    isPaused = false;
+    if (!emergencyMode && playlist.length > 0) showItem(current);
   }
 }, () => {});
 

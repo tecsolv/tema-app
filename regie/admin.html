@@ -309,6 +309,16 @@
     }
     .preview-nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
     .preview-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .btn-pause-screen {
+      background: rgba(200,152,26,0.1); border: 1px solid rgba(200,152,26,0.28);
+      color: var(--gold); border-radius: 8px; padding: 8px 18px;
+      font-size: 12px; font-weight: 700; font-family: var(--font);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .btn-pause-screen:hover { background: rgba(200,152,26,0.2); border-color: var(--gold); }
+    .btn-pause-screen.is-paused { background: rgba(26,122,110,0.12); border-color: rgba(26,122,110,0.35); color: #4ecdc4; }
+    .btn-pause-screen.is-paused:hover { background: rgba(26,122,110,0.22); }
 
     /* ── PLAYLIST SECTION ── */
     #playlist-section {
@@ -680,6 +690,9 @@
           <button class="preview-nav-btn" id="btn-prev-screen" onclick="prevScreen()">
             <i class="ti ti-player-skip-back"></i> Précédent
           </button>
+          <button class="btn-pause-screen" id="btn-pause-screen" onclick="toggleScreenPause()">
+            <i class="ti ti-player-pause"></i> Pause
+          </button>
           <button class="preview-nav-btn" id="btn-next-screen" onclick="nextScreen()">
             Suivant <i class="ti ti-player-skip-forward"></i>
           </button>
@@ -952,6 +965,7 @@ function listenScreens() {
     if (selectedScreen) {
       updateSelectedInfo(selectedScreen);
       renderPreview(selectedScreen);
+      updatePauseButton();
     }
   }, () => {});
 }
@@ -1084,6 +1098,7 @@ function selectScreen(screenId) {
   renderPreview(screenId);
   renderScreenPlaylist(screenId);
   updateNavButtons();
+  updatePauseButton();
 }
 
 function deselectScreen() {
@@ -1097,6 +1112,23 @@ function deselectScreen() {
   document.getElementById('right-empty').style.display      = '';
   document.getElementById('preview-section').style.display  = 'none';
   document.getElementById('playlist-section').style.display = 'none';
+}
+
+function toggleScreenPause() {
+  if (!selectedScreen) return;
+  const paused = screensLiveData[selectedScreen]?.paused === true;
+  db.collection('screens').doc(selectedScreen).update({ paused: !paused })
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
+function updatePauseButton() {
+  const btn = document.getElementById('btn-pause-screen');
+  if (!btn || !selectedScreen) return;
+  const paused = screensLiveData[selectedScreen]?.paused === true;
+  btn.className = `btn-pause-screen${paused ? ' is-paused' : ''}`;
+  btn.innerHTML = paused
+    ? `<i class="ti ti-player-play"></i> Reprendre`
+    : `<i class="ti ti-player-pause"></i> Pause`;
 }
 
 function updateNavButtons() {
