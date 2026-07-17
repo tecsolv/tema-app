@@ -230,12 +230,14 @@
     }
     .s-live  { background: rgba(34,197,94,.12);   color: #22c55e; border: 1px solid rgba(34,197,94,.22);   }
     .s-pause { background: rgba(245,158,11,.12);  color: #f59e0b; border: 1px solid rgba(245,158,11,.22);  }
-    .s-off   { background: rgba(239,68,68,.10);   color: #ef4444; border: 1px solid rgba(239,68,68,.2);   }
+    .s-off   { background: rgba(100,116,139,.10); color: #64748b; border: 1px solid rgba(100,116,139,.2);  }
+    .s-conn  { background: rgba(78,205,196,.10);  color: #4ecdc4; border: 1px solid rgba(78,205,196,.22);  }
     .s-prev  { background: rgba(255,255,255,.04); color: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.08); }
     .dot-status { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .dot-live  { background: #22c55e; }
     .dot-pause { background: #f59e0b; }
-    .dot-off   { background: #ef4444; }
+    .dot-off   { background: #64748b; }
+    .dot-conn  { background: #4ecdc4; }
     .dot-dim   { background: rgba(255,255,255,.2); }
 
     /* ── COLONNE DROITE — EMPTY ── */
@@ -1092,13 +1094,15 @@ function getScreenStatus(screenId) {
   const config = SCREEN_CONFIG[screenId];
 
   if (!config?.installé) return { class: 's-prev',  text: 'Prévu',        dotClass: 'dot-dim',   clickable: false };
-  if (!data?.lastSeen)   return { class: 's-off',   text: 'Hors ligne',   dotClass: 'dot-off',   clickable: true  };
 
-  const secondsAgo = (Date.now() - data.lastSeen.toMillis()) / 1000;
-  if (secondsAgo > 300) return { class: 's-off',   text: 'Éteint',       dotClass: 'dot-off',   clickable: true };
-  if (secondsAgo > 60)  return { class: 's-pause', text: 'En pause',     dotClass: 'dot-pause', clickable: true };
-  if (data.playing)     return { class: 's-live',  text: 'En diffusion', dotClass: 'dot-live',  clickable: true };
-  return                       { class: 's-pause', text: 'Connecté',     dotClass: 'dot-pause', clickable: true };
+  const lastMs   = data?.lastSeen?.toMillis?.() || 0;
+  const secsAgo  = (Date.now() - lastMs) / 1000;
+  const isOnline = data?.online === true && secsAgo < 300;
+
+  if (!isOnline)    return { class: 's-off',   text: 'Éteint',       dotClass: 'dot-off',   clickable: true };
+  if (data.paused)  return { class: 's-pause', text: 'En Pause',     dotClass: 'dot-pause', clickable: true };
+  if (data.playing) return { class: 's-live',  text: 'En diffusion', dotClass: 'dot-live',  clickable: true };
+  return                   { class: 's-conn',  text: 'Connecté',     dotClass: 'dot-conn',  clickable: true };
 }
 
 // ════════════════════════════════════════
