@@ -4410,7 +4410,7 @@ const posF0 = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0));
 const posNow = () => new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const posDateHeure = () => new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const CAT_ZONE = {'Accessoires Informatiques':'A','Fournitures Scolaires':'B','Habits Enfants':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
-const CAT_EMOJI = {'Accessoires Informatiques':'🖥️','Habits Enfants':'👕','Fournitures Scolaires':'📚','Épicerie':'🛒','Services':'🖨️'};
+const CAT_EMOJI = {'Accessoires Informatiques':'🖥️','Habits Enfants':'👕','Fournitures Scolaires':'📚','Épicerie':'🛒','Services':'🖨️','Pâtisserie':'🧁','Électroménager':'🔌','Beauté & Bien-Être':'💄'};
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
 function consigner(action, details = '') {
@@ -7702,7 +7702,14 @@ async function confirmerNouvelleCategorie() {
 function renderCategories() {
   const cats = [
     ...DEFAULT_CATS,
-    ...customCats.map(nom => ({nom, icon:'📦', color:'#64748b'}))
+    ...customCats.map(nom => {
+      const meta = {
+        'Pâtisserie':       {icon:'🧁', color:'#e91e8c'},
+        'Électroménager':   {icon:'🔌', color:'#e67e22'},
+        'Beauté & Bien-Être':{icon:'💄', color:'#d81b60'},
+      }[nom] || {icon:'📦', color:'#64748b'};
+      return {nom, ...meta};
+    })
   ];
   const container = document.getElementById('cat-cards');
   if (!container) return;
