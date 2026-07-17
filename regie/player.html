@@ -214,6 +214,14 @@ function applyPlaylist(items) {
     showItem(0);
   } else {
     playlist = [];
+    clearTimeout(imgTimer);
+    [slideA, slideB].forEach(s => {
+      const v = s.querySelector('video');
+      if (v) { v.pause(); v.src = ''; }
+      s.innerHTML = '';
+      s.classList.remove('active');
+    });
+    activeSlide = 'A';
     emptyEl.classList.add('visible');
   }
 }
