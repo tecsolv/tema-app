@@ -4594,13 +4594,17 @@ async function assurerCompteAdmin() {
 // Crée le registre des caisses physiques une seule fois si la collection caisses est vide
 const CAISSES_INITIALES = [
   { nom: 'Caisse 1', code: 'C1', zones: 'Boutique principale (Zones B, C, D)' },
-  { nom: 'Caisse 2', code: 'C2', zones: 'Informatique & Services (Zone A)' }
+  { nom: 'Caisse 2', code: 'C2', zones: 'Informatique & Services (Zone A)' },
+  { nom: 'Caisse 3', code: 'C3', zones: 'Mobile Money' },
+  { nom: 'Caisse 4', code: 'C4', zones: 'Boutique principale (Zones B, C, D)' }
 ];
 async function assurerCaissesInitiales() {
-  const snap = await db.collection('caisses').limit(1).get();
-  if (!snap.empty) return;
+  const snap = await db.collection('caisses').get();
+  const existingCodes = new Set(snap.docs.map(d => d.data().code).filter(Boolean));
   const batch = db.batch();
+  let added = 0;
   CAISSES_INITIALES.forEach(c => {
+    if (existingCodes.has(c.code)) return;
     const ref = db.collection('caisses').doc();
     batch.set(ref, {
       nom: c.nom, code: c.code, zones: c.zones,
@@ -4608,8 +4612,9 @@ async function assurerCaissesInitiales() {
       utilisateurActifId: null, utilisateurActifNom: null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    added++;
   });
-  await batch.commit();
+  if (added > 0) await batch.commit();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
