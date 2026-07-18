@@ -3781,6 +3781,20 @@
     <button class="pos-modal-close" onclick="closePosModal('modal-mm-montant')">×</button>
     <h2 id="mm-modal-titre" style="margin-bottom:6px">💸 Mobile Money</h2>
     <p id="mm-modal-subtitle" style="color:#64748b;font-size:13px;margin-bottom:20px"></p>
+    <!-- Retrait / Dépôt — visible uniquement pour Transfert -->
+    <div id="mm-type-section" style="display:none;margin-bottom:16px">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Type d'opération</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label id="mm-type-depot-lbl" onclick="selectMMType('depot')"
+          style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:all .15s">
+          <span>➕</span> Dépôt
+        </label>
+        <label id="mm-type-retrait-lbl" onclick="selectMMType('retrait')"
+          style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:all .15s">
+          <span>➖</span> Retrait
+        </label>
+      </div>
+    </div>
     <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Montant de la transaction (FCFA)</label>
     <input type="number" id="mm-montant-input" min="0" placeholder="Ex: 10 000"
       style="width:100%;padding:14px;border:2px solid var(--border);border-radius:10px;font-size:20px;text-align:right;box-sizing:border-box;margin-bottom:18px"
@@ -6099,10 +6113,10 @@ const MM_OPS = [
   {id:'orange', label:'Orange Money', color:'#FF6600', bg:'#FFF5EE', emoji:'🟠'},
   {id:'wave',   label:'Wave',         color:'#1A9EFF', bg:'#EFF8FF', emoji:'🔵'},
   {id:'mtn',    label:'MTN Money',    color:'#FFCC00', bg:'#FFFBEB', emoji:'🟡'},
-  {id:'moov',   label:'Moov Money',   color:'#E4001B', bg:'#FFF0F0', emoji:'🔴'},
+  {id:'moov',   label:'Moov Money',   color:'#16a34a', bg:'#f0fdf4', emoji:'🟢'},
 ];
 const MM_SERVICES = [
-  {id:'transfert', label:'Transfert (Retrait/Dépôt)', emoji:'💸'},
+  {id:'transfert', label:'Transfert', emoji:'💸'},
   {id:'unite',     label:"Achat d'Unité",             emoji:'📱'},
   {id:'data',      label:'Achat de Data',              emoji:'🌐'},
 ];
@@ -6152,23 +6166,56 @@ function selectMMOperateur(opId) {
   renderMMPanel();
 }
 
+let mmTypeActif = null; // 'depot' | 'retrait' | null
+
 function ajouterServiceMM(opId, svcId) {
   const op  = MM_OPS.find(o => o.id === opId);
   const svc = MM_SERVICES.find(s => s.id === svcId);
-  mmTransactionEnCours = { label: `${op.label} — ${svc.label}` };
+  mmTransactionEnCours = { op, svc, isTransfert: svcId === 'transfert' };
+  mmTypeActif = null;
   document.getElementById('mm-modal-titre').textContent    = `${svc.emoji} ${svc.label}`;
   document.getElementById('mm-modal-subtitle').textContent = `Opérateur : ${op.emoji} ${op.label}`;
   document.getElementById('mm-montant-input').value = '';
+  // Afficher/masquer section Retrait/Dépôt
+  const typeSection = document.getElementById('mm-type-section');
+  typeSection.style.display = svcId === 'transfert' ? 'block' : 'none';
+  // Réinitialiser les boutons de type
+  ['depot','retrait'].forEach(t => {
+    const lbl = document.getElementById(`mm-type-${t}-lbl`);
+    if (lbl) { lbl.style.borderColor = '#e2e8f0'; lbl.style.background = '#fff'; lbl.style.color = '#1a1e2e'; }
+  });
   document.getElementById('modal-mm-montant').classList.add('open');
   setTimeout(() => document.getElementById('mm-montant-input').focus(), 120);
+}
+
+function selectMMType(type) {
+  mmTypeActif = type;
+  const colors = { depot: '#16a34a', retrait: '#e74c3c' };
+  ['depot','retrait'].forEach(t => {
+    const lbl = document.getElementById(`mm-type-${t}-lbl`);
+    if (!lbl) return;
+    const active = t === type;
+    lbl.style.borderColor = active ? colors[t] : '#e2e8f0';
+    lbl.style.background  = active ? (t === 'depot' ? '#f0fdf4' : '#fff5f5') : '#fff';
+    lbl.style.color       = active ? colors[t] : '#1a1e2e';
+  });
 }
 
 function confirmerMMTransaction() {
   const montant = parseFloat(document.getElementById('mm-montant-input').value) || 0;
   if (montant <= 0) { showToast('Veuillez saisir un montant valide', 'error'); return; }
+  if (mmTransactionEnCours.isTransfert && !mmTypeActif) {
+    showToast('Veuillez sélectionner Dépôt ou Retrait', 'error'); return;
+  }
+  const { op, svc } = mmTransactionEnCours;
+  const typeSuffix  = mmTransactionEnCours.isTransfert
+    ? ` — ${mmTypeActif === 'depot' ? 'Dépôt ➕' : 'Retrait ➖'}`
+    : '';
+  const label = `${op.label} — ${svc.label}${typeSuffix}`;
   closePosModal('modal-mm-montant');
-  ajouterServiceDirectPOS(mmTransactionEnCours.label, montant);
+  ajouterServiceDirectPOS(label, montant);
   mmTransactionEnCours = null;
+  mmTypeActif = null;
 }
 
 function ouvrirModalServicePOS(nom='') {
