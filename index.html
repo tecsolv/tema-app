@@ -6110,10 +6110,10 @@ function ajouterServiceDirectPOS(nom, prix) {
 // CAISSE 3 — MOBILE MONEY
 // ═══════════════════════════════════════════════════════════════
 const MM_OPS = [
-  {id:'orange', label:'Orange Money', color:'#FF6600', bg:'#FFF5EE', emoji:'🟠'},
-  {id:'wave',   label:'Wave',         color:'#1A9EFF', bg:'#EFF8FF', emoji:'🔵'},
-  {id:'mtn',    label:'MTN Money',    color:'#FFCC00', bg:'#FFFBEB', emoji:'🟡'},
-  {id:'moov',   label:'Moov Money',   color:'#16a34a', bg:'#f0fdf4', emoji:'🟢'},
+  {id:'orange', label:'Orange Money', color:'#FF6600', bg:'#FFF5EE', logo:'/assets/mm/orange.png'},
+  {id:'wave',   label:'Wave',         color:'#1A9EFF', bg:'#EFF8FF', logo:'/assets/mm/wave.png'},
+  {id:'mtn',    label:'MTN Money',    color:'#FFCC00', bg:'#FFFBEB', logo:'/assets/mm/mtn.png'},
+  {id:'moov',   label:'Moov Money',   color:'#16a34a', bg:'#f0fdf4', logo:'/assets/mm/momo.png'},
 ];
 const MM_SERVICES = [
   {id:'transfert', label:'Transfert', emoji:'💸'},
@@ -6136,7 +6136,7 @@ function renderMMPanel() {
       style="background:${op.bg};border:2px solid ${mmOpActif===op.id ? op.color : '#e2e8f0'};
              border-radius:16px;padding:22px 12px;cursor:pointer;text-align:center;transition:all .15s;
              box-shadow:${mmOpActif===op.id ? `0 4px 16px ${op.color}33` : 'none'}">
-      <div style="font-size:36px;margin-bottom:8px">${op.emoji}</div>
+      <img src="${op.logo}" alt="${op.label}" style="width:64px;height:64px;object-fit:contain;margin-bottom:10px;border-radius:10px">
       <div style="font-weight:800;font-size:14px;color:${op.color}">${op.label}</div>
     </div>`).join('');
 
@@ -6144,7 +6144,7 @@ function renderMMPanel() {
   if (mmOpActif) {
     const op = MM_OPS.find(o => o.id === mmOpActif);
     document.getElementById('mm-services-title').innerHTML =
-      `<span style="color:${op.color}">${op.emoji} ${op.label}</span> — Choisir un service`;
+      `<img src="${op.logo}" alt="${op.label}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;vertical-align:middle;margin-right:6px"><span style="color:${op.color}">${op.label}</span> — Choisir un service`;
     document.getElementById('mm-services-grid').innerHTML = MM_SERVICES.map(svc => `
       <div onclick="ajouterServiceMM('${op.id}','${svc.id}')"
         style="display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #e2e8f0;
@@ -6174,7 +6174,7 @@ function ajouterServiceMM(opId, svcId) {
   mmTransactionEnCours = { op, svc, isTransfert: svcId === 'transfert' };
   mmTypeActif = null;
   document.getElementById('mm-modal-titre').textContent    = `${svc.emoji} ${svc.label}`;
-  document.getElementById('mm-modal-subtitle').textContent = `Opérateur : ${op.emoji} ${op.label}`;
+  document.getElementById('mm-modal-subtitle').innerHTML = `Opérateur : <img src="${op.logo}" alt="${op.label}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;vertical-align:middle;margin-right:4px">${op.label}`;
   document.getElementById('mm-montant-input').value = '';
   // Afficher/masquer section Retrait/Dépôt
   const typeSection = document.getElementById('mm-type-section');
