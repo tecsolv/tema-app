@@ -797,6 +797,9 @@
   }
   .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
   .cat-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+  .cat-tab-cross { opacity: .68; font-size: 11px !important; }
+  .cat-tab-cross.active { opacity: 1; }
+  .cat-tab-sep { width: 1px; background: rgba(0,0,0,.1); margin: 4px 8px; align-self: stretch; flex-shrink: 0; }
 
   .product-grid-wrap { flex: 1; overflow-y: auto; padding: 10px; }
   .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 10px; }
@@ -3747,14 +3750,7 @@
         <input type="text" id="prod-search" placeholder="🔍 Rechercher un produit..." oninput="filtrerProduits()">
         <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">📷 Scanner prêt</span>
       </div>
-      <div class="cat-tabs">
-        <div class="cat-tab active" onclick="choisirCategorie(this,'')">Tous</div>
-        <div class="cat-tab" onclick="choisirCategorie(this,'Épicerie')">🛒 Épicerie</div>
-        <div class="cat-tab" onclick="choisirCategorie(this,'Fournitures')">📚 École</div>
-        <div class="cat-tab" onclick="choisirCategorie(this,'Habits')">👶 Enfants</div>
-        <div class="cat-tab" onclick="choisirCategorie(this,'Informatique')">🖥️ Informatique</div>
-        <div class="cat-tab" onclick="choisirCategorie(this,'Services')">🖨️ Services</div>
-      </div>
+      <div id="pos-cat-tabs" class="cat-tabs"></div>
       <div class="product-grid-wrap">
         <div id="product-grid" class="product-grid"></div>
       </div>
@@ -5937,6 +5933,7 @@ function ouvrirEcranPOS() {
   const tn = document.getElementById('ticket-num');
   if (tn && tn.textContent === '—') tn.textContent = posGenTicketNum();
   mmOpActif = null;
+  posCategorieActive = '__zone__';
   renderGrilleProduits();
   activerScannerBarcode();
   majBadgeSessionPOS();
@@ -5987,28 +5984,34 @@ function choisirCategorie(el, cat) {
 function filtrerProduits() { renderGrilleProduits(); }
 
 function renderGrilleProduits() {
-  // Caisse 3 — Mobile Money : panel dédié
-  if (isCaisseMMActive()) {
+  renderCatTabs();
+
+  const cat    = posCategorieActive || '__zone__';
+  const isZone = cat === '' || cat === '__zone__';
+  const showMM = (isCaisseMMActive() && isZone) || cat === '__MM__';
+
+  // ── Panel Mobile Money ──────────────────────────────────────────
+  if (showMM) {
     const mmPanel = document.getElementById('pos-mm-panel');
-    if (mmPanel) { mmPanel.style.display = 'flex'; mmOpActif = mmOpActif || null; renderMMPanel(); }
-    ['products-search-bar','cat-tabs','product-grid-wrap'].forEach(cls => {
-      const el = document.querySelector('#screen-pos .' + cls);
-      if (el) el.style.display = 'none';
-    });
+    if (mmPanel) { mmPanel.style.display = 'flex'; mmPanel.style.flexDirection = 'column'; renderMMPanel(); }
+    const srch = document.querySelector('#screen-pos .products-search-bar');
+    if (srch) srch.style.display = 'none';
+    const wrap = document.querySelector('#screen-pos .product-grid-wrap');
+    if (wrap) wrap.style.display = 'none';
     return;
   }
-  // Autres caisses : panel catalogue standard
-  ['products-search-bar','cat-tabs','product-grid-wrap'].forEach(cls => {
-    const el = document.querySelector('#screen-pos .' + cls);
-    if (el) el.style.display = '';
-  });
+
+  // ── Catalogue standard ──────────────────────────────────────────
   const mmPanel = document.getElementById('pos-mm-panel');
   if (mmPanel) mmPanel.style.display = 'none';
+  const srch = document.querySelector('#screen-pos .products-search-bar');
+  if (srch) srch.style.display = '';
+  const wrap = document.querySelector('#screen-pos .product-grid-wrap');
+  if (wrap) wrap.style.display = '';
 
   const grid = document.getElementById('product-grid');
   if (!grid) return;
   const q = (document.getElementById('prod-search')?.value||'').toLowerCase().trim();
-  const cat = posCategorieActive;
 
   if (cat === 'Services') {
     const svcs = [
@@ -6028,10 +6031,19 @@ function renderGrilleProduits() {
     return;
   }
 
+  // Filtre zone primaire quand aucune catégorie spécifique sélectionnée
+  const cfg = getCaisseZoneConfig();
+  const zoneCats = (isZone && cfg?.zonePrimaryCats) ? cfg.zonePrimaryCats : null;
+
   grid.className = 'product-grid';
   const liste = produits.filter(p => {
-    const matchCat = !cat || (p.cat||'').toLowerCase().includes(cat.toLowerCase());
-    const matchQ   = !q || (p.nom||'').toLowerCase().includes(q) || (p.codeBarre||'').includes(q) || (p.ref||'').includes(q);
+    let matchCat;
+    if (zoneCats) {
+      matchCat = zoneCats.some(z => (p.cat||'').toLowerCase().includes(z.toLowerCase()));
+    } else {
+      matchCat = !cat || cat === '__zone__' || (p.cat||'').toLowerCase().includes(cat.toLowerCase());
+    }
+    const matchQ = !q || (p.nom||'').toLowerCase().includes(q) || (p.codeBarre||'').includes(q) || (p.ref||'').includes(q);
     return matchCat && matchQ;
   });
 
@@ -6216,6 +6228,100 @@ function confirmerMMTransaction() {
   ajouterServiceDirectPOS(label, montant);
   mmTransactionEnCours = null;
   mmTypeActif = null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ONGLETS PAR CAISSE — configuration et rendu
+// ═══════════════════════════════════════════════════════════════
+const CAISSE_TABS_CONFIG = {
+  'Caisse 1': {
+    zoneLabel: 'Zones B·C·D',
+    zonePrimaryCats: ['Habits','Fournitures','Épicerie','Beauté','Pâtisserie','Électroménager'],
+    primaryTabs: [
+      {label:'Habillement',    cat:'Habits',        emoji:'👕'},
+      {label:'Fournitures',    cat:'Fournitures',   emoji:'📚'},
+      {label:'Épicerie',       cat:'Épicerie',      emoji:'🛒'},
+      {label:'Beauté',         cat:'Beauté',        emoji:'💄'},
+      {label:'Pâtisserie',     cat:'Pâtisserie',    emoji:'🧁'},
+      {label:'Électroménager', cat:'Électroménager',emoji:'🔌'},
+    ],
+    crossTabs: [
+      {label:'Informatiques',  cat:'Informatique',  emoji:'🖥️'},
+      {label:'Digitalisation', cat:'Services',      emoji:'🖨️'},
+      {label:'Mobile Money',   cat:'__MM__',        emoji:'💸'},
+    ]
+  },
+  'Caisse 2': {
+    zoneLabel: 'Zone A',
+    zonePrimaryCats: ['Informatique','Services','Électroménager'],
+    primaryTabs: [
+      {label:'Informatiques',  cat:'Informatique',  emoji:'🖥️'},
+      {label:'Digitalisation', cat:'Services',      emoji:'🖨️'},
+      {label:'Électroménager', cat:'Électroménager',emoji:'🔌'},
+    ],
+    crossTabs: [
+      {label:'Mobile Money',   cat:'__MM__',        emoji:'💸'},
+      {label:'Habillement',    cat:'Habits',        emoji:'👕'},
+      {label:'Fournitures',    cat:'Fournitures',   emoji:'📚'},
+      {label:'Épicerie',       cat:'Épicerie',      emoji:'🛒'},
+      {label:'Beauté',         cat:'Beauté',        emoji:'💄'},
+      {label:'Pâtisserie',     cat:'Pâtisserie',    emoji:'🧁'},
+    ]
+  },
+  'Caisse 3': {
+    isMM: true,
+    primaryTabs: [{label:'Mobile Money', cat:'__zone__', emoji:'💸'}],
+    crossTabs: [
+      {label:'Informatiques',   cat:'Informatique',  emoji:'🖥️'},
+      {label:'Digitalisation',  cat:'Services',      emoji:'🖨️'},
+      {label:'Électroménager',  cat:'Électroménager',emoji:'🔌'},
+      {label:'Habillement',     cat:'Habits',        emoji:'👕'},
+      {label:'Fournitures',     cat:'Fournitures',   emoji:'📚'},
+      {label:'Épicerie',        cat:'Épicerie',      emoji:'🛒'},
+      {label:'Beauté',          cat:'Beauté',        emoji:'💄'},
+      {label:'Pâtisserie',      cat:'Pâtisserie',    emoji:'🧁'},
+    ]
+  }
+};
+CAISSE_TABS_CONFIG['Caisse 4'] = CAISSE_TABS_CONFIG['Caisse 1'];
+
+let _posCatTabs = [];
+
+function getCaisseZoneConfig() {
+  return CAISSE_TABS_CONFIG[posSessionActive?.caisseNom || ''] || null;
+}
+
+function renderCatTabs() {
+  const tabsEl = document.getElementById('pos-cat-tabs');
+  if (!tabsEl) return;
+  const cfg = getCaisseZoneConfig();
+  if (!cfg) { tabsEl.innerHTML = ''; return; }
+
+  _posCatTabs = [];
+  if (!cfg.isMM) {
+    _posCatTabs.push({label: cfg.zoneLabel, cat: '__zone__', emoji: ''});
+    cfg.primaryTabs.forEach(t => _posCatTabs.push({...t}));
+  } else {
+    cfg.primaryTabs.forEach(t => _posCatTabs.push({...t}));
+  }
+  _posCatTabs.push({type: 'sep'});
+  cfg.crossTabs.forEach(t => _posCatTabs.push({...t, cross: true}));
+
+  const activeTab = posCategorieActive || '__zone__';
+  tabsEl.innerHTML = _posCatTabs.map((t, i) => {
+    if (t.type === 'sep') return `<div class="cat-tab-sep"></div>`;
+    const isActive = t.cat === activeTab ||
+      (t.cat === '__zone__' && (activeTab === '' || activeTab === '__zone__'));
+    return `<div class="cat-tab${isActive?' active':''}${t.cross?' cat-tab-cross':''}" onclick="choisirCaisseTab(${i})">${t.emoji ? t.emoji+' ' : ''}${t.label}</div>`;
+  }).join('');
+}
+
+function choisirCaisseTab(idx) {
+  const tab = _posCatTabs[idx];
+  if (!tab || tab.type === 'sep') return;
+  posCategorieActive = tab.cat;
+  if (tab.cat === '__zone__') mmOpActif = null;
+  renderGrilleProduits();
 }
 
 function ouvrirModalServicePOS(nom='') {
