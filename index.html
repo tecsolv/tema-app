@@ -2827,7 +2827,7 @@
         <div class="form-group"><label>Nom de l'article *</label><input class="form-control" id="p-nom" required placeholder="Ex: Stylo Bic"></div>
         <div class="form-group"><label>Référence</label>
           <div style="display:flex;gap:6px">
-            <input class="form-control" id="p-ref" placeholder="Auto-généré selon la catégorie" onkeydown="gererScanDouchette(event)">
+            <input class="form-control" id="p-ref" placeholder="Auto-généré selon la catégorie" readonly style="background:var(--bg-secondary,#f1f5f9);color:var(--text-muted,#64748b);cursor:default" onkeydown="gererScanDouchette(event)">
             <button type="button" class="btn btn-outline" title="Scanner un code-barres" onclick="ouvrirScanProduit()" style="white-space:nowrap">📷 Scanner</button>
           </div>
         </div>
