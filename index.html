@@ -2598,7 +2598,7 @@
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-tresorerie" checked style="margin-top:3px"> <span><strong>Trésorerie &amp; Rapprochement</strong><br><span style="font-size:12px;color:var(--text-muted)">Relevés de trésorerie, rapprochements bancaires</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-rh" checked style="margin-top:3px"> <span><strong>RH — Pointages, Planning, Absences</strong><br><span style="font-size:12px;color:var(--text-muted)">Pointages journaliers, affectations planning, congés/absences</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-achats" checked style="margin-top:3px"> <span><strong>Achats Fournisseurs</strong><br><span style="font-size:12px;color:var(--text-muted)">Commandes fournisseurs, paiements</span></span></label>
-          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité</strong><br><span style="font-size:12px;color:var(--text-muted)">Historique des connexions et actions admin (Journal d'Activité)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité & Audit</strong><br><span style="font-size:12px;color:var(--text-muted)">Activité récente, journal d'audit des caisses, historique des connexions</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-cat-support" checked style="margin-top:3px"> <span><strong>Messages de support</strong><br><span style="font-size:12px;color:var(--text-muted)">Messages de test envoyés par les employés à l'Administrateur</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (pour ressaisir l'inventaire réel)</span></span></label>
         </div>
@@ -9699,13 +9699,13 @@ function renderSupportAdmin() {
 // lancement réel de la boutique. Ne touche jamais au catalogue produits (sauf remise à
 // zéro du stock si demandé), aux comptes utilisateurs, caisses, fournisseurs ou paramètres RH.
 const REINIT_CATEGORIES = {
-  ventes:      { label: 'Ventes & Caisse',               collections: ['ventesCaisse','ventes_services','sessions_caisse','audit_caisses'] },
+  ventes:      { label: 'Ventes & Caisse',               collections: ['ventesCaisse','ventes_services','sessions_caisse'] },
   compta:      { label: 'Comptabilité OHADA',            collections: ['ecritures_comptables'] },
   mm:          { label: 'Mobile Money & Transactions',   collections: ['transactions_mm','transactions_mobile_money'] },
   tresorerie:  { label: 'Trésorerie & Rapprochement',    collections: ['releves_tresorerie','rapprochements'] },
   rh:          { label: 'RH — Pointages, Planning, Absences', collections: ['rh_pointages','rh_planning','rh_absences'] },
   achats:      { label: 'Achats Fournisseurs',           collections: ['commandes','paiements'] },
-  journal:     { label: "Journal d'activité",            collections: ['journal','audit_trail'] },
+  journal:     { label: "Journal d'activité & Audit",    collections: ['journal','audit_trail','audit_caisses'] },
   support:     { label: 'Messages de support',           collections: ['support_messages'] }
 };
 
