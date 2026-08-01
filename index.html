@@ -10379,11 +10379,13 @@ function renderTableauBordCompta() {
   const el = document.getElementById('compta-tableau-content');
   if (!el) return;
 
-  const debutAnnee = today().slice(0,4) + '-01-01';
+  const anneeLabel = today().slice(0,4);
+  const debutAnnee = anneeLabel + '-01-01';
   const annee = ecritures.filter(e => (e.date||'') >= debutAnnee);
 
-  const cl7 = _comptaCalcClasse(ecritures, '7');
-  const cl6 = _comptaCalcClasse(ecritures, '6');
+  // Produits & Charges : année en cours | Trésorerie : solde cumulé (tout l'historique)
+  const cl7 = _comptaCalcClasse(annee, '7');
+  const cl6 = _comptaCalcClasse(annee, '6');
   const cl5 = _comptaCalcClasse(ecritures, '5');
   const produits = cl7.credit - cl7.debit;
   const charges  = cl6.debit  - cl6.credit;
@@ -10402,9 +10404,9 @@ function renderTableauBordCompta() {
     moisData.push({ lbl, produits: p.credit - p.debit, charges: c.debit - c.credit });
   }
 
-  // Répartition journaux (toutes écritures)
+  // Répartition journaux — année en cours
   const jrnx = {};
-  ecritures.forEach(e => {
+  annee.forEach(e => {
     const j = e.journal || '—';
     if (!jrnx[j]) jrnx[j] = { n:0, mt:0 };
     jrnx[j].n++; jrnx[j].mt += totalDebitEcriture(e);
@@ -10417,10 +10419,10 @@ function renderTableauBordCompta() {
   el.innerHTML = `
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px">
   ${[
-    {lbl:'Produits (Cl. 7)', val:produits, sub:'Comptes de produits', c:'#16a34a'},
-    {lbl:'Charges (Cl. 6)',  val:charges,  sub:'Comptes de charges',  c:'#e67e22'},
-    {lbl:'Résultat Net',     val:resultat, sub:'Produits − Charges',  c:coulR, sign:true},
-    {lbl:'Trésorerie (Cl. 5)',val:tresorerie,sub:'Solde disponible',  c:coulT, sign:true},
+    {lbl:'Produits (Cl. 7)', val:produits, sub:`Année ${anneeLabel} — Cl. 7`, c:'#16a34a'},
+    {lbl:'Charges (Cl. 6)',  val:charges,  sub:`Année ${anneeLabel} — Cl. 6`, c:'#e67e22'},
+    {lbl:'Résultat Net',     val:resultat, sub:`Produits − Charges ${anneeLabel}`, c:coulR, sign:true},
+    {lbl:'Trésorerie (Cl. 5)',val:tresorerie,sub:'Solde cumulé (Cl. 5)', c:coulT, sign:true},
   ].map(k=>`
   <div style="background:var(--card-bg,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:16px 18px">
     <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${k.lbl}</div>
