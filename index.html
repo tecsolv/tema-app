@@ -1808,19 +1808,19 @@
       <div class="alert alert-info no-print">📒 Comptabilité simplifiée selon le plan comptable OHADA — saisie d'écritures, journal comptable et balance des comptes mis à jour en temps réel.</div>
 
       <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
-        <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-tableau" onclick="comptaNavigate('tableau')" style="flex:1;min-width:130px">📊 Tableau de Bord</button>
-        <button class="btn btn-sm caisse-tab-btn active" id="compta-tab-btn-saisie" onclick="comptaNavigate('saisie')" style="flex:1;min-width:130px">✏️ Saisie Écriture</button>
+        <button class="btn btn-sm caisse-tab-btn active" id="compta-tab-btn-tableau" onclick="comptaNavigate('tableau')" style="flex:1;min-width:130px">📊 Tableau de Bord</button>
+        <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-saisie" onclick="comptaNavigate('saisie')" style="flex:1;min-width:130px">✏️ Saisie Écriture</button>
         <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-journal" onclick="comptaNavigate('journal')" style="flex:1;min-width:130px">📓 Journal Comptable</button>
         <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-balance" onclick="comptaNavigate('balance')" style="flex:1;min-width:130px">⚖️ Balance des Comptes</button>
       </div>
 
       <!-- ONGLET 0 : TABLEAU DE BORD -->
-      <div class="caisse-tab" id="compta-tab-tableau">
+      <div class="caisse-tab active" id="compta-tab-tableau">
         <div id="compta-tableau-content" style="padding-bottom:20px"></div>
       </div>
 
       <!-- ONGLET 1 : SAISIE ÉCRITURE -->
-      <div class="caisse-tab active" id="compta-tab-saisie">
+      <div class="caisse-tab" id="compta-tab-saisie">
         <div class="card">
           <div class="card-header"><h2>✏️ Nouvelle Écriture Comptable</h2></div>
           <div class="card-body">
@@ -10267,7 +10267,7 @@ async function genererEcritureAchat(article, montant, fournisseurNom, numPieceOv
   } catch (err) { console.error('Erreur génération écriture achat:', err); }
 }
 
-let comptaOnglet = 'saisie';
+let comptaOnglet = 'tableau';
 function comptaNavigate(tab) {
   comptaOnglet = tab;
   document.querySelectorAll('#page-comptabilite .caisse-tab').forEach(t => t.classList.remove('active'));
@@ -10354,14 +10354,15 @@ function recalculerTotauxEcriture() {
 
 function renderComptabilite() {
   if (!document.getElementById('page-comptabilite').classList.contains('active')) return;
+  // Initialiser le formulaire de saisie une seule fois (indépendamment de l'onglet actif)
   const dateEl = document.getElementById('ec-date');
   if (!dateEl.dataset.built) {
     dateEl.dataset.built = '1';
     peuplerDatalistComptesOhada();
     ecritureLignesEnCours = [ligneEcritureVide(), ligneEcritureVide()];
     renderLignesEcriture();
+    if (!dateEl.value) dateEl.value = today();
   }
-  if (!dateEl.value) dateEl.value = today();
   if (comptaOnglet === 'tableau') renderTableauBordCompta();
   else if (comptaOnglet === 'journal') renderJournalComptable();
   else if (comptaOnglet === 'balance') renderBalanceComptes();
