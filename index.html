@@ -4491,8 +4491,8 @@ function genererRefProduit(cat) {
 function autoRefCategorie() {
   const cat = document.getElementById('p-cat').value;
   const refEl = document.getElementById('p-ref');
-  if (!cat || refEl.value.trim()) return;
-  refEl.value = genererRefProduit(cat);
+  if (document.getElementById('p-edit-id').value) return; // edition : ne pas écraser
+  refEl.value = cat ? genererRefProduit(cat) : '';
 }
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
