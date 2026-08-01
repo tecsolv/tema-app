@@ -3685,7 +3685,7 @@
     <div class="pos-topbar-left">
       <button class="pos-back-btn" onclick="retourDepuisPOS()" title="Retour">⬅</button>
       <div>
-        <div class="pos-title">🏪 TeMa Smart Caisse</div>
+        <div class="pos-title" id="pos-titre-caisse">🏪 TeMa Smart Caisse</div>
       </div>
       <div class="pos-cashier-info" id="pos-cashier-name">—</div>
     </div>
@@ -5932,6 +5932,11 @@ function ouvrirEcranPOS() {
   document.getElementById('screen-pos').classList.add('active');
   const tn = document.getElementById('ticket-num');
   if (tn && tn.textContent === '—') tn.textContent = posGenTicketNum();
+  const titreEl = document.getElementById('pos-titre-caisse');
+  if (titreEl) {
+    const num = posSessionActive?.caisseNom?.replace('Caisse ', '') || '';
+    titreEl.textContent = '🏪 TeMa Smart Caisse' + (num ? ' ' + num : '');
+  }
   mmOpActif = null;
   posCategorieActive = '__zone__';
   renderGrilleProduits();
