@@ -1808,9 +1808,15 @@
       <div class="alert alert-info no-print">📒 Comptabilité simplifiée selon le plan comptable OHADA — saisie d'écritures, journal comptable et balance des comptes mis à jour en temps réel.</div>
 
       <div class="nav no-print" style="display:flex;gap:6px;background:var(--bg-soft,#eef2f6);border-radius:10px;padding:6px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-tableau" onclick="comptaNavigate('tableau')" style="flex:1;min-width:130px">📊 Tableau de Bord</button>
         <button class="btn btn-sm caisse-tab-btn active" id="compta-tab-btn-saisie" onclick="comptaNavigate('saisie')" style="flex:1;min-width:130px">✏️ Saisie Écriture</button>
         <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-journal" onclick="comptaNavigate('journal')" style="flex:1;min-width:130px">📓 Journal Comptable</button>
         <button class="btn btn-sm caisse-tab-btn" id="compta-tab-btn-balance" onclick="comptaNavigate('balance')" style="flex:1;min-width:130px">⚖️ Balance des Comptes</button>
+      </div>
+
+      <!-- ONGLET 0 : TABLEAU DE BORD -->
+      <div class="caisse-tab" id="compta-tab-tableau">
+        <div id="compta-tableau-content" style="padding-bottom:20px"></div>
       </div>
 
       <!-- ONGLET 1 : SAISIE ÉCRITURE -->
@@ -1887,7 +1893,17 @@
           <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
             <div class="form-group" style="margin:0"><label>Période — du</label><input type="date" class="form-control" id="ej-date-debut" onchange="renderJournalComptable()"></div>
             <div class="form-group" style="margin:0"><label>au</label><input type="date" class="form-control" id="ej-date-fin" onchange="renderJournalComptable()"></div>
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ej-date-debut').value='';document.getElementById('ej-date-fin').value='';renderJournalComptable()">✕ Effacer le filtre</button>
+            <div class="form-group" style="margin:0"><label>Journal</label>
+              <select class="form-control" id="ej-filtre-journal" onchange="renderJournalComptable()">
+                <option value="">Tous</option>
+                <option value="VE">VE — Ventes</option>
+                <option value="AC">AC — Achats</option>
+                <option value="BQ">BQ — Banque</option>
+                <option value="CA">CA — Caisse</option>
+                <option value="OD">OD — Op. Diverses</option>
+              </select>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ej-date-debut').value='';document.getElementById('ej-date-fin').value='';document.getElementById('ej-filtre-journal').value='';renderJournalComptable()">✕ Effacer</button>
             <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="exporterJournalComptableCSV()">⬇ Export CSV</button>
           </div>
         </div>
@@ -1911,7 +1927,10 @@
       <!-- ONGLET 3 : BALANCE DES COMPTES -->
       <div class="caisse-tab" id="compta-tab-balance">
         <div class="card">
-          <div class="card-header"><h2>⚖️ Balance des Comptes <span style="font-weight:400;color:var(--text-muted);font-size:13px">(mise à jour en temps réel)</span></h2></div>
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <h2>⚖️ Balance des Comptes <span style="font-weight:400;color:var(--text-muted);font-size:13px">(mise à jour en temps réel)</span></h2>
+            <button class="btn btn-outline btn-sm" onclick="exporterBalanceCSV()">⬇ Export CSV</button>
+          </div>
           <div class="card-body table-wrap">
             <table><thead><tr>
               <th>N°</th><th>Libellé du compte</th><th style="text-align:right">Total Débits</th><th style="text-align:right">Total Crédits</th><th style="text-align:right">Solde</th>
@@ -10343,8 +10362,144 @@ function renderComptabilite() {
     renderLignesEcriture();
   }
   if (!dateEl.value) dateEl.value = today();
-  if (comptaOnglet === 'journal') renderJournalComptable();
+  if (comptaOnglet === 'tableau') renderTableauBordCompta();
+  else if (comptaOnglet === 'journal') renderJournalComptable();
   else if (comptaOnglet === 'balance') renderBalanceComptes();
+}
+
+function _comptaCalcClasse(liste, classe) {
+  let prod = 0, chg = 0;
+  liste.forEach(e => lignesEcriture(e).forEach(l => {
+    if ((l.compte||'').startsWith(classe)) { prod += (l.credit||0); chg += (l.debit||0); }
+  }));
+  return { credit: prod, debit: chg, solde: prod - chg };
+}
+
+function renderTableauBordCompta() {
+  const el = document.getElementById('compta-tableau-content');
+  if (!el) return;
+
+  const debutAnnee = today().slice(0,4) + '-01-01';
+  const annee = ecritures.filter(e => (e.date||'') >= debutAnnee);
+
+  const cl7 = _comptaCalcClasse(ecritures, '7');
+  const cl6 = _comptaCalcClasse(ecritures, '6');
+  const cl5 = _comptaCalcClasse(ecritures, '5');
+  const produits = cl7.credit - cl7.debit;
+  const charges  = cl6.debit  - cl6.credit;
+  const resultat = produits - charges;
+  const tresorerie = cl5.debit - cl5.credit;
+
+  // 6 derniers mois
+  const moisData = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const lbl = d.toLocaleDateString('fr',{month:'short'}) + ' ' + String(d.getFullYear()).slice(2);
+    const m = ecritures.filter(e => (e.date||'').startsWith(key));
+    const p = _comptaCalcClasse(m,'7'); const c = _comptaCalcClasse(m,'6');
+    moisData.push({ lbl, produits: p.credit - p.debit, charges: c.debit - c.credit });
+  }
+
+  // Répartition journaux (toutes écritures)
+  const jrnx = {};
+  ecritures.forEach(e => {
+    const j = e.journal || '—';
+    if (!jrnx[j]) jrnx[j] = { n:0, mt:0 };
+    jrnx[j].n++; jrnx[j].mt += totalDebitEcriture(e);
+  });
+  const jrnxTotal = Object.values(jrnx).reduce((s,v)=>s+v.mt,0);
+  const JLBL = {'VE':'Ventes','AC':'Achats','BQ':'Banque','CA':'Caisse','OD':'Op. Diverses'};
+  const coulR = resultat >= 0 ? '#16a34a' : '#dc2626';
+  const coulT = tresorerie >= 0 ? '#2563eb' : '#dc2626';
+
+  el.innerHTML = `
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px">
+  ${[
+    {lbl:'Produits (Cl. 7)', val:produits, sub:'Comptes de produits', c:'#16a34a'},
+    {lbl:'Charges (Cl. 6)',  val:charges,  sub:'Comptes de charges',  c:'#e67e22'},
+    {lbl:'Résultat Net',     val:resultat, sub:'Produits − Charges',  c:coulR, sign:true},
+    {lbl:'Trésorerie (Cl. 5)',val:tresorerie,sub:'Solde disponible',  c:coulT, sign:true},
+  ].map(k=>`
+  <div style="background:var(--card-bg,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:16px 18px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${k.lbl}</div>
+    <div style="font-size:20px;font-weight:800;color:${k.c}">${k.sign&&k.val>0?'+':''}${FCFA(k.val)}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${k.sub}</div>
+  </div>`).join('')}
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:18px">
+  <div style="background:var(--card-bg,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:18px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:4px">📈 Évolution mensuelle — 6 derniers mois</div>
+    <div style="display:flex;gap:14px;font-size:11px;color:var(--text-muted);margin-bottom:12px">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#16a34a;margin-right:4px"></span>Produits</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e67e22;margin-right:4px"></span>Charges</span>
+    </div>
+    <canvas id="compta-chart-evo" style="width:100%;height:180px;display:block"></canvas>
+  </div>
+  <div style="background:var(--card-bg,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:18px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px">📋 Répartition par journal</div>
+    <div id="compta-jrnx-bk">${
+      Object.entries(jrnx).sort((a,b)=>b[1].mt-a[1].mt).map(([code,v])=>{
+        const pct = jrnxTotal ? Math.round(v.mt/jrnxTotal*100) : 0;
+        return `<div style="margin-bottom:11px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="font-weight:600">${code} — ${JLBL[code]||code}</span>
+            <span style="color:var(--text-muted)">${v.n} écr. · ${pct}%</span>
+          </div>
+          <div style="background:var(--bg-soft,#eef2f6);border-radius:4px;height:5px">
+            <div style="height:100%;width:${pct}%;background:#2563eb;border-radius:4px"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${FCFA(v.mt)}</div>
+        </div>`;
+      }).join('') || '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:13px">Aucune écriture</div>'
+    }</div>
+  </div>
+</div>`;
+
+  // Canvas chart
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById('compta-chart-evo');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.offsetWidth || 400, H = 180;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const isDark = document.documentElement.dataset.theme === 'dark' ||
+      (!document.documentElement.dataset.theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
+    const textC = isDark ? '#94a3b8' : '#64748b';
+    const gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)';
+    const maxVal = Math.max(...moisData.map(m => Math.max(m.produits, m.charges)), 1);
+    const PAD = {t:8, b:28, l:8, r:8};
+    const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+    const n = moisData.length, slotW = cW / n;
+    const bW = Math.max(Math.floor(slotW * 0.3), 4);
+    // Grid
+    ctx.strokeStyle = gridC; ctx.lineWidth = 1;
+    [0,.25,.5,.75,1].forEach(p => {
+      const y = PAD.t + cH*(1-p);
+      ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+    });
+    // Bars
+    moisData.forEach((m, i) => {
+      const cx = PAD.l + slotW*i + slotW/2;
+      const drawBar = (val, color, offsetX) => {
+        if (val <= 0) return;
+        const bh = (val/maxVal)*cH;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(cx+offsetX, PAD.t+cH-bh, bW, bh, [3,3,0,0]);
+        else ctx.rect(cx+offsetX, PAD.t+cH-bh, bW, bh);
+        ctx.fill();
+      };
+      drawBar(m.produits, '#16a34a', -(bW+2));
+      drawBar(m.charges,  '#e67e22', 2);
+      ctx.fillStyle = textC; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(m.lbl, cx, H - 6);
+    });
+  });
 }
 
 // Enregistre une nouvelle écriture comptable multi-lignes (Phase 2), avec contrôles Phase 5 :
@@ -10407,9 +10562,11 @@ async function enregistrerEcriture(event) {
 function renderJournalComptable() {
   const debut = document.getElementById('ej-date-debut')?.value || '';
   const fin = document.getElementById('ej-date-fin')?.value || '';
+  const jrnl = document.getElementById('ej-filtre-journal')?.value || '';
   let liste = [...ecritures];
   if (debut) liste = liste.filter(e => (e.date || '') >= debut);
-  if (fin) liste = liste.filter(e => (e.date || '') <= fin);
+  if (fin)   liste = liste.filter(e => (e.date || '') <= fin);
+  if (jrnl)  liste = liste.filter(e => (e.journal || '') === jrnl);
   liste.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
   const tbody = document.getElementById('tbody-journal-comptable');
@@ -10492,6 +10649,24 @@ function renderBalanceComptes() {
   document.getElementById('bal-total-debit').textContent = FCFA(totalDebitGeneral);
   document.getElementById('bal-total-credit').textContent = FCFA(totalCreditGeneral);
   document.getElementById('bal-total-solde').textContent = FCFA(totalDebitGeneral - totalCreditGeneral);
+}
+
+function exporterBalanceCSV() {
+  const lignes = [['N° Compte','Libellé','Classe','Total Débits (FCFA)','Total Crédits (FCFA)','Solde (FCFA)']];
+  const plan = planComptableAffichage();
+  plan.forEach(c => {
+    let td = 0, tc = 0;
+    ecritures.forEach(e => lignesEcriture(e).forEach(l => {
+      if (l.compte === c.numero_compte) { td += (l.debit||0); tc += (l.credit||0); }
+    }));
+    if (td > 0 || tc > 0) lignes.push([c.numero_compte, c.intitule_compte, c.classe, td, tc, td - tc]);
+  });
+  lignes.push(['','TOTAL GÉNÉRAL','',
+    lignes.slice(1).reduce((s,r)=>s+r[3],0),
+    lignes.slice(1).reduce((s,r)=>s+r[4],0),
+    lignes.slice(1).reduce((s,r)=>s+r[5],0)
+  ]);
+  telechargerCSV(lignes, `balance_comptes_${today()}.csv`);
 }
 
 // ===================================================================
