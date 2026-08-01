@@ -2827,14 +2827,14 @@
         <div class="form-group"><label>Nom de l'article *</label><input class="form-control" id="p-nom" required placeholder="Ex: Stylo Bic"></div>
         <div class="form-group"><label>Référence</label>
           <div style="display:flex;gap:6px">
-            <input class="form-control" id="p-ref" placeholder="Ex: REF-001 ou scannez avec la douchette" onkeydown="gererScanDouchette(event)">
+            <input class="form-control" id="p-ref" placeholder="Auto-généré selon la catégorie" onkeydown="gererScanDouchette(event)">
             <button type="button" class="btn btn-outline" title="Scanner un code-barres" onclick="ouvrirScanProduit()" style="white-space:nowrap">📷 Scanner</button>
           </div>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Catégorie *</label>
-          <select class="form-control" id="p-cat" required>
+          <select class="form-control" id="p-cat" required onchange="autoRefCategorie()">
             <option value="">-- Choisir --</option>
           </select>
         </div>
@@ -4451,6 +4451,49 @@ const posNow = () => new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minut
 const posDateHeure = () => new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const CAT_ZONE = {'Accessoires Informatiques':'A','Fournitures Scolaires':'B','Habits Enfants':'C','Épicerie':'D','Toutes catégories':'D','Services':'E'};
 const CAT_EMOJI = {'Accessoires Informatiques':'🖥️','Habits Enfants':'👕','Fournitures Scolaires':'📚','Épicerie':'🛒','Services':'🖨️','Pâtisserie':'🧁','Électroménager':'🔌','Beauté & Bien-Être':'💄'};
+
+const CAT_REF_PREFIX = {
+  'Beauté & Bien-Être':        'BBE',
+  'Fournitures Scolaires':     'FOS',
+  'Fournitures de Bureau':     'FDB',
+  'Fournitures Bureau':        'FDB',
+  'Habits Enfants':            'HAE',
+  'Épicerie':                  'EPI',
+  'Matériel Informatiques':    'MAI',
+  'Matériel Informatique':     'MAI',
+  'Accessoires Informatiques': 'ACI',
+  'Accessoires Informatique':  'ACI',
+  'Pâtisserie':                'PAT',
+  'Électroménager':            'ELM',
+  'Services':                  'SRV',
+  'Informatique':              'INF',
+  'Habits':                    'HAB',
+};
+
+function _prefixeDepuisCategorie(cat) {
+  const norm = cat.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+  const STOP = new Set(['DE','DU','DES','LE','LA','LES','ET','EN','AU','AUX','UN','UNE']);
+  const mots = norm.split(/\s+/).filter(m => m.length > 1 && !STOP.has(m));
+  if (!mots.length) return cat.slice(0,3).toUpperCase();
+  if (mots.length === 1) return mots[0].slice(0,3);
+  return mots.slice(0,3).map(m => m[0]).join('');
+}
+
+function genererRefProduit(cat) {
+  if (!cat) return '';
+  const prefix = CAT_REF_PREFIX[cat] || _prefixeDepuisCategorie(cat);
+  const regex = new RegExp('^' + prefix + '-(\\d+)$', 'i');
+  let max = 0;
+  (produits || []).forEach(p => { const m = (p.ref||'').match(regex); if (m) max = Math.max(max, parseInt(m[1])); });
+  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
+}
+
+function autoRefCategorie() {
+  const cat = document.getElementById('p-cat').value;
+  const refEl = document.getElementById('p-ref');
+  if (!cat || refEl.value.trim()) return;
+  refEl.value = genererRefProduit(cat);
+}
 
 // Enregistre une action dans le journal d'activité (audit trail) de la boutique
 function consigner(action, details = '') {
