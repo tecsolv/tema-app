@@ -10467,11 +10467,17 @@ function renderMMComptaChart() {
     { id:'Moov Money',   c:'#16a34a' },
   ];
   const now = new Date();
+  const DEBUT_MM = new Date(2026, 7, 1); // Août 2026 — ouverture boutique
+  const finMMRef = new Date(Math.max(
+    new Date(DEBUT_MM.getFullYear(), DEBUT_MM.getMonth() + 5, 1).getTime(),
+    new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+  ));
   const moisKeys = [], moisLbls = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    moisKeys.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-    moisLbls.push(d.toLocaleDateString('fr',{month:'short'}) + ' ' + String(d.getFullYear()).slice(2));
+  let cursorMM = new Date(DEBUT_MM);
+  while (cursorMM <= finMMRef) {
+    moisKeys.push(cursorMM.getFullYear() + '-' + String(cursorMM.getMonth()+1).padStart(2,'0'));
+    moisLbls.push(cursorMM.toLocaleDateString('fr',{month:'short'}) + ' ' + String(cursorMM.getFullYear()).slice(2));
+    cursorMM.setMonth(cursorMM.getMonth() + 1);
   }
   const data = MM_OP.map(op => ({
     ...op,
@@ -10515,8 +10521,10 @@ function renderMMComptaChart() {
     });
   });
   ctx.fillStyle = textC; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  const stepMM = n > 12 ? 3 : n > 8 ? 2 : 1;
   moisLbls.forEach((lbl,i) => {
-    ctx.fillText(lbl, PAD.l + cW*(i/(n-1)), H-6);
+    if (i % stepMM === 0 || i === n-1)
+      ctx.fillText(lbl, PAD.l + cW*(i/(n-1)), H-6);
   });
 }
 
@@ -10537,16 +10545,22 @@ function renderTableauBordCompta() {
   const resultat = produits - charges;
   const tresorerie = cl5.debit - cl5.credit;
 
-  // 6 derniers mois — graphe barres
+  // Depuis ouverture boutique (Août 2026) — min 6 mois affichés
   const moisData = [];
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    const lbl = d.toLocaleDateString('fr',{month:'short'}) + ' ' + String(d.getFullYear()).slice(2);
+  const DEBUT_GRAPH = new Date(2026, 7, 1); // Août 2026
+  const finGraphRef = new Date(Math.max(
+    new Date(DEBUT_GRAPH.getFullYear(), DEBUT_GRAPH.getMonth() + 5, 1).getTime(),
+    new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+  ));
+  let cursorGraph = new Date(DEBUT_GRAPH);
+  while (cursorGraph <= finGraphRef) {
+    const key = cursorGraph.getFullYear() + '-' + String(cursorGraph.getMonth()+1).padStart(2,'0');
+    const lbl = cursorGraph.toLocaleDateString('fr',{month:'short'}) + ' ' + String(cursorGraph.getFullYear()).slice(2);
     const m = ecritures.filter(e => (e.date||'').startsWith(key));
     const p = _comptaCalcClasse(m,'7'); const c = _comptaCalcClasse(m,'6');
     moisData.push({ lbl, produits: p.credit - p.debit, charges: c.debit - c.credit });
+    cursorGraph.setMonth(cursorGraph.getMonth() + 1);
   }
 
   // Répartition journaux
@@ -10723,8 +10737,12 @@ ${CARD(`
         };
         drawBar(m.produits, '#16a34a', -(bW+2));
         drawBar(m.charges,  '#e67e22', 2);
-        ctx.fillStyle = textC; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(m.lbl, cx, H - 6);
+        // Afficher le label tous les 2 mois si > 8 mois, tous les 3 si > 12
+        const step = n > 12 ? 3 : n > 8 ? 2 : 1;
+        if (i % step === 0) {
+          ctx.fillStyle = textC; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(m.lbl, cx, H - 6);
+        }
       });
     }
     // Graphe lignes — Mobile Money
