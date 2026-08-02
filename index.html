@@ -9394,14 +9394,24 @@ function renderMediaCenterAdmin() {
       + options.map(o => `<option value="${o.id}" ${mcState.sourceId === o.id ? 'selected' : ''}>${o.label}</option>`).join('');
   }
   const tbodyPlEnCours = document.getElementById('tbody-mc-playlist-encours');
-  if (tbodyPlEnCours && !modeTous && mcState.sourceType === 'internet_radio') {
-    tbodyPlEnCours.innerHTML = `<tr><td style="padding:14px 10px;color:#5ad16f;text-align:center;font-weight:700" colspan="4">📡 ${mcState.nowPlaying || 'Radio en direct'}</td></tr>`;
-  } else if (tbodyPlEnCours && !modeTous) {
+  if (tbodyPlEnCours && modeTous) {
+    // Mode synchronisé : pas d'état individuel, on efface le stale content
+    tbodyPlEnCours.innerHTML = '<tr><td style="padding:14px 10px;color:rgba(255,255,255,.4);text-align:center;font-size:13px" colspan="4">🔊 Mode synchronisé — sélectionner un appareil précis pour voir sa lecture</td></tr>';
+  } else if (tbodyPlEnCours && mcState.sourceType === 'internet_radio') {
+    // Radio internet : afficher le nom de la station (sourceId → mcSources) + métadonnée en sous-titre
+    const sourceActive = mcSources.find(s => s.id === mcState.sourceId);
+    const nomStation = sourceActive?.nom || mcState.nowPlaying || 'Radio en direct';
+    const metadata = mcState.nowPlaying && mcState.nowPlaying !== nomStation ? mcState.nowPlaying : '';
+    tbodyPlEnCours.innerHTML = `<tr><td style="padding:14px 10px;color:#5ad16f;text-align:center;font-weight:700" colspan="4">
+      📡 ${nomStation}
+      ${metadata ? `<br><span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.55);margin-top:2px;display:block">${metadata}</span>` : ''}
+    </td></tr>`;
+  } else if (tbodyPlEnCours) {
     const plActive = mcPlaylists.find(p => p.id === mcState.playlistId);
     const pistesPl = plActive ? (plActive.trackIds || []).map(id => mcTracks.find(t => t.id === id)).filter(Boolean) : [];
     tbodyPlEnCours.innerHTML = pistesPl.length ? pistesPl.map((t, i) => {
       const enCours = t.titre === mcState.nowPlaying;
-      const couleur = enCours ? '#5ad16f' : 'rgba(255,255,255,.85)'; // vert façon Winamp pour la piste active
+      const couleur = enCours ? '#5ad16f' : 'rgba(255,255,255,.85)';
       return `
       <tr${enCours ? ' style="background:rgba(255,255,255,.06)"' : ''}>
         <td style="padding:4px 10px;width:28px;color:rgba(255,255,255,.35)">${i + 1}.</td>
