@@ -7435,7 +7435,7 @@ function afficherTicketPOS(data) {
       <div>Ticket N° : <strong>${data.ticketNum}</strong></div>
       <div>Date : ${data.date} à ${data.heure}</div>
       ${data.client?`<div>Client : ${data.client.nom}</div>`:''}
-      <div>Caissier : ${currentUser?.label||'—'}</div>
+      <div>Caisse : ${posSessionActive?.caisseNom?.replace(/Caisse\s*/i,'')||'?'} (${(currentUser?.label||'').split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()).join('')||'?'})</div>
     </div>
     <div class="receipt-items">${lignes}</div>
     <div style="font-size:11px;margin-bottom:6px">
