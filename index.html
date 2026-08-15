@@ -3912,22 +3912,7 @@
 </div>
 
 <!-- POS MODAL: Club TeMa Family — Saisie PIN anti-fraude -->
-<div class="pos-modal-overlay" id="modal-loyalty-pin">
-  <div class="pos-modal-box" style="max-width:320px;text-align:center">
-    <button class="pos-modal-close" onclick="closePosModal('modal-loyalty-pin')">×</button>
-    <div style="font-size:32px;margin-bottom:8px">🔒</div>
-    <h2 style="font-size:16px;margin-bottom:4px">Code PIN</h2>
-    <p id="pin-modal-subtitle" style="color:#64748b;font-size:13px;margin-bottom:18px"></p>
-    <input type="password" id="pin-input" maxlength="4" inputmode="numeric" placeholder="• • • •"
-      style="width:100%;text-align:center;font-size:32px;letter-spacing:14px;padding:14px;border:2px solid var(--border);border-radius:10px;box-sizing:border-box;outline:none"
-      oninput="checkPinInput()">
-    <div id="pin-error" style="display:none;color:#dc2626;font-size:13px;margin-top:8px">Code PIN incorrect — Réessayez</div>
-    <button onclick="closePosModal('modal-loyalty-pin')"
-      style="width:100%;margin-top:12px;padding:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer">
-      Annuler
-    </button>
-  </div>
-</div>
+<!-- modal-loyalty-pin supprimé — pas de PIN, identifiant = numéro de téléphone -->
 
 <!-- POS MODAL: Club TeMa Family — Inscription nouveau membre -->
 <div class="pos-modal-overlay" id="modal-loyalty-create">
@@ -4490,6 +4475,12 @@ let mcPlaylists = [], mcTracks = [], mcSources = [];
 
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
+let storeConfig = {
+  name: 'TeMa Boutique',
+  phone: '+225 27 30 655 526 | Mob/WB : +225 07 69 859 206',
+  rccm: 'CI-TDI-01-2026-B12-00307',
+  address: 'Quartier Ebenezer fin goudron, Yamoussoukro, Côte d\'Ivoire'
+};
 let loyaltyCustomers = [];
 let memberPrices = [];
 let loyaltySession = {
@@ -4498,7 +4489,7 @@ let loyaltySession = {
   totalSavings: 0, active: false,
   memberPricesMap: {}  // productId → {memberPrice, saving}
 };
-let _loyaltyPinCallback = null; // stocke la fonction appelée après validation PIN
+// PIN supprimé — identifiant unique = numéro de téléphone
 // ── RH (Phase RH-A) ────────────────────────────────────────
 let rhEmployes = [], rhContrats = [];
 let rhListenersDemarres = false;
@@ -5605,6 +5596,11 @@ function demarrerListeners() {
   const uMemberPrices = db.collection('member_prices').where('active','==',true).onSnapshot(snap => {
     memberPrices = snap.docs.map(d => ({id: d.id, ...d.data()}));
   }, err => console.error('member_prices:', err));
+
+  // Listener config boutique (config/store) — infos reçu + paramètres généraux
+  db.collection('config').doc('store').onSnapshot(snap => {
+    if (snap.exists) storeConfig = {...storeConfig, ...snap.data()};
+  }, err => console.error('config/store:', err));
 
   unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15, uLoyalty, uMemberPrices];
 
@@ -6919,8 +6915,6 @@ function handleNewCustomer(phone) {
       <input class="form-control" id="loyalty-new-prenom" placeholder="Prénom" autofocus></div>
     <div class="form-group"><label style="font-size:12px;font-weight:600">Nom *</label>
       <input class="form-control" id="loyalty-new-nom" placeholder="Nom de famille"></div>
-    <div class="form-group"><label style="font-size:12px;font-weight:600">Code PIN 4 chiffres (sécurité) *</label>
-      <input class="form-control" id="loyalty-new-pin" type="password" maxlength="4" inputmode="numeric" placeholder="• • • •" style="letter-spacing:8px;text-align:center"></div>
     <input type="hidden" id="loyalty-new-phone-val" value="${phone}">
     <div style="display:flex;gap:8px;margin-top:6px">
       <button onclick="skipLoyalty()" style="flex:1;padding:11px;background:#f1f5f9;border:1px solid var(--border);border-radius:9px;font-size:13px;cursor:pointer">Passer →</button>
@@ -6963,9 +6957,9 @@ function showVoucherOptions() {
   if(!c) return;
   const available=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
   if(!available.length){showToast('Aucun bon disponible','warning');return;}
-  if(available.length===1){showPinModal(available[0].id,available[0].value,available[0].label);return;}
+  if(available.length===1){applyVoucher(available[0].id,available[0].value,available[0].label);return;}
   const vHTML=available.map(v=>`
-    <div onclick="showPinModal('${v.id}',${v.value},'${v.label.replace(/'/g,"\\'")}');document.getElementById('voucher-list-section')?.remove()"
+    <div onclick="applyVoucher('${v.id}',${v.value},'${v.label.replace(/'/g,"\\'")}');document.getElementById('voucher-list-section')?.remove()"
       style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:11px 14px;cursor:pointer;margin-bottom:8px">
       <div><div style="font-weight:700">${v.label}</div></div>
       <div style="font-size:15px;font-weight:800;color:#16a34a">-${posF(v.value)}</div>
@@ -6979,33 +6973,7 @@ function showVoucherOptions() {
     </div>`);
 }
 
-function showPinModal(voucherId,value,label) {
-  const pinEl=document.getElementById('pin-input');
-  const errEl=document.getElementById('pin-error');
-  const subEl=document.getElementById('pin-modal-subtitle');
-  if(pinEl) pinEl.value='';
-  if(errEl) errEl.style.display='none';
-  if(subEl) subEl.textContent=`Saisissez votre code PIN pour utiliser le bon de ${posF(value)}`;
-  _loyaltyPinCallback=()=>applyVoucher(voucherId,value,label);
-  document.getElementById('modal-loyalty-pin').classList.add('open');
-  setTimeout(()=>pinEl?.focus(),100);
-}
-
-function checkPinInput() {
-  const pin=document.getElementById('pin-input')?.value||'';
-  if(pin.length===4) {
-    const correct=loyaltySession.customer?.pin;
-    if(!correct||pin!==correct) {
-      const errEl=document.getElementById('pin-error');
-      if(errEl) errEl.style.display='block';
-      const pinEl=document.getElementById('pin-input');
-      if(pinEl){pinEl.value='';setTimeout(()=>pinEl.focus(),50);}
-    } else {
-      closePosModal('modal-loyalty-pin');
-      if(_loyaltyPinCallback){_loyaltyPinCallback();_loyaltyPinCallback=null;}
-    }
-  }
-}
+// showPinModal / checkPinInput supprimés — pas de PIN dans le système
 
 function applyVoucher(voucherId,value,label) {
   loyaltySession.voucherApplied=voucherId;
@@ -7036,11 +7004,9 @@ function resetLoyaltySession() {
 async function createLoyaltyCustomer() {
   const firstName=(document.getElementById('loyalty-new-prenom')?.value||'').trim();
   const lastName=(document.getElementById('loyalty-new-nom')?.value||'').trim();
-  const pin=(document.getElementById('loyalty-new-pin')?.value||'').trim();
   const phone=document.getElementById('loyalty-new-phone-val')?.value||'';
   if(!firstName||!lastName){showToast('Prénom et nom requis','error');return;}
-  if(pin.length!==4||isNaN(pin)){showToast('Code PIN : 4 chiffres obligatoires','error');return;}
-  const data={phone,phoneRaw:phone.replace('+225','0'),firstName,lastName,pin,
+  const data={phone,phoneRaw:phone.replace('+225','0'),firstName,lastName,
     stars:0,tier:'member',totalSpent:0,totalSaved:0,vouchers:[],receipts:[],
     createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastPurchase:null};
   try{
@@ -7137,6 +7103,35 @@ function renderClubTema() {
     </tr>`;
   }).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:12px">Aucun prix membre défini</td></tr>';
   el.innerHTML=`
+    <details class="card" style="margin-bottom:18px">
+      <summary style="padding:14px 18px;cursor:pointer;font-weight:700;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        <span>🏪 Paramètres Boutique — Informations Reçu</span>
+        <span style="font-size:12px;color:var(--text-muted);font-weight:400">Cliquer pour modifier</span>
+      </summary>
+      <div class="card-body" style="padding-top:0">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div class="form-group" style="margin:0">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Nom commercial *</label>
+            <input class="form-control" id="sc-name" value="${storeConfig.name||''}" placeholder="Nom de la boutique">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Téléphone *</label>
+            <input class="form-control" id="sc-phone" value="${storeConfig.phone||''}" placeholder="+225 27 ...">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="form-group" style="margin:0">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">N° RCCM</label>
+            <input class="form-control" id="sc-rccm" value="${storeConfig.rccm||''}" placeholder="CI-...">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Adresse</label>
+            <input class="form-control" id="sc-address" value="${storeConfig.address||''}" placeholder="Quartier, Ville, Pays">
+          </div>
+        </div>
+        <button onclick="saveStoreConfig()" style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les infos boutique</button>
+      </div>
+    </details>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:11px;margin-bottom:20px">
       <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${total}</h3><p>Membres total</p></div></div>
       <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-info"><h3>${actifs}</h3><p>Actifs (30 jours)</p></div></div>
@@ -7178,7 +7173,7 @@ function renderClubTema() {
             <td>${posF(c.totalSpent||0)}</td>
             <td style="color:#16a34a">${posF(c.totalSaved||0)}</td>
             <td>${vDispo>0?`<span style="background:#f0fdf4;color:#16a34a;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700">${vDispo}</span>`:'—'}</td>
-            <td>${c.lastPurchase||'—'}</td>
+            <td style="font-size:12px;white-space:nowrap">${formatTimestamp(c.lastPurchase)}</td>
             <td><button onclick="openLoyaltyMemberModal('${c.id}')" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Détails</button></td>
           </tr>`;
         }).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px">Aucun membre inscrit</td></tr>'}
@@ -7222,18 +7217,79 @@ function openLoyaltyMemberModal(id) {
   openModal('modal-loyalty-member');
 }
 
-async function adminAjouterEtoiles(customerId) {
-  const nb=prompt("Nombre d'étoiles à ajouter (négatif pour retirer) :");
-  if(nb===null||nb.trim()===''||isNaN(nb)) return;
-  const delta=parseInt(nb); if(delta===0) return;
+function formatTimestamp(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds*1000) : new Date(ts));
+  if (isNaN(d.getTime())) return '—';
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} | ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function adminAjouterEtoiles(customerId) {
+  const c=loyaltyCustomers.find(m=>m.id===customerId);
+  if(!c) return;
+  document.getElementById('loyalty-member-content').innerHTML=`
+    <h3 style="margin-bottom:4px">⭐ Ajustement d'étoiles</h3>
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px">${c.firstName||''} ${c.lastName||''} — Solde actuel : ${(c.stars||0).toLocaleString('fr-FR')} ⭐</p>
+    <div class="form-group">
+      <label style="font-size:12px;font-weight:600">Nombre d'étoiles *<span style="color:#94a3b8;font-weight:400"> (négatif pour retirer)</span></label>
+      <input class="form-control" id="adj-delta" type="number" placeholder="Ex : +20 ou -5" oninput="checkAdjForm()">
+    </div>
+    <div class="form-group">
+      <label style="font-size:12px;font-weight:600">Raison de l'ajustement * <span style="color:#dc2626">— obligatoire</span></label>
+      <input class="form-control" id="adj-raison" placeholder="Ex : Geste commercial, erreur de caisse, promotion..." oninput="checkAdjForm()">
+    </div>
+    <div id="adj-preview" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:14px;display:none">
+      Nouveau solde : <strong id="adj-new-stars">—</strong>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="openLoyaltyMemberModal('${c.id}')" style="flex:1;padding:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">← Retour</button>
+      <button id="adj-btn-valider" onclick="confirmerAjustementEtoiles('${c.id}')"
+        disabled style="flex:2;padding:10px;background:#94a3b8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:not-allowed">
+        ✓ Valider l'ajustement
+      </button>
+    </div>`;
+  openModal('modal-loyalty-member');
+}
+
+function checkAdjForm() {
+  const delta=parseInt(document.getElementById('adj-delta')?.value||'');
+  const raison=(document.getElementById('adj-raison')?.value||'').trim();
+  const btn=document.getElementById('adj-btn-valider');
+  const preview=document.getElementById('adj-preview');
+  const c=loyaltyCustomers.find(m=>m.id===(document.getElementById('adj-btn-valider')?.getAttribute('onclick')||'').match(/'([^']+)'/)?.[1]);
+  if(btn&&raison&&!isNaN(delta)&&delta!==0){
+    btn.disabled=false;btn.style.background='var(--primary)';btn.style.cursor='pointer';
+  } else if(btn){
+    btn.disabled=true;btn.style.background='#94a3b8';btn.style.cursor='not-allowed';
+  }
+  if(preview&&!isNaN(delta)&&delta!==0){
+    const currentCustomer=loyaltyCustomers.find(m=>document.getElementById('adj-preview'));
+    preview.style.display='block';
+    document.getElementById('adj-new-stars').textContent=Math.max(0,(parseInt(document.getElementById('adj-delta')?.value||0)))+'  étoiles de variation';
+  }
+}
+
+async function confirmerAjustementEtoiles(customerId) {
+  const delta=parseInt(document.getElementById('adj-delta')?.value||'');
+  const raison=(document.getElementById('adj-raison')?.value||'').trim();
+  if(!raison||isNaN(delta)||delta===0){showToast('Raison et nombre d\'étoiles requis','error');return;}
   const c=loyaltyCustomers.find(m=>m.id===customerId);
   const newStars=Math.max(0,(c?.stars||0)+delta);
   try {
-    await db.collection('customers').doc(customerId).update({
+    const batch=db.batch();
+    batch.update(db.collection('customers').doc(customerId),{
       stars:firebase.firestore.FieldValue.increment(delta),tier:getTierKey(newStars)
     });
+    batch.set(db.collection('loyalty_transactions').doc(),{
+      customerId,phone:c?.phone||'',type:'manual_adjustment',
+      delta,reason:raison,adminId:currentUser?.uid||currentUser?.username||'admin',
+      adminLabel:currentUser?.label||'Administrateur',
+      starsAfter:newStars,date:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await batch.commit();
     closeModal('modal-loyalty-member');
-    showToast(`${delta>0?'+':''}${delta} étoile${Math.abs(delta)!==1?'s':''} ajusté(es)`);
+    showToast(`${delta>0?'+':''}${delta} étoile${Math.abs(delta)!==1?'s':''} — tracé dans l'historique ✓`);
   } catch(err){showToast('Erreur : '+err.message,'error');}
 }
 
@@ -7290,11 +7346,29 @@ async function deleteMemberPrice(id) {
   catch(err){showToast('Erreur : '+err.message,'error');}
 }
 
+async function saveStoreConfig() {
+  const name=(document.getElementById('sc-name')?.value||'').trim();
+  const phone=(document.getElementById('sc-phone')?.value||'').trim();
+  const rccm=(document.getElementById('sc-rccm')?.value||'').trim();
+  const address=(document.getElementById('sc-address')?.value||'').trim();
+  if(!name||!phone){showToast('Nom commercial et téléphone obligatoires','error');return;}
+  try{
+    await db.collection('config').doc('store').set({name,phone,rccm,address,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    storeConfig={...storeConfig,name,phone,rccm,address};
+    showToast('Informations boutique enregistrées ✓');
+  }catch(err){showToast('Erreur : '+err.message,'error');}
+}
+
 // ─────────────────────────────────────────────────────────────
 
 function afficherTicketPOS(data) {
   const lignes=data.items.map(i=>`<div class="r-item"><span>${i.nom} ×${i.qte}</span><span>${posF0(i.total)} F</span></div>`).join('');
-  const html=`<div class="receipt-header"><h3>🏪 TeMa Multi-Services</h3><div class="sub">Libreville, Gabon</div><div class="sub">Tél: +241 07 00 00 00 00</div></div>
+  const html=`<div class="receipt-header">
+    <h3>🏪 ${storeConfig.name}</h3>
+    <div class="sub">${storeConfig.address}</div>
+    <div class="sub">Tél: ${storeConfig.phone}</div>
+    ${storeConfig.rccm?`<div class="sub">N° RCCM : ${storeConfig.rccm}</div>`:''}
+    </div>
     <div style="font-size:10px;color:#666;margin-bottom:8px">
       <div>Ticket N° : <strong>${data.ticketNum}</strong></div>
       <div>Date : ${data.date} à ${data.heure}</div>
