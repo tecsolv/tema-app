@@ -3754,6 +3754,7 @@
         <div class="cart-totals">
           <div class="cart-line"><span>Sous-total</span><span id="cart-subtotal">0 FCFA</span></div>
           <div class="cart-line"><span>Remise</span><span id="cart-remise" style="color:var(--danger)">0 FCFA</span></div>
+          <div class="cart-line" id="cart-loyalty-row" style="display:none"><span>⭐ Club TeMa</span><span id="cart-loyalty-discount" style="color:#22c55e">0 FCFA</span></div>
           <div class="cart-total-line">
             <span class="cart-total-label">TOTAL</span>
             <span class="cart-total-value" id="cart-total">0 FCFA</span>
@@ -3847,17 +3848,10 @@
   <div class="pos-modal-box payment-box">
     <button class="pos-modal-close" onclick="closePosModal('modal-payment')">×</button>
     <h2>💳 Encaissement</h2>
-    <!-- ── Club TeMa Family — Identification membre ── -->
-    <div id="loyalty-panel" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">🌟 Club TeMa Family</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="tel" id="loyalty-phone-input" placeholder="📱 N° téléphone membre..."
-          style="flex:1;padding:7px 10px;border:1px solid #bae6fd;border-radius:8px;font-size:13px;background:#fff;outline:none"
-          oninput="searchLoyaltyCustomer()">
-        <button onclick="clearLoyalty()" title="Effacer"
-          style="padding:6px 10px;border:none;background:#e0f2fe;border-radius:8px;cursor:pointer;font-size:13px;color:#0369a1;flex-shrink:0">✕</button>
-      </div>
-      <div id="loyalty-result" style="margin-top:7px"></div>
+    <!-- Résumé fidélité compact (rempli si session active) -->
+    <div id="payment-loyalty-summary" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;display:flex;justify-content:space-between;align-items:center">
+      <span>⭐ <span id="payment-loyalty-name"></span></span>
+      <span>Économie : <strong id="payment-loyalty-saving"></strong></span>
     </div>
     <div class="payment-total-display">
       <div class="ptd-label">Total à payer</div>
@@ -3898,6 +3892,40 @@
     <div class="receipt-print" id="receipt-content"></div>
     <button class="btn-print" onclick="imprimerTicket()">🖨️ Imprimer le ticket</button>
     <button class="btn-new-sale" onclick="nouvelleVente()">➕ Nouvelle vente</button>
+  </div>
+</div>
+
+<!-- POS MODAL: Club TeMa Family — Checkout fidélité (avant paiement) -->
+<div class="pos-modal-overlay" id="modal-loyalty-checkout">
+  <div class="pos-modal-box" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">⭐ Club TeMa Family</div>
+        <h2 style="font-size:18px;margin:0;color:#1a1e2e">Identification membre</h2>
+      </div>
+      <button class="pos-modal-close" onclick="skipLoyalty()" style="position:initial">×</button>
+    </div>
+    <div id="loyalty-checkout-body">
+      <!-- Rempli dynamiquement par renderLoyaltyCheckout() -->
+    </div>
+  </div>
+</div>
+
+<!-- POS MODAL: Club TeMa Family — Saisie PIN anti-fraude -->
+<div class="pos-modal-overlay" id="modal-loyalty-pin">
+  <div class="pos-modal-box" style="max-width:320px;text-align:center">
+    <button class="pos-modal-close" onclick="closePosModal('modal-loyalty-pin')">×</button>
+    <div style="font-size:32px;margin-bottom:8px">🔒</div>
+    <h2 style="font-size:16px;margin-bottom:4px">Code PIN</h2>
+    <p id="pin-modal-subtitle" style="color:#64748b;font-size:13px;margin-bottom:18px"></p>
+    <input type="password" id="pin-input" maxlength="4" inputmode="numeric" placeholder="• • • •"
+      style="width:100%;text-align:center;font-size:32px;letter-spacing:14px;padding:14px;border:2px solid var(--border);border-radius:10px;box-sizing:border-box;outline:none"
+      oninput="checkPinInput()">
+    <div id="pin-error" style="display:none;color:#dc2626;font-size:13px;margin-top:8px">Code PIN incorrect — Réessayez</div>
+    <button onclick="closePosModal('modal-loyalty-pin')"
+      style="width:100%;margin-top:12px;padding:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer">
+      Annuler
+    </button>
   </div>
 </div>
 
@@ -4463,7 +4491,14 @@ let mcPlaylists = [], mcTracks = [], mcSources = [];
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
 let loyaltyCustomers = [];
-let _loyaltyCurrentCustomer = null;
+let memberPrices = [];
+let loyaltySession = {
+  customer: null, memberSavings: 0,
+  voucherApplied: null, voucherSavings: 0,
+  totalSavings: 0, active: false,
+  memberPricesMap: {}  // productId → {memberPrice, saving}
+};
+let _loyaltyPinCallback = null; // stocke la fonction appelée après validation PIN
 // ── RH (Phase RH-A) ────────────────────────────────────────
 let rhEmployes = [], rhContrats = [];
 let rhListenersDemarres = false;
@@ -5566,7 +5601,12 @@ function demarrerListeners() {
     if (document.getElementById('page-club-tema')?.classList.contains('active')) renderClubTema();
   }, err => console.error('customers:', err));
 
-  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15, uLoyalty];
+  // Listener prix membres (member_prices) — appliqués en temps réel au panier fidélité
+  const uMemberPrices = db.collection('member_prices').where('active','==',true).onSnapshot(snap => {
+    memberPrices = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  }, err => console.error('member_prices:', err));
+
+  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15, uLoyalty, uMemberPrices];
 
   // Listeners Suivi des présences / Tableau de bord caisses (Gérant/Admin)
   if (estGerantOuAdmin()) {
@@ -6583,7 +6623,8 @@ function calculerTotaux() {
   const rv=parseFloat(document.getElementById('remise-input')?.value)||0;
   const rt=document.getElementById('remise-type')?.value||'pct';
   const remiseFCFA=rt==='pct'?Math.round(sous*rv/100):Math.min(rv,sous);
-  return {sous, remiseFCFA, total:Math.max(0,sous-remiseFCFA)};
+  const loyaltyDiscount=loyaltySession.totalSavings||0;
+  return {sous, remiseFCFA, loyaltyDiscount, total:Math.max(0,sous-remiseFCFA-loyaltyDiscount)};
 }
 
 function renderPanier() {
@@ -6597,10 +6638,14 @@ function renderPanier() {
         const codeBarre=item.codeBarre||prod?.codeBarre||'—';
         const nomComplet=`${item.serviceType?'🖨️ ':''}${item.nom}`;
         const tooltip=`${nomComplet}\nRéférence : ${ref}\nCode-barres : ${codeBarre}`;
+        const mp = loyaltySession.active && !item.serviceType ? loyaltySession.memberPricesMap[item.id] : null;
+        const priceUnit = mp
+          ? `<s style="color:#94a3b8;font-size:10px">${posF0(item.prix)}</s> <span style="color:#22c55e;font-weight:700">${posF0(mp.memberPrice)}</span> FCFA × ${item.qte}`
+          : `${posF0(item.prix)} FCFA × ${item.qte}`;
         return `<div class="cart-item" ondblclick="afficherDetailArticle(${i})">
         <div class="cart-item-info">
           <div class="cart-item-name" title="${tooltip}">${nomComplet}</div>
-          <div class="cart-item-unit">${posF0(item.prix)} FCFA × ${item.qte}</div>
+          <div class="cart-item-unit">${priceUnit}</div>
         </div>
         <div class="cart-item-qty">
           <button class="qty-btn" onclick="changerQte(${i},-1)">−</button>
@@ -6613,6 +6658,10 @@ function renderPanier() {
       }).join('');
   document.getElementById('cart-subtotal').textContent=posF(sous);
   document.getElementById('cart-remise').textContent=remiseFCFA?'−'+posF(remiseFCFA):'0 FCFA';
+  const lRow=document.getElementById('cart-loyalty-row');
+  const lDisc=document.getElementById('cart-loyalty-discount');
+  if(lRow) lRow.style.display=loyaltyDiscount>0?'':'none';
+  if(lDisc&&loyaltyDiscount>0) lDisc.textContent='−'+posF(loyaltyDiscount);
   document.getElementById('cart-total').textContent=posF(total);
   document.getElementById('btn-pay').disabled = !posPanier.length || posSessionActive?.statutSession === 'en_pause';
 }
@@ -6620,6 +6669,14 @@ function renderPanier() {
 function posOuvrirPaiement() {
   if (!posPanier.length) return;
   if (posSessionActive?.statutSession === 'en_pause') { showToast('Reprenez votre session pour encaisser','error'); return; }
+  // Session fidélité déjà active → aller direct au paiement
+  if (loyaltySession.active) { ouvrirModalPaiement(); return; }
+  // Sinon : ouvrir le checkout fidélité d'abord
+  renderLoyaltyCheckout('phone');
+  document.getElementById('modal-loyalty-checkout').classList.add('open');
+}
+
+function ouvrirModalPaiement() {
   const {total}=calculerTotaux(); posModePayActuel='Espèces';
   document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelector('[data-mode="Espèces"]').classList.add('selected');
@@ -6628,7 +6685,15 @@ function posOuvrirPaiement() {
   document.getElementById('payment-change').style.display='none';
   document.getElementById('cash-section').style.display='';
   document.getElementById('btn-confirm-pay').disabled=true;
-  clearLoyalty();
+  // Résumé fidélité compact dans le modal paiement
+  const sumEl=document.getElementById('payment-loyalty-summary');
+  if(sumEl) {
+    if(loyaltySession.active && loyaltySession.totalSavings>0) {
+      document.getElementById('payment-loyalty-name').textContent=`${loyaltySession.customer.firstName||''} ${loyaltySession.customer.lastName||''}`;
+      document.getElementById('payment-loyalty-saving').textContent=posF(loyaltySession.totalSavings);
+      sumEl.style.display='flex';
+    } else { sumEl.style.display='none'; }
+  }
   document.getElementById('modal-payment').classList.add('open');
 }
 
@@ -6713,8 +6778,8 @@ async function confirmerVente() {
       });
     }
     await batch.commit();
-    // Fidélité Club TeMa Family : créditer les étoiles après la vente
-    addLoyaltyPoints(ticketNum, total);
+    // Fidélité Club TeMa Family : clôturer la session (étoiles + bons + ticket numérique)
+    closeLoyaltySession(ticketNum, sous - remiseFCFA, total);
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
     const numPiecesVente = genererNumPieces(posPanier.length);
     posPanier.forEach((item, idx) => {
@@ -6728,200 +6793,369 @@ async function confirmerVente() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// CLUB TEMA FAMILY — MODULE FIDÉLITÉ
+// CLUB TEMA FAMILY — MODULE FIDÉLITÉ (Architecture Lidl Plus)
 // ─────────────────────────────────────────────────────────────
+
+// ── Constantes ──────────────────────────────────────────────
 const LOYALTY_TIERS = {
-  member: {min:0,   max:499,      label:'Membre', color:'#64748b'},
-  silver: {min:500, max:1499,     label:'Argent', color:'#94a3b8'},
-  gold:   {min:1500,max:Infinity, label:'Or',     color:'#f59e0b'}
+  member: {label:'Membre',        color:'#C8981A'},
+  silver: {label:'Membre Silver', color:'#9CA3AF'},
+  gold:   {label:'Membre Gold',   color:'#F59E0B'}
 };
-const LOYALTY_REWARDS = [
-  {stars:50,  label:'Cadeau surprise'},
-  {stars:100, label:'Crédit 500 FCFA',      value:500},
-  {stars:200, label:'Crédit 1 000 FCFA',    value:1000},
-  {stars:500, label:'Produit ≤ 2 500 FCFA', value:2500}
+const STAR_REWARDS = [
+  {stars:50,  value:0,    label:'Cadeau surprise'},
+  {stars:100, value:500,  label:'Bon de 500 FCFA'},
+  {stars:200, value:1000, label:'Bon de 1 000 FCFA'},
+  {stars:500, value:2500, label:'Bon de 2 500 FCFA'}
 ];
-function calculateStars(amount) { return Math.floor((amount||0) / 500); }
-function getTier(stars) {
-  if ((stars||0) >= 1500) return {key:'gold',   ...LOYALTY_TIERS.gold};
-  if ((stars||0) >= 500)  return {key:'silver', ...LOYALTY_TIERS.silver};
-  return {key:'member', ...LOYALTY_TIERS.member};
+
+// ── Utilitaires ─────────────────────────────────────────────
+function normalizePhone(raw) {
+  const d=raw.replace(/\D/g,'');
+  if(d.startsWith('225'))          return '+'+d;
+  if(d.startsWith('0')&&d.length===10) return '+225'+d.slice(1);
+  if(d.length===9)                 return '+225'+d;
+  return '+225'+d;
+}
+function calculateStars(amount) { return Math.floor((amount||0)/500); }
+function getTierKey(stars) {
+  if((stars||0)>=1500) return 'gold';
+  if((stars||0)>=500)  return 'silver';
+  return 'member';
 }
 
-function searchLoyaltyCustomer() {
-  const phone = (document.getElementById('loyalty-phone-input')?.value||'').replace(/\s/g,'');
-  const res = document.getElementById('loyalty-result');
-  if (!res) return;
-  if (phone.length < 6) { res.innerHTML=''; _loyaltyCurrentCustomer=null; return; }
-  const found = loyaltyCustomers.find(c => (c.phone||'').replace(/\s/g,'') === phone);
-  if (found) {
-    _loyaltyCurrentCustomer = found;
-    showLoyaltyCustomerFound(found);
-  } else {
-    _loyaltyCurrentCustomer = null;
-    const {total} = calculerTotaux();
-    const starsEarned = calculateStars(total);
-    res.innerHTML = `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 11px;font-size:12px">
-      <div style="font-weight:700;color:#c2410c">Numéro non inscrit</div>
-      <div style="color:#78350f;margin-top:3px">
-        <a href="#" onclick="event.preventDefault();openCreateLoyaltyModal('${phone.replace(/'/g,"\\'")}');return false"
-           style="color:#ea580c;font-weight:700;text-decoration:underline">Inscrire ce numéro au Club</a>
+// ── Rendu du modal de checkout fidélité ─────────────────────
+let _phoneTimer=null;
+function renderLoyaltyCheckout(phase) {
+  const body=document.getElementById('loyalty-checkout-body');
+  if(!body) return;
+  if(phase==='phone') {
+    body.innerHTML=`
+      <div style="margin-bottom:12px">
+        <input type="tel" id="loyalty-phone-input"
+          placeholder="Numéro de téléphone (ex : 07 00 00 00 00)"
+          maxlength="12"
+          oninput="onPhoneInput(this.value)"
+          style="width:100%;padding:13px;border:2px solid var(--border);border-radius:10px;font-size:15px;box-sizing:border-box;outline:none">
       </div>
-      <div style="color:#92400e;margin-top:3px">+${starsEarned} ⭐ crédités après la vente</div>
-    </div>`;
+      <div id="loyalty-checkout-status" style="font-size:13px;color:#64748b;margin-bottom:16px;min-height:18px">
+        Saisissez votre numéro pour appliquer vos avantages membres
+      </div>
+      <button onclick="skipLoyalty()"
+        style="width:100%;padding:12px;background:#f1f5f9;border:1px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer">
+        Passer cette fois →
+      </button>`;
+    setTimeout(()=>document.getElementById('loyalty-phone-input')?.focus(),80);
+  } else if(phase==='active') {
+    const c=loyaltySession.customer;
+    const tier=LOYALTY_TIERS[getTierKey(c.stars||0)];
+    const pendingVouchers=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
+    const appliedVoucher=loyaltySession.voucherApplied;
+    body.innerHTML=`
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-weight:800;font-size:15px">${c.firstName||''} ${c.lastName||''}</div>
+          <span style="background:${tier.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${tier.label}</span>
+        </div>
+        <div style="font-size:13px;color:#15803d">⭐ ${(c.stars||0).toLocaleString('fr-FR')} étoiles</div>
+        ${loyaltySession.memberSavings>0?`<div style="font-size:12px;color:#15803d;margin-top:4px">✅ Prix membres appliqués — Économie : <strong>-${posF(loyaltySession.memberSavings)}</strong></div>`:''}
+        ${appliedVoucher
+          ?`<div style="font-size:12px;color:#15803d;margin-top:4px">🎁 Bon appliqué : <strong>-${posF(loyaltySession.voucherSavings)}</strong>
+             <button onclick="removeVoucher()" style="margin-left:8px;padding:2px 7px;border:1px solid #16a34a;background:transparent;border-radius:5px;font-size:11px;cursor:pointer;color:#16a34a">Annuler</button></div>`
+          :pendingVouchers.length>0
+            ?`<button onclick="showVoucherOptions()" style="margin-top:8px;width:100%;padding:7px;background:#16a34a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">
+               🎁 ${pendingVouchers.length} bon${pendingVouchers.length>1?'s':''} disponible${pendingVouchers.length>1?'s':''} — Utiliser →</button>`
+            :''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="removeLoyaltySession()"
+          style="flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:9px;font-size:13px;cursor:pointer;color:#64748b">
+          ✕ Retirer
+        </button>
+        <button onclick="proceedToPayment()"
+          style="flex:2;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer">
+          Continuer →
+        </button>
+      </div>`;
   }
 }
 
-function showLoyaltyCustomerFound(customer) {
-  const res = document.getElementById('loyalty-result');
-  if (!res) return;
-  const {total} = calculerTotaux();
-  const starsEarned = calculateStars(total);
-  const tier = getTier(customer.stars||0);
-  const newStars = (customer.stars||0) + starsEarned;
-  const available = LOYALTY_REWARDS.filter(r => (customer.stars||0) >= r.stars);
-  res.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 11px;font-size:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div style="font-weight:700;color:#166534">${customer.firstName||''} ${customer.lastName||''}</div>
-      <div style="background:${tier.color};color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700">${tier.label}</div>
+function onPhoneInput(rawValue) {
+  clearTimeout(_phoneTimer);
+  const digits=rawValue.replace(/\D/g,'');
+  const statusEl=document.getElementById('loyalty-checkout-status');
+  if(digits.length<9) {
+    if(statusEl) statusEl.textContent=digits.length?'Continuez à saisir...':'Saisissez votre numéro pour appliquer vos avantages membres';
+    return;
+  }
+  if(statusEl) statusEl.innerHTML='<span style="color:#94a3b8">🔍 Recherche en cours...</span>';
+  _phoneTimer=setTimeout(()=>lookupCustomer(digits),400);
+}
+
+async function lookupCustomer(rawDigits) {
+  const phone=normalizePhone(rawDigits);
+  const statusEl=document.getElementById('loyalty-checkout-status');
+  try {
+    const local=loyaltyCustomers.find(c=>(c.phone||'')===phone);
+    if(local){openLoyaltySession(local);return;}
+    const snap=await db.collection('customers').where('phone','==',phone).limit(1).get();
+    if(snap.empty){handleNewCustomer(phone);}
+    else{openLoyaltySession({id:snap.docs[0].id,...snap.docs[0].data()});}
+  } catch(e) {
+    if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">⚠️ Erreur réseau — continuer sans fidélité</span>';
+  }
+}
+
+function handleNewCustomer(phone) {
+  const potential=_calcPotentialSavings();
+  const body=document.getElementById('loyalty-checkout-body');
+  if(!body) return;
+  body.innerHTML=`
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#92400e">
+      <strong>Numéro non inscrit.</strong>
+      ${potential>0?` Créer un compte pour économiser <strong>${posF(potential)}</strong> aujourd\'hui.`:' Rejoindre le Club TeMa Family ?'}
     </div>
-    <div style="color:#15803d">⭐ ${(customer.stars||0).toLocaleString('fr-FR')} étoiles actuelles &nbsp;→&nbsp; <strong>+${starsEarned}</strong> après cette vente (total : ${newStars.toLocaleString('fr-FR')})</div>
-    ${available.length ? `<button onclick="openRedeemModal()"
-      style="margin-top:8px;width:100%;padding:6px;background:#16a34a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">
-      🎁 ${available.length} récompense${available.length>1?'s':''} disponible${available.length>1?'s':''}
-    </button>` : ''}
-  </div>`;
+    <div class="form-group"><label style="font-size:12px;font-weight:600">Prénom *</label>
+      <input class="form-control" id="loyalty-new-prenom" placeholder="Prénom" autofocus></div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600">Nom *</label>
+      <input class="form-control" id="loyalty-new-nom" placeholder="Nom de famille"></div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600">Code PIN 4 chiffres (sécurité) *</label>
+      <input class="form-control" id="loyalty-new-pin" type="password" maxlength="4" inputmode="numeric" placeholder="• • • •" style="letter-spacing:8px;text-align:center"></div>
+    <input type="hidden" id="loyalty-new-phone-val" value="${phone}">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button onclick="skipLoyalty()" style="flex:1;padding:11px;background:#f1f5f9;border:1px solid var(--border);border-radius:9px;font-size:13px;cursor:pointer">Passer →</button>
+      <button onclick="createLoyaltyCustomer()" style="flex:2;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer">✓ Créer mon compte</button>
+    </div>`;
 }
 
-function clearLoyalty() {
-  _loyaltyCurrentCustomer = null;
-  const inp = document.getElementById('loyalty-phone-input');
-  const res = document.getElementById('loyalty-result');
-  if (inp) inp.value='';
-  if (res) res.innerHTML='';
+function _calcPotentialSavings() {
+  let s=0;
+  memberPrices.forEach(mp=>{
+    const item=posPanier.find(i=>i.id===mp.productId&&!i.serviceType);
+    if(item) s+=Math.max(0,(item.prix-mp.memberPrice)*item.qte);
+  });
+  return s;
 }
 
-function openCreateLoyaltyModal(phone) {
-  const inp = document.getElementById('loyalty-new-phone');
-  if (inp) inp.value = phone||'';
-  const nom = document.getElementById('loyalty-new-nom');
-  const prenom = document.getElementById('loyalty-new-prenom');
-  if (nom) nom.value='';
-  if (prenom) prenom.value='';
-  document.getElementById('modal-loyalty-create').classList.add('open');
+async function openLoyaltySession(customer) {
+  loyaltySession.customer=customer;
+  loyaltySession.active=true;
+  let memberSavings=0;
+  const map={};
+  memberPrices.forEach(mp=>{
+    const item=posPanier.find(i=>i.id===mp.productId&&!i.serviceType);
+    if(item&&mp.memberPrice<item.prix) {
+      const saving=(item.prix-mp.memberPrice)*item.qte;
+      memberSavings+=saving;
+      map[item.id]={memberPrice:mp.memberPrice,saving};
+    }
+  });
+  loyaltySession.memberSavings=memberSavings;
+  loyaltySession.memberPricesMap=map;
+  loyaltySession.totalSavings=memberSavings+(loyaltySession.voucherSavings||0);
+  renderPanier();
+  renderLoyaltyCheckout('active');
+}
+
+// ── Vouchers + PIN ───────────────────────────────────────────
+function showVoucherOptions() {
+  const c=loyaltySession.customer;
+  if(!c) return;
+  const available=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
+  if(!available.length){showToast('Aucun bon disponible','warning');return;}
+  if(available.length===1){showPinModal(available[0].id,available[0].value,available[0].label);return;}
+  const vHTML=available.map(v=>`
+    <div onclick="showPinModal('${v.id}',${v.value},'${v.label.replace(/'/g,"\\'")}');document.getElementById('voucher-list-section')?.remove()"
+      style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:11px 14px;cursor:pointer;margin-bottom:8px">
+      <div><div style="font-weight:700">${v.label}</div></div>
+      <div style="font-size:15px;font-weight:800;color:#16a34a">-${posF(v.value)}</div>
+    </div>`).join('');
+  document.getElementById('loyalty-checkout-body').insertAdjacentHTML('afterbegin',`
+    <div id="voucher-list-section" style="margin-bottom:12px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">Choisir un bon :</div>
+      ${vHTML}
+      <button onclick="document.getElementById('voucher-list-section').remove()"
+        style="width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;color:#64748b">Annuler</button>
+    </div>`);
+}
+
+function showPinModal(voucherId,value,label) {
+  const pinEl=document.getElementById('pin-input');
+  const errEl=document.getElementById('pin-error');
+  const subEl=document.getElementById('pin-modal-subtitle');
+  if(pinEl) pinEl.value='';
+  if(errEl) errEl.style.display='none';
+  if(subEl) subEl.textContent=`Saisissez votre code PIN pour utiliser le bon de ${posF(value)}`;
+  _loyaltyPinCallback=()=>applyVoucher(voucherId,value,label);
+  document.getElementById('modal-loyalty-pin').classList.add('open');
+  setTimeout(()=>pinEl?.focus(),100);
+}
+
+function checkPinInput() {
+  const pin=document.getElementById('pin-input')?.value||'';
+  if(pin.length===4) {
+    const correct=loyaltySession.customer?.pin;
+    if(!correct||pin!==correct) {
+      const errEl=document.getElementById('pin-error');
+      if(errEl) errEl.style.display='block';
+      const pinEl=document.getElementById('pin-input');
+      if(pinEl){pinEl.value='';setTimeout(()=>pinEl.focus(),50);}
+    } else {
+      closePosModal('modal-loyalty-pin');
+      if(_loyaltyPinCallback){_loyaltyPinCallback();_loyaltyPinCallback=null;}
+    }
+  }
+}
+
+function applyVoucher(voucherId,value,label) {
+  loyaltySession.voucherApplied=voucherId;
+  loyaltySession.voucherSavings=value;
+  loyaltySession.totalSavings=loyaltySession.memberSavings+value;
+  renderPanier();
+  renderLoyaltyCheckout('active');
+  showToast(`🎁 Bon de ${posF(value)} appliqué !`);
+}
+
+function removeVoucher() {
+  loyaltySession.voucherApplied=null;
+  loyaltySession.voucherSavings=0;
+  loyaltySession.totalSavings=loyaltySession.memberSavings;
+  renderPanier();
+  renderLoyaltyCheckout('active');
+}
+
+function skipLoyalty(){closePosModal('modal-loyalty-checkout');ouvrirModalPaiement();}
+function proceedToPayment(){closePosModal('modal-loyalty-checkout');ouvrirModalPaiement();}
+function removeLoyaltySession(){resetLoyaltySession();renderLoyaltyCheckout('phone');}
+
+function resetLoyaltySession() {
+  loyaltySession={customer:null,memberSavings:0,voucherApplied:null,voucherSavings:0,totalSavings:0,active:false,memberPricesMap:{}};
+  renderPanier();
 }
 
 async function createLoyaltyCustomer() {
-  const phone    = (document.getElementById('loyalty-new-phone')?.value||'').trim();
-  const lastName = (document.getElementById('loyalty-new-nom')?.value||'').trim();
-  const firstName= (document.getElementById('loyalty-new-prenom')?.value||'').trim();
-  if (!phone || !lastName) { showToast('Téléphone et nom sont requis', 'error'); return; }
-  try {
-    const ref = await db.collection('customers').add({
-      phone, firstName, lastName, stars:0, tier:'member', totalSpent:0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastPurchase: null
-    });
-    _loyaltyCurrentCustomer = {id:ref.id, phone, firstName, lastName, stars:0, tier:'member', totalSpent:0};
-    showLoyaltyCustomerFound(_loyaltyCurrentCustomer);
-    closePosModal('modal-loyalty-create');
-    showToast(`✅ ${firstName} ${lastName} inscrit(e) au Club TeMa Family`);
-  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+  const firstName=(document.getElementById('loyalty-new-prenom')?.value||'').trim();
+  const lastName=(document.getElementById('loyalty-new-nom')?.value||'').trim();
+  const pin=(document.getElementById('loyalty-new-pin')?.value||'').trim();
+  const phone=document.getElementById('loyalty-new-phone-val')?.value||'';
+  if(!firstName||!lastName){showToast('Prénom et nom requis','error');return;}
+  if(pin.length!==4||isNaN(pin)){showToast('Code PIN : 4 chiffres obligatoires','error');return;}
+  const data={phone,phoneRaw:phone.replace('+225','0'),firstName,lastName,pin,
+    stars:0,tier:'member',totalSpent:0,totalSaved:0,vouchers:[],receipts:[],
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastPurchase:null};
+  try{
+    const ref=await db.collection('customers').add(data);
+    openLoyaltySession({id:ref.id,...data,createdAt:new Date()});
+    showToast(`Bienvenue ${firstName} dans le Club TeMa Family ! ⭐`);
+  }catch(err){showToast('Erreur : '+err.message,'error');}
 }
 
-function openRedeemModal() {
-  if (!_loyaltyCurrentCustomer) return;
-  const c = _loyaltyCurrentCustomer;
-  const available = LOYALTY_REWARDS.filter(r => (c.stars||0) >= r.stars);
-  const subtitle = document.getElementById('loyalty-redeem-subtitle');
-  if (subtitle) subtitle.textContent = `${c.firstName||''} ${c.lastName||''} — ${(c.stars||0).toLocaleString('fr-FR')} étoile${(c.stars||0)!==1?'s':''}`;
-  const listEl = document.getElementById('loyalty-rewards-list');
-  if (listEl) {
-    if (!available.length) {
-      listEl.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:16px">Aucune récompense disponible</p>';
-    } else {
-      listEl.innerHTML = available.map(r => `
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px">
-          <div>
-            <div style="font-weight:700;font-size:14px">${r.label}</div>
-            <div style="font-size:12px;color:#64748b">Coût : ${r.stars} ⭐</div>
-          </div>
-          <button onclick="redeemReward(${r.stars},'${r.label.replace(/'/g,"\\'")}',${r.value||0})"
-            style="padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
-            Échanger
-          </button>
-        </div>`).join('');
+// ── Clôture session fidélité ─────────────────────────────────
+async function closeLoyaltySession(saleId,amountGross,amountNet) {
+  if(!loyaltySession.active||!loyaltySession.customer) return;
+  const c=loyaltySession.customer;
+  const starsEarned=calculateStars(amountNet);
+  const newStars=(c.stars||0)+starsEarned;
+  const newTierKey=getTierKey(newStars);
+  const receipt={id:saleId,date:new Date().toISOString(),amountGross,amountNet,
+    saved:loyaltySession.totalSavings,starsEarned,starsTotal:newStars,tier:newTierKey};
+  let updatedVouchers=[...(c.vouchers||[])];
+  if(loyaltySession.voucherApplied)
+    updatedVouchers=updatedVouchers.map(v=>v.id===loyaltySession.voucherApplied?{...v,used:true}:v);
+  const newVouchers=checkNewVouchersEarned(c.stars||0,newStars);
+  const batch=db.batch();
+  batch.update(db.collection('customers').doc(c.id),{
+    stars:firebase.firestore.FieldValue.increment(starsEarned),
+    tier:newTierKey,
+    totalSpent:firebase.firestore.FieldValue.increment(amountNet),
+    totalSaved:firebase.firestore.FieldValue.increment(loyaltySession.totalSavings),
+    lastPurchase:firebase.firestore.FieldValue.serverTimestamp(),
+    vouchers:[...updatedVouchers,...newVouchers],
+    receipts:firebase.firestore.FieldValue.arrayUnion(receipt)
+  });
+  batch.set(db.collection('loyalty_transactions').doc(),{
+    customerId:c.id,phone:c.phone,saleId,
+    amountGross,amountNet,savedAmount:loyaltySession.totalSavings,
+    memberSavings:loyaltySession.memberSavings,
+    memberPricesApplied:loyaltySession.memberSavings>0,
+    voucherUsed:loyaltySession.voucherApplied?{id:loyaltySession.voucherApplied,value:loyaltySession.voucherSavings}:null,
+    starsEarned,date:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  try{await batch.commit();}catch(e){console.error('closeLoyaltySession:',e);}
+  showPostPurchaseSummary(c.firstName,starsEarned,newStars,newTierKey,newVouchers);
+  resetLoyaltySession();
+}
+
+function checkNewVouchersEarned(oldStars,newStars) {
+  const nv=[];
+  STAR_REWARDS.forEach(r=>{
+    if(r.value>0){
+      if(Math.floor(newStars/r.stars)>Math.floor(oldStars/r.stars))
+        nv.push({id:`voucher_${Date.now()}_${r.stars}`,value:r.value,label:r.label,
+          earnedAt:new Date().toISOString(),expiresAt:null,used:false});
     }
-  }
-  document.getElementById('modal-loyalty-redeem').classList.add('open');
+  });
+  return nv;
 }
 
-async function redeemReward(starsRequired, label, value) {
-  if (!_loyaltyCurrentCustomer) return;
-  const c = _loyaltyCurrentCustomer;
-  if ((c.stars||0) < starsRequired) { showToast("Pas assez d'étoiles", 'error'); return; }
-  const newStars = (c.stars||0) - starsRequired;
-  try {
-    await db.collection('customers').doc(c.id).update({
-      stars: firebase.firestore.FieldValue.increment(-starsRequired),
-      tier: getTier(newStars).key
-    });
-    await db.collection('loyalty_transactions').add({
-      customerId: c.id, phone: c.phone, amount: 0,
-      starsEarned: 0, starsUsed: starsRequired, type: 'redeem',
-      rewardLabel: label, saleId: null, date: today(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    _loyaltyCurrentCustomer = {...c, stars: newStars, tier: getTier(newStars).key};
-    showLoyaltyCustomerFound(_loyaltyCurrentCustomer);
-    closePosModal('modal-loyalty-redeem');
-    showToast(`🎁 Récompense "${label}" accordée !`);
-  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+function showPostPurchaseSummary(firstName,earned,total,tierKey,newVouchers) {
+  const label=LOYALTY_TIERS[tierKey]?.label||tierKey;
+  const vMsg=newVouchers.length>0?` 🎁 ${newVouchers[0].label} débloqué !`:'';
+  showToast(`⭐ Merci ${firstName||''}! +${earned} étoile${earned!==1?'s':''} — Solde : ${total.toLocaleString('fr-FR')} (${label})${vMsg}`);
 }
 
-async function addLoyaltyPoints(saleId, total) {
-  if (!_loyaltyCurrentCustomer) return;
-  const c = _loyaltyCurrentCustomer;
-  const starsEarned = calculateStars(total);
-  if (starsEarned <= 0) return;
-  const newStars = (c.stars||0) + starsEarned;
-  try {
-    await db.collection('customers').doc(c.id).update({
-      stars: firebase.firestore.FieldValue.increment(starsEarned),
-      totalSpent: firebase.firestore.FieldValue.increment(total),
-      tier: getTier(newStars).key, lastPurchase: today()
-    });
-    await db.collection('loyalty_transactions').add({
-      customerId: c.id, phone: c.phone, amount: total,
-      starsEarned, starsUsed: 0, type: 'earn',
-      rewardLabel: '', saleId, date: today(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast(`⭐ +${starsEarned} étoile${starsEarned!==1?'s':''} pour ${c.firstName||c.lastName||c.phone}`);
-  } catch(err) { console.error('addLoyaltyPoints:', err); }
-}
-
-// Tableau de bord Admin — Club TeMa Family
+// ── Tableau de bord Admin ────────────────────────────────────
 function renderClubTema() {
-  const el = document.getElementById('club-tema-content');
-  if (!el) return;
-  const total = loyaltyCustomers.length;
-  const gold   = loyaltyCustomers.filter(c => getTier(c.stars||0).key === 'gold').length;
-  const silver = loyaltyCustomers.filter(c => getTier(c.stars||0).key === 'silver').length;
-  const totalStars  = loyaltyCustomers.reduce((s,c) => s+(c.stars||0), 0);
-  const totalSpent  = loyaltyCustomers.reduce((s,c) => s+(c.totalSpent||0), 0);
-  const searchVal = document.getElementById('club-search')?.value?.toLowerCase() || '';
-  const filtered = searchVal
-    ? loyaltyCustomers.filter(c =>
-        `${c.firstName||''} ${c.lastName||''} ${c.phone||''}`.toLowerCase().includes(searchVal))
+  const el=document.getElementById('club-tema-content');
+  if(!el) return;
+  const limit30=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+  const total=loyaltyCustomers.length;
+  const actifs=loyaltyCustomers.filter(c=>c.lastPurchase&&c.lastPurchase>=limit30).length;
+  const gold  =loyaltyCustomers.filter(c=>getTierKey(c.stars||0)==='gold').length;
+  const silver=loyaltyCustomers.filter(c=>getTierKey(c.stars||0)==='silver').length;
+  const totalStars =loyaltyCustomers.reduce((s,c)=>s+(c.stars||0),0);
+  const totalSpent =loyaltyCustomers.reduce((s,c)=>s+(c.totalSpent||0),0);
+  const totalSaved =loyaltyCustomers.reduce((s,c)=>s+(c.totalSaved||0),0);
+  const allV=loyaltyCustomers.flatMap(c=>c.vouchers||[]);
+  const bonsEmis=allV.filter(v=>v.value>0).length;
+  const bonsUses=allV.filter(v=>v.used&&v.value>0).length;
+  const searchVal=(document.getElementById('club-search')?.value||'').toLowerCase();
+  const filtered=searchVal
+    ? loyaltyCustomers.filter(c=>`${c.firstName||''} ${c.lastName||''} ${c.phone||''}`.toLowerCase().includes(searchVal))
     : [...loyaltyCustomers];
-  const sorted = filtered.sort((a,b) => (b.stars||0)-(a.stars||0));
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:22px">
+  const sorted=filtered.sort((a,b)=>(b.stars||0)-(a.stars||0));
+  const mpHTML=memberPrices.length?memberPrices.map(mp=>{
+    const prod=produits.find(p=>p.id===mp.productId);
+    const pct=mp.discountPct||Math.round((mp.normalPrice-mp.memberPrice)/mp.normalPrice*100);
+    return `<tr>
+      <td>${prod?.nom||mp.productName||'—'}</td>
+      <td>${posF(mp.normalPrice)}</td>
+      <td style="color:#16a34a;font-weight:700">${posF(mp.memberPrice)}</td>
+      <td style="color:#dc2626">-${posF(mp.normalPrice-mp.memberPrice)} (${pct}%)</td>
+      <td>${mp.validUntil||'Toujours actif'}</td>
+      <td><button onclick="deleteMemberPrice('${mp.id}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:5px;font-size:11px;cursor:pointer">Désactiver</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:12px">Aucun prix membre défini</td></tr>';
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:11px;margin-bottom:20px">
       <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${total}</h3><p>Membres total</p></div></div>
-      <div class="kpi-card" style="border-left:4px solid #f59e0b"><div class="kpi-icon">🥇</div><div class="kpi-info"><h3>${gold}</h3><p>Membres Or</p></div></div>
-      <div class="kpi-card" style="border-left:4px solid #94a3b8"><div class="kpi-icon">🥈</div><div class="kpi-info"><h3>${silver}</h3><p>Membres Argent</p></div></div>
+      <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-info"><h3>${actifs}</h3><p>Actifs (30 jours)</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid #f59e0b"><div class="kpi-icon">🥇</div><div class="kpi-info"><h3>${gold}</h3><p>Membres Gold</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid #9ca3af"><div class="kpi-icon">🥈</div><div class="kpi-info"><h3>${silver}</h3><p>Membres Silver</p></div></div>
       <div class="kpi-card"><div class="kpi-icon">⭐</div><div class="kpi-info"><h3>${totalStars.toLocaleString('fr-FR')}</h3><p>Étoiles en circulation</p></div></div>
-      <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSpent))}</h3><p>Dépenses cumulées (FCFA)</p></div></div>
+      <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSpent))}</h3><p>CA fidélité (FCFA)</p></div></div>
+      <div class="kpi-card success"><div class="kpi-icon">💚</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSaved))}</h3><p>Économies clients (FCFA)</p></div></div>
+      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-info"><h3>${bonsUses}/${bonsEmis}</h3><p>Bons utilisés/émis</p></div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h2>🏷️ Prix membres</h2>
+        <button onclick="openMemberPriceModal()" style="padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Ajouter</button>
+      </div>
+      <div class="card-body table-wrap">
+        <table><thead><tr><th>Produit</th><th>Prix normal</th><th>Prix membre</th><th>Réduction</th><th>Validité</th><th>Actions</th></tr></thead>
+        <tbody>${mpHTML}</tbody></table>
+      </div>
     </div>
     <div class="card">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -6931,78 +7165,129 @@ function renderClubTema() {
           oninput="renderClubTema()" value="${searchVal.replace(/"/g,'&quot;')}">
       </div>
       <div class="card-body table-wrap">
-        <table><thead><tr>
-          <th>Nom</th><th>Téléphone</th><th>Niveau</th><th>Étoiles</th><th>Total dépensé</th><th>Dernière visite</th><th>Actions</th>
-        </tr></thead><tbody>
-        ${sorted.length ? sorted.map(c => {
-          const t = getTier(c.stars||0);
+        <table><thead><tr><th>Nom</th><th>Téléphone</th><th>Niveau</th><th>Étoiles</th><th>Dépensé</th><th>Économisé</th><th>Bons dispo.</th><th>Dernière visite</th><th>Actions</th></tr></thead>
+        <tbody>${sorted.length?sorted.map(c=>{
+          const tk=getTierKey(c.stars||0);
+          const t=LOYALTY_TIERS[tk];
+          const vDispo=(c.vouchers||[]).filter(v=>!v.used&&v.value>0).length;
           return `<tr>
             <td>${c.firstName||''} ${c.lastName||''}</td>
             <td>${c.phone||'—'}</td>
             <td><span style="background:${t.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${t.label}</span></td>
             <td style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</td>
             <td>${posF(c.totalSpent||0)}</td>
+            <td style="color:#16a34a">${posF(c.totalSaved||0)}</td>
+            <td>${vDispo>0?`<span style="background:#f0fdf4;color:#16a34a;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700">${vDispo}</span>`:'—'}</td>
             <td>${c.lastPurchase||'—'}</td>
-            <td><button onclick="openLoyaltyMemberModal('${c.id}')"
-              style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Détails</button></td>
+            <td><button onclick="openLoyaltyMemberModal('${c.id}')" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Détails</button></td>
           </tr>`;
-        }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Aucun membre inscrit</td></tr>'}
+        }).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px">Aucun membre inscrit</td></tr>'}
         </tbody></table>
       </div>
     </div>`;
 }
 
 function openLoyaltyMemberModal(id) {
-  const c = loyaltyCustomers.find(m => m.id === id);
-  if (!c) return;
-  const t = getTier(c.stars||0);
-  const available = LOYALTY_REWARDS.filter(r => (c.stars||0) >= r.stars);
-  document.getElementById('loyalty-member-content').innerHTML = `
+  const c=loyaltyCustomers.find(m=>m.id===id);
+  if(!c) return;
+  const tk=getTierKey(c.stars||0);
+  const t=LOYALTY_TIERS[tk];
+  const vDispo=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
+  const receipts=(c.receipts||[]).slice(-5).reverse();
+  document.getElementById('loyalty-member-content').innerHTML=`
     <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:32px;margin-bottom:4px">🌟</div>
+      <div style="font-size:28px">🌟</div>
       <div style="font-size:20px;font-weight:800">${c.firstName||''} ${c.lastName||''}</div>
       <div style="display:inline-block;background:${t.color};color:#fff;border-radius:12px;padding:3px 14px;font-size:12px;font-weight:700;margin-top:6px">${t.label}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;font-size:13px">
-      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Téléphone</div><div style="font-weight:700">${c.phone||'—'}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Étoiles</div><div style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total dépensé</div><div style="font-weight:700">${posF(c.totalSpent||0)}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Dernière visite</div><div style="font-weight:700">${c.lastPurchase||'—'}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;font-size:13px">
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Téléphone</div><div style="font-weight:700">${c.phone||'—'}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Étoiles</div><div style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total dépensé</div><div style="font-weight:700">${posF(c.totalSpent||0)}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total économisé</div><div style="font-weight:700;color:#16a34a">${posF(c.totalSaved||0)}</div></div>
     </div>
-    <div style="font-weight:700;margin-bottom:10px;font-size:14px">Récompenses :</div>
-    ${available.length ? available.map(r=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 14px;margin-bottom:9px">
-        <div>
-          <div style="font-weight:700;font-size:13px">${r.label}</div>
-          <div style="font-size:12px;color:#64748b">Coût : ${r.stars} ⭐</div>
-        </div>
-        <button onclick="adminRedeemReward('${c.id}',${r.stars},'${r.label.replace(/'/g,"\\'")}');closeModal('modal-loyalty-member')"
-          style="padding:7px 14px;background:var(--success);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">
-          Accorder
-        </button>
-      </div>`).join('')
-    : '<p style="color:var(--text-muted);font-size:13px">Aucune récompense disponible pour ce membre.</p>'}`;
+    ${vDispo.length?`<div style="font-weight:700;margin-bottom:8px;font-size:13px">Bons disponibles :</div>
+    ${vDispo.map(v=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:13px">
+      <div style="font-weight:700">${v.label}</div><div style="font-weight:800;color:#16a34a">${posF(v.value)}</div>
+    </div>`).join('')}`:''}
+    ${receipts.length?`<div style="font-weight:700;margin-bottom:8px;font-size:13px;margin-top:${vDispo.length?12:0}px">5 derniers achats :</div>
+    ${receipts.map(r=>`<div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid #f1f5f9;padding:6px 0;color:#475569">
+      <div>${(r.date||'').slice(0,10)} &nbsp; ⭐ +${r.starsEarned||0}</div>
+      <div><span style="color:#16a34a">-${posF(r.saved||0)}</span> &nbsp; <strong>${posF(r.amountNet||0)}</strong></div>
+    </div>`).join('')}`:''}
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="adminAjouterEtoiles('${c.id}')" style="flex:1;padding:10px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">⭐ Ajuster étoiles</button>
+      <button onclick="closeModal('modal-loyalty-member')" style="flex:1;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Fermer</button>
+    </div>`;
   openModal('modal-loyalty-member');
 }
 
-async function adminRedeemReward(customerId, starsRequired, label) {
-  const c = loyaltyCustomers.find(m => m.id === customerId);
-  if (!c || (c.stars||0) < starsRequired) { showToast("Pas assez d'étoiles", 'error'); return; }
-  const newStars = (c.stars||0) - starsRequired;
+async function adminAjouterEtoiles(customerId) {
+  const nb=prompt("Nombre d'étoiles à ajouter (négatif pour retirer) :");
+  if(nb===null||nb.trim()===''||isNaN(nb)) return;
+  const delta=parseInt(nb); if(delta===0) return;
+  const c=loyaltyCustomers.find(m=>m.id===customerId);
+  const newStars=Math.max(0,(c?.stars||0)+delta);
   try {
     await db.collection('customers').doc(customerId).update({
-      stars: firebase.firestore.FieldValue.increment(-starsRequired),
-      tier: getTier(newStars).key
+      stars:firebase.firestore.FieldValue.increment(delta),tier:getTierKey(newStars)
     });
-    await db.collection('loyalty_transactions').add({
-      customerId, phone: c.phone, amount: 0,
-      starsEarned: 0, starsUsed: starsRequired, type: 'redeem',
-      rewardLabel: label, saleId: null, date: today(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast(`🎁 Récompense "${label}" accordée à ${c.firstName||c.lastName}`);
-    renderClubTema();
-  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+    closeModal('modal-loyalty-member');
+    showToast(`${delta>0?'+':''}${delta} étoile${Math.abs(delta)!==1?'s':''} ajusté(es)`);
+  } catch(err){showToast('Erreur : '+err.message,'error');}
+}
+
+// ── Gestion des prix membres (Admin) ────────────────────────
+function openMemberPriceModal(id=null) {
+  const existing=id?memberPrices.find(m=>m.id===id):null;
+  const prodOpts=produits.map(p=>`<option value="${p.id}" ${existing?.productId===p.id?'selected':''}>${p.nom} (${posF(p.prix||0)})</option>`).join('');
+  document.getElementById('loyalty-member-content').innerHTML=`
+    <h3 style="margin-bottom:14px">${existing?'Modifier':'Nouveau'} prix membre</h3>
+    <div class="form-group"><label>Produit *</label>
+      <select id="mp-produit" class="form-control" onchange="majPrixNormal()" ${existing?'disabled':''}>
+        <option value="">— Sélectionner —</option>${prodOpts}
+      </select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Prix normal (FCFA)</label><input class="form-control" id="mp-normal" type="number" readonly value="${existing?.normalPrice||''}" placeholder="Auto"></div>
+      <div class="form-group"><label>Prix membre (FCFA) *</label><input class="form-control" id="mp-membre" type="number" min="0" value="${existing?.memberPrice||''}" placeholder="Prix réduit"></div>
+    </div>
+    <div class="form-group"><label>Valide jusqu'au (vide = toujours)</label><input class="form-control" id="mp-until" type="date" value="${existing?.validUntil||''}"></div>
+    <input type="hidden" id="mp-id" value="${id||''}">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button onclick="closeModal('modal-loyalty-member')" style="flex:1;padding:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">Annuler</button>
+      <button onclick="saveMemberPrice()" style="flex:2;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">💾 Enregistrer</button>
+    </div>`;
+  openModal('modal-loyalty-member');
+}
+
+function majPrixNormal() {
+  const p=produits.find(x=>x.id===document.getElementById('mp-produit')?.value);
+  const el=document.getElementById('mp-normal'); if(el&&p) el.value=p.prix||0;
+}
+
+async function saveMemberPrice() {
+  const productId=document.getElementById('mp-produit')?.value;
+  const normalPrice=parseFloat(document.getElementById('mp-normal')?.value)||0;
+  const memberPrice=parseFloat(document.getElementById('mp-membre')?.value);
+  const validUntil=document.getElementById('mp-until')?.value||null;
+  const existingId=document.getElementById('mp-id')?.value;
+  const prod=produits.find(p=>p.id===productId);
+  if(!productId||isNaN(memberPrice)||memberPrice<0){showToast('Produit et prix membre obligatoires','error');return;}
+  if(memberPrice>=normalPrice){showToast('Le prix membre doit être inférieur au prix normal','error');return;}
+  const data={productId,productName:prod?.nom||'',normalPrice,memberPrice,
+    discount:normalPrice-memberPrice,discountPct:Math.round((normalPrice-memberPrice)/normalPrice*100),
+    validUntil:validUntil||null,active:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  try{
+    if(existingId) await db.collection('member_prices').doc(existingId).update(data);
+    else await db.collection('member_prices').add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    closeModal('modal-loyalty-member'); showToast('Prix membre enregistré ✓');
+  }catch(err){showToast('Erreur : '+err.message,'error');}
+}
+
+async function deleteMemberPrice(id) {
+  if(!confirm('Désactiver ce prix membre ?')) return;
+  try{await db.collection('member_prices').doc(id).update({active:false});showToast('Prix membre désactivé');}
+  catch(err){showToast('Erreur : '+err.message,'error');}
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -7038,6 +7323,7 @@ function nouvelleVente() {
   document.getElementById('cart-client-name').textContent='Aucun client';
   const ri=document.getElementById('remise-input'); if(ri) ri.value='';
   document.getElementById('ticket-num').textContent=posGenTicketNum();
+  resetLoyaltySession();
   renderPanier(); closePosModal('modal-receipt');
 }
 
