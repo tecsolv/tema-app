@@ -6629,7 +6629,7 @@ function calculerTotaux() {
 
 function renderPanier() {
   const el=document.getElementById('cart-items'); if(!el) return;
-  const {sous,remiseFCFA,total}=calculerTotaux();
+  const {sous,remiseFCFA,loyaltyDiscount,total}=calculerTotaux();
   el.innerHTML = !posPanier.length
     ? `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div>Sélectionnez un produit<br>ou scannez un code-barres</div></div>`
     : posPanier.map((item,i)=>{
