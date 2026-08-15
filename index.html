@@ -6793,10 +6793,12 @@ async function confirmerVente() {
 // ─────────────────────────────────────────────────────────────
 
 // ── Constantes ──────────────────────────────────────────────
-const LOYALTY_TIERS = {
-  member: {label:'Membre',        color:'#C8981A'},
-  silver: {label:'Membre Silver', color:'#9CA3AF'},
-  gold:   {label:'Membre Gold',   color:'#F59E0B'}
+const TIERS = {
+  club:    {name:'Club',    emoji:'⭐',  minStars:0,    minVisits:0,  multiplier:1.0,  color:'#6B7280', bgColor:'#F3F4F6'},
+  argent:  {name:'Argent', emoji:'🥈',  minStars:200,  minVisits:8,  multiplier:1.15, color:'#475569', bgColor:'#F1F5F9'},
+  or:      {name:'Or',     emoji:'🥇',  minStars:600,  minVisits:20, multiplier:1.30, color:'#92400E', bgColor:'#FEF3C7'},
+  platine: {name:'Platine',emoji:'💎',  minStars:1500, minVisits:40, multiplier:1.50, color:'#5B21B6', bgColor:'#EDE9FE'},
+  diamant: {name:'Diamant',emoji:'💠',  minStars:3000, minVisits:80, multiplier:1.80, color:'#0369A1', bgColor:'#E0F2FE'}
 };
 const STAR_REWARDS = [
   {stars:50,  value:0,    label:'Cadeau surprise'},
@@ -6814,10 +6816,25 @@ function normalizePhone(raw) {
   return '+225'+d;
 }
 function calculateStars(amount) { return Math.floor((amount||0)/500); }
-function getTierKey(stars) {
-  if((stars||0)>=1500) return 'gold';
-  if((stars||0)>=500)  return 'silver';
-  return 'member';
+function getTier(stars, visits) {
+  const s=stars||0, v=visits||0;
+  if(s>=3000&&v>=80)  return 'diamant';
+  if(s>=1500&&v>=40)  return 'platine';
+  if(s>=600 &&v>=20)  return 'or';
+  if(s>=200 &&v>=8)   return 'argent';
+  return 'club';
+}
+function getLimitingFactor(stars, visits, nextKey) {
+  if(!nextKey||!TIERS[nextKey]) return null;
+  const t=TIERS[nextKey];
+  if(t.minVisits===0) return null;
+  const sPct=stars/t.minStars, vPct=visits/t.minVisits;
+  return sPct<vPct?'étoiles':'visites';
+}
+function getNextTier(currentKey) {
+  const order=['club','argent','or','platine','diamant'];
+  const idx=order.indexOf(currentKey);
+  return idx>=0&&idx<order.length-1?order[idx+1]:null;
 }
 
 // ── Rendu du modal de checkout fidélité ─────────────────────
@@ -6844,14 +6861,15 @@ function renderLoyaltyCheckout(phase) {
     setTimeout(()=>document.getElementById('loyalty-phone-input')?.focus(),80);
   } else if(phase==='active') {
     const c=loyaltySession.customer;
-    const tier=LOYALTY_TIERS[getTierKey(c.stars||0)];
+    const tierKey=getTier(c.stars||0,c.totalVisits||0);
+    const tier=TIERS[tierKey];
     const pendingVouchers=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
     const appliedVoucher=loyaltySession.voucherApplied;
     body.innerHTML=`
       <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-weight:800;font-size:15px">${c.firstName||''} ${c.lastName||''}</div>
-          <span style="background:${tier.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${tier.label}</span>
+          <span style="background:${tier.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${tier.emoji} ${tier.name}</span>
         </div>
         <div style="font-size:13px;color:#15803d">⭐ ${(c.stars||0).toLocaleString('fr-FR')} étoiles</div>
         ${loyaltySession.memberSavings>0?`<div style="font-size:12px;color:#15803d;margin-top:4px">✅ Prix membres appliqués — Économie : <strong>-${posF(loyaltySession.memberSavings)}</strong></div>`:''}
@@ -7007,7 +7025,7 @@ async function createLoyaltyCustomer() {
   const phone=document.getElementById('loyalty-new-phone-val')?.value||'';
   if(!firstName||!lastName){showToast('Prénom et nom requis','error');return;}
   const data={phone,phoneRaw:phone.replace('+225','0'),firstName,lastName,
-    stars:0,tier:'member',totalSpent:0,totalSaved:0,vouchers:[],receipts:[],
+    stars:0,tier:'club',totalSpent:0,totalSaved:0,totalVisits:0,vouchers:[],receipts:[],
     createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastPurchase:null};
   try{
     const ref=await db.collection('customers').add(data);
@@ -7022,7 +7040,8 @@ async function closeLoyaltySession(saleId,amountGross,amountNet) {
   const c=loyaltySession.customer;
   const starsEarned=calculateStars(amountNet);
   const newStars=(c.stars||0)+starsEarned;
-  const newTierKey=getTierKey(newStars);
+  const newVisits=(c.totalVisits||0)+1;
+  const newTierKey=getTier(newStars,newVisits);
   const receipt={id:saleId,date:new Date().toISOString(),amountGross,amountNet,
     saved:loyaltySession.totalSavings,starsEarned,starsTotal:newStars,tier:newTierKey};
   let updatedVouchers=[...(c.vouchers||[])];
@@ -7032,6 +7051,7 @@ async function closeLoyaltySession(saleId,amountGross,amountNet) {
   const batch=db.batch();
   batch.update(db.collection('customers').doc(c.id),{
     stars:firebase.firestore.FieldValue.increment(starsEarned),
+    totalVisits:firebase.firestore.FieldValue.increment(1),
     tier:newTierKey,
     totalSpent:firebase.firestore.FieldValue.increment(amountNet),
     totalSaved:firebase.firestore.FieldValue.increment(loyaltySession.totalSavings),
@@ -7065,7 +7085,8 @@ function checkNewVouchersEarned(oldStars,newStars) {
 }
 
 function showPostPurchaseSummary(firstName,earned,total,tierKey,newVouchers) {
-  const label=LOYALTY_TIERS[tierKey]?.label||tierKey;
+  const t=TIERS[tierKey];
+  const label=t?`${t.emoji} ${t.name}`:tierKey;
   const vMsg=newVouchers.length>0?` 🎁 ${newVouchers[0].label} débloqué !`:'';
   showToast(`⭐ Merci ${firstName||''}! +${earned} étoile${earned!==1?'s':''} — Solde : ${total.toLocaleString('fr-FR')} (${label})${vMsg}`);
 }
@@ -7076,9 +7097,12 @@ function renderClubTema() {
   if(!el) return;
   const limit30=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
   const total=loyaltyCustomers.length;
-  const actifs=loyaltyCustomers.filter(c=>c.lastPurchase&&c.lastPurchase>=limit30).length;
-  const gold  =loyaltyCustomers.filter(c=>getTierKey(c.stars||0)==='gold').length;
-  const silver=loyaltyCustomers.filter(c=>getTierKey(c.stars||0)==='silver').length;
+  const actifs=loyaltyCustomers.filter(c=>c.lastPurchase&&(c.lastPurchase?.toDate?c.lastPurchase.toDate()>=new Date(Date.now()-30*86400000):c.lastPurchase>=limit30)).length;
+  const nClub   =loyaltyCustomers.filter(c=>getTier(c.stars||0,c.totalVisits||0)==='club').length;
+  const nArgent =loyaltyCustomers.filter(c=>getTier(c.stars||0,c.totalVisits||0)==='argent').length;
+  const nOr     =loyaltyCustomers.filter(c=>getTier(c.stars||0,c.totalVisits||0)==='or').length;
+  const nPlatine=loyaltyCustomers.filter(c=>getTier(c.stars||0,c.totalVisits||0)==='platine').length;
+  const nDiamant=loyaltyCustomers.filter(c=>getTier(c.stars||0,c.totalVisits||0)==='diamant').length;
   const totalStars =loyaltyCustomers.reduce((s,c)=>s+(c.stars||0),0);
   const totalSpent =loyaltyCustomers.reduce((s,c)=>s+(c.totalSpent||0),0);
   const totalSaved =loyaltyCustomers.reduce((s,c)=>s+(c.totalSaved||0),0);
@@ -7129,15 +7153,20 @@ function renderClubTema() {
             <input class="form-control" id="sc-address" value="${storeConfig.address||''}" placeholder="Quartier, Ville, Pays">
           </div>
         </div>
-        <button onclick="saveStoreConfig()" style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les infos boutique</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button onclick="saveStoreConfig()" style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les infos boutique</button>
+          <button onclick="migrerClientsExistants()" style="padding:9px 16px;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;color:#475569">🔧 Migrer membres (totalVisits)</button>
+        </div>
       </div>
     </details>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:11px;margin-bottom:20px">
       <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${total}</h3><p>Membres total</p></div></div>
       <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-info"><h3>${actifs}</h3><p>Actifs (30 jours)</p></div></div>
-      <div class="kpi-card" style="border-left:4px solid #f59e0b"><div class="kpi-icon">🥇</div><div class="kpi-info"><h3>${gold}</h3><p>Membres Gold</p></div></div>
-      <div class="kpi-card" style="border-left:4px solid #9ca3af"><div class="kpi-icon">🥈</div><div class="kpi-info"><h3>${silver}</h3><p>Membres Silver</p></div></div>
-      <div class="kpi-card"><div class="kpi-icon">⭐</div><div class="kpi-info"><h3>${totalStars.toLocaleString('fr-FR')}</h3><p>Étoiles en circulation</p></div></div>
+      <div class="kpi-card"><div class="kpi-icon">⭐</div><div class="kpi-info"><h3>${nClub}</h3><p>Club</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid ${TIERS.argent.color}"><div class="kpi-icon">🥈</div><div class="kpi-info"><h3>${nArgent}</h3><p>Argent</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid ${TIERS.or.color}"><div class="kpi-icon">🥇</div><div class="kpi-info"><h3>${nOr}</h3><p>Or</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid ${TIERS.platine.color}"><div class="kpi-icon">💎</div><div class="kpi-info"><h3>${nPlatine}</h3><p>Platine</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid ${TIERS.diamant.color}"><div class="kpi-icon">💠</div><div class="kpi-info"><h3>${nDiamant}</h3><p>Diamant</p></div></div>
       <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSpent))}</h3><p>CA fidélité (FCFA)</p></div></div>
       <div class="kpi-card success"><div class="kpi-icon">💚</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSaved))}</h3><p>Économies clients (FCFA)</p></div></div>
       <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-info"><h3>${bonsUses}/${bonsEmis}</h3><p>Bons utilisés/émis</p></div></div>
@@ -7162,13 +7191,13 @@ function renderClubTema() {
       <div class="card-body table-wrap">
         <table><thead><tr><th>Nom</th><th>Téléphone</th><th>Niveau</th><th>Étoiles</th><th>Dépensé</th><th>Économisé</th><th>Bons dispo.</th><th>Dernière visite</th><th>Actions</th></tr></thead>
         <tbody>${sorted.length?sorted.map(c=>{
-          const tk=getTierKey(c.stars||0);
-          const t=LOYALTY_TIERS[tk];
+          const tk=getTier(c.stars||0,c.totalVisits||0);
+          const t=TIERS[tk];
           const vDispo=(c.vouchers||[]).filter(v=>!v.used&&v.value>0).length;
           return `<tr>
             <td>${c.firstName||''} ${c.lastName||''}</td>
             <td>${c.phone||'—'}</td>
-            <td><span style="background:${t.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${t.label}</span></td>
+            <td><span style="background:${t.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${t.emoji} ${t.name}</span></td>
             <td style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</td>
             <td>${posF(c.totalSpent||0)}</td>
             <td style="color:#16a34a">${posF(c.totalSaved||0)}</td>
@@ -7185,22 +7214,39 @@ function renderClubTema() {
 function openLoyaltyMemberModal(id) {
   const c=loyaltyCustomers.find(m=>m.id===id);
   if(!c) return;
-  const tk=getTierKey(c.stars||0);
-  const t=LOYALTY_TIERS[tk];
+  const stars=c.stars||0, visits=c.totalVisits||0;
+  const tk=getTier(stars,visits);
+  const t=TIERS[tk];
+  const nextKey=getNextTier(tk);
+  const nextT=nextKey?TIERS[nextKey]:null;
+  const limiting=nextKey?getLimitingFactor(stars,visits,nextKey):null;
+  const progressHTML=nextT?`
+    <div style="background:${nextT.bgColor};border:1px solid ${nextT.color}33;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px">
+      <div style="font-weight:700;color:${nextT.color};margin-bottom:6px">Progression → ${nextT.emoji} ${nextT.name}</div>
+      <div style="margin-bottom:4px">⭐ ${stars.toLocaleString('fr-FR')} / ${nextT.minStars.toLocaleString('fr-FR')} étoiles
+        <div style="background:#e2e8f0;border-radius:4px;height:5px;margin-top:3px"><div style="background:${nextT.color};height:5px;border-radius:4px;width:${Math.min(100,Math.round(stars/nextT.minStars*100))}%"></div></div>
+      </div>
+      <div style="margin-bottom:4px">🛒 ${visits} / ${nextT.minVisits} visites
+        <div style="background:#e2e8f0;border-radius:4px;height:5px;margin-top:3px"><div style="background:${nextT.color};height:5px;border-radius:4px;width:${Math.min(100,Math.round(visits/nextT.minVisits*100))}%"></div></div>
+      </div>
+      <div style="color:${nextT.color};font-weight:700;margin-top:4px">⚠️ Critère limitant : ${limiting} — encore ${limiting==='étoiles'?nextT.minStars-stars:nextT.minVisits-visits} ${limiting} nécessaires</div>
+    </div>`:
+    `<div style="background:#fef9c3;border:1px solid #fde047;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:#713f12;font-weight:700">💠 Niveau maximum atteint !</div>`;
   const vDispo=(c.vouchers||[]).filter(v=>!v.used&&v.value>0);
   const receipts=(c.receipts||[]).slice(-5).reverse();
   document.getElementById('loyalty-member-content').innerHTML=`
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:28px">🌟</div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:28px">${t.emoji}</div>
       <div style="font-size:20px;font-weight:800">${c.firstName||''} ${c.lastName||''}</div>
-      <div style="display:inline-block;background:${t.color};color:#fff;border-radius:12px;padding:3px 14px;font-size:12px;font-weight:700;margin-top:6px">${t.label}</div>
+      <div style="display:inline-block;background:${t.color};color:#fff;border-radius:12px;padding:3px 14px;font-size:12px;font-weight:700;margin-top:6px">${t.emoji} ${t.name}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;font-size:13px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;font-size:13px">
       <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Téléphone</div><div style="font-weight:700">${c.phone||'—'}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Étoiles</div><div style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total dépensé</div><div style="font-weight:700">${posF(c.totalSpent||0)}</div></div>
-      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total économisé</div><div style="font-weight:700;color:#16a34a">${posF(c.totalSaved||0)}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Visites</div><div style="font-weight:700">🛒 ${visits.toLocaleString('fr-FR')}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Étoiles</div><div style="font-weight:700;color:var(--primary)">⭐ ${stars.toLocaleString('fr-FR')}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:9px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Dépensé / Économisé</div><div style="font-weight:700">${posF(c.totalSpent||0)} / <span style="color:#16a34a">${posF(c.totalSaved||0)}</span></div></div>
     </div>
+    ${progressHTML}
     ${vDispo.length?`<div style="font-weight:700;margin-bottom:8px;font-size:13px">Bons disponibles :</div>
     ${vDispo.map(v=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:13px">
       <div style="font-weight:700">${v.label}</div><div style="font-weight:800;color:#16a34a">${posF(v.value)}</div>
@@ -7276,10 +7322,11 @@ async function confirmerAjustementEtoiles(customerId) {
   if(!raison||isNaN(delta)||delta===0){showToast('Raison et nombre d\'étoiles requis','error');return;}
   const c=loyaltyCustomers.find(m=>m.id===customerId);
   const newStars=Math.max(0,(c?.stars||0)+delta);
+  const newTier=getTier(newStars,c?.totalVisits||0);
   try {
     const batch=db.batch();
     batch.update(db.collection('customers').doc(customerId),{
-      stars:firebase.firestore.FieldValue.increment(delta),tier:getTierKey(newStars)
+      stars:firebase.firestore.FieldValue.increment(delta),tier:newTier
     });
     batch.set(db.collection('loyalty_transactions').doc(),{
       customerId,phone:c?.phone||'',type:'manual_adjustment',
@@ -7344,6 +7391,21 @@ async function deleteMemberPrice(id) {
   if(!confirm('Désactiver ce prix membre ?')) return;
   try{await db.collection('member_prices').doc(id).update({active:false});showToast('Prix membre désactivé');}
   catch(err){showToast('Erreur : '+err.message,'error');}
+}
+
+async function migrerClientsExistants() {
+  if(!confirm('Initialiser totalVisits=0 pour tous les membres sans ce champ ?')) return;
+  try {
+    const snap=await db.collection('customers').get();
+    const batch=db.batch();
+    let n=0;
+    snap.forEach(doc=>{
+      if(doc.data().totalVisits===undefined){batch.update(doc.ref,{totalVisits:0});n++;}
+    });
+    if(n===0){showToast('Tous les membres ont déjà totalVisits ✓');return;}
+    await batch.commit();
+    showToast(`${n} membre${n>1?'s':''} migré${n>1?'s':''} (totalVisits=0) ✓`);
+  }catch(err){showToast('Erreur migration : '+err.message,'error');}
 }
 
 async function saveStoreConfig() {
