@@ -2610,7 +2610,7 @@
 
     <!-- MODULE ADMIN — RÉINITIALISATION AVANT OUVERTURE -->
     <div class="page" id="page-reinitialisation">
-      <div class="alert alert-danger">⚠️ <strong>Action irréversible.</strong> Cet outil efface définitivement les enregistrements de test (ventes, caisses, comptabilité, RH, etc.) pour repartir avec une base propre avant l'ouverture réelle de la boutique. Le catalogue produits, les comptes employés, les caisses, les fournisseurs et les paramètres RH ne sont jamais supprimés. Réservé à l'Administrateur.</div>
+      <div class="alert alert-danger">⚠️ <strong>Action irréversible.</strong> Cet outil efface définitivement les données de test pour repartir avec une base propre avant l'ouverture réelle de la boutique. Les comptes employés, les caisses, les fiches RH et la configuration boutique ne sont jamais supprimés. Réservé à l'Administrateur.</div>
       <div class="card">
         <div class="card-header"><h2>🔄 Catégories à réinitialiser</h2></div>
         <div class="card-body">
@@ -2621,14 +2621,18 @@
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-rh" checked style="margin-top:3px"> <span><strong>RH — Pointages, Planning, Absences</strong><br><span style="font-size:12px;color:var(--text-muted)">Pointages journaliers, affectations planning, congés/absences</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-achats" checked style="margin-top:3px"> <span><strong>Achats Fournisseurs</strong><br><span style="font-size:12px;color:var(--text-muted)">Commandes fournisseurs, paiements</span></span></label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-journal" checked style="margin-top:3px"> <span><strong>Journal d'activité & Audit</strong><br><span style="font-size:12px;color:var(--text-muted)">Activité récente, journal d'audit des caisses, historique des connexions</span></span></label>
-          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-cat-support" checked style="margin-top:3px"> <span><strong>Messages de support</strong><br><span style="font-size:12px;color:var(--text-muted)">Messages de test envoyés par les employés à l'Administrateur</span></span></label>
-          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (pour ressaisir l'inventaire réel)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-support" checked style="margin-top:3px"> <span><strong>Messages de support</strong><br><span style="font-size:12px;color:var(--text-muted)">Messages de test envoyés par les employés à l'Administrateur</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-fidelite" checked style="margin-top:3px"> <span><strong>Club TeMa Family — membres test</strong><br><span style="font-size:12px;color:var(--text-muted)">Membres, transactions fidélité et prix membres (comptes de test à supprimer)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><input type="checkbox" id="reinit-cat-fournisseurs" checked style="margin-top:3px"> <span><strong>Fournisseurs (fiches test)</strong><br><span style="font-size:12px;color:var(--text-muted)">Fiches fournisseurs saisies pendant les tests</span></span></label>
+          <div style="border-top:2px dashed var(--border);margin:12px 0 14px"></div>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"><input type="checkbox" id="reinit-cat-produits" style="margin-top:3px"> <span><strong>⚠️ Supprimer tout le catalogue produits</strong><br><span style="font-size:12px;color:var(--text-muted)">Supprime tous les articles — à cocher si vous voulez ressaisir votre inventaire réel depuis zéro (incompatible avec "remise à 0 du stock" ci-dessous)</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px"><input type="checkbox" id="reinit-stock" checked style="margin-top:3px"> <span><strong>Remettre le stock des produits à 0</strong><br><span style="font-size:12px;color:var(--text-muted)">Le catalogue produits est conservé, seules les quantités en stock repartent à zéro (à utiliser si vous gardez le catalogue mais que les quantités test sont fausses)</span></span></label>
         </div>
       </div>
       <div class="card">
         <div class="card-header"><h2>✅ Confirmation</h2></div>
         <div class="card-body">
-          <p style="margin-bottom:10px">Ce qui est <strong>conservé</strong> : catalogue produits, comptes employés, caisses (Caisse 1/2/3/4), fournisseurs, fiches employés RH, contrats, paramètres de paie, clients.</p>
+          <p style="margin-bottom:10px">Ce qui est <strong>toujours conservé</strong> : comptes utilisateurs, configuration boutique, caisses (Caisse 1/2/3/4), fiches employées RH (AFFALI, Ettien Grâce, YAO), contrats, paramètres de paie.</p>
           <div class="form-group" style="max-width:420px">
             <label>Pour confirmer, tapez <strong>REINITIALISER</strong> ci-dessous</label>
             <input type="text" class="form-control" id="reinit-confirm-text" placeholder="REINITIALISER" oninput="verifierConfirmationReinit()" autocomplete="off">
@@ -7211,24 +7215,7 @@ function renderClubTema() {
         </tbody></table>
       </div>
     </div>
-    <details class="card" style="margin-top:18px;border:2px solid #c0392b">
-      <summary style="padding:14px 18px;cursor:pointer;font-weight:700;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;color:#c0392b">
-        <span>⚠️ Zone Danger — Remise à zéro production</span>
-        <span style="font-size:12px;font-weight:400;color:var(--text-muted)">Cliquer pour afficher</span>
-      </summary>
-      <div class="card-body" style="padding-top:0">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
-          Efface toutes les données de test avant le lancement réel. <strong>Action irréversible.</strong><br>
-          Conservés : comptes utilisateurs, configuration boutique, caisses, Media Center, fiches RH des 3 employées.
-        </p>
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.7">
-          <strong>Sera effacé :</strong> Journal de caisse · Ventes · Sessions · Audit · Journal comptable · Inventaire · Commandes · Fournisseurs · Club TeMa Family (membres test) · Mobile Money · Trésorerie · Pointages RH · Avances · Paie · Planning
-        </div>
-        <button onclick="resetProductionData()" style="padding:10px 22px;background:#c0392b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
-          🗑️ Lancer la remise à zéro production
-        </button>
-      </div>
-    </details>`;
+`;
 }
 
 function openLoyaltyMemberModal(id) {
@@ -7426,63 +7413,6 @@ async function migrerClientsExistants() {
     await batch.commit();
     showToast(`${n} membre${n>1?'s':''} migré${n>1?'s':''} (totalVisits=0) ✓`);
   }catch(err){showToast('Erreur migration : '+err.message,'error');}
-}
-
-async function resetProductionData() {
-  // Étape 1 : confirmation textuelle
-  const saisie = prompt(
-    '⚠️ REMISE À ZÉRO PRODUCTION\n\n' +
-    'Cette action effacera DÉFINITIVEMENT toutes les données de test.\n\n' +
-    'Seront conservés :\n' +
-    '• Comptes utilisateurs\n• Configuration boutique\n• Caisses\n• Media Center\n• Fiches RH des 3 employées\n\n' +
-    'Tapez exactement   EFFACER   pour confirmer :'
-  );
-  if ((saisie || '').trim() !== 'EFFACER') {
-    showToast('Remise à zéro annulée.', 'error');
-    return;
-  }
-  if (!confirm('Dernière confirmation — cette action est irréversible.\n\nLancer la remise à zéro production ?')) return;
-
-  const collections = [
-    'ventesCaisse','ventes_services','sessions_caisse',
-    'audit_caisses','audit_trail',
-    'ecritures_comptables','journal',
-    'produits','commandes','paiements','fournisseurs',
-    'customers','loyalty_transactions','member_prices',
-    'transactions_mm','transactions_mobile_money',
-    'rapprochements','releves_tresorerie',
-    'clients_pos','support_messages',
-    'rh_pointages','rh_absences','rh_avances','rh_paie',
-    'rh_planning','rh_formations','rh_prets','rh_parametres_paie'
-  ];
-
-  let totalDocs = 0;
-  let erreurs = [];
-  showToast('⏳ Remise à zéro en cours…');
-
-  for (const col of collections) {
-    try {
-      const snap = await db.collection(col).get();
-      if (snap.empty) continue;
-      const docs = snap.docs;
-      for (let i = 0; i < docs.length; i += 400) {
-        const batch = db.batch();
-        docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
-        await batch.commit();
-      }
-      totalDocs += docs.length;
-    } catch(e) {
-      erreurs.push(col);
-      console.error('Reset erreur ' + col + ':', e);
-    }
-  }
-
-  if (erreurs.length) {
-    showToast('⚠️ Terminé avec erreurs sur : ' + erreurs.join(', '), 'error');
-  } else {
-    showToast('✅ Remise à zéro terminée — ' + totalDocs + ' documents supprimés. Boutique prête pour le lancement !');
-  }
-  renderClubTema();
 }
 
 async function saveStoreConfig() {
@@ -10578,14 +10508,17 @@ function renderSupportAdmin() {
 // lancement réel de la boutique. Ne touche jamais au catalogue produits (sauf remise à
 // zéro du stock si demandé), aux comptes utilisateurs, caisses, fournisseurs ou paramètres RH.
 const REINIT_CATEGORIES = {
-  ventes:      { label: 'Ventes & Caisse',               collections: ['ventesCaisse','ventes_services','sessions_caisse'] },
-  compta:      { label: 'Comptabilité OHADA',            collections: ['ecritures_comptables'] },
-  mm:          { label: 'Mobile Money & Transactions',   collections: ['transactions_mm','transactions_mobile_money'] },
-  tresorerie:  { label: 'Trésorerie & Rapprochement',    collections: ['releves_tresorerie','rapprochements'] },
-  rh:          { label: 'RH — Pointages, Planning, Absences', collections: ['rh_pointages','rh_planning','rh_absences'] },
-  achats:      { label: 'Achats Fournisseurs',           collections: ['commandes','paiements'] },
-  journal:     { label: "Journal d'activité & Audit",    collections: ['journal','audit_trail','audit_caisses'] },
-  support:     { label: 'Messages de support',           collections: ['support_messages'] }
+  ventes:       { label: 'Ventes & Caisse',                        collections: ['ventesCaisse','ventes_services','sessions_caisse'] },
+  compta:       { label: 'Comptabilité OHADA',                     collections: ['ecritures_comptables'] },
+  mm:           { label: 'Mobile Money & Transactions',            collections: ['transactions_mm','transactions_mobile_money'] },
+  tresorerie:   { label: 'Trésorerie & Rapprochement',             collections: ['releves_tresorerie','rapprochements'] },
+  rh:           { label: 'RH — Pointages, Planning, Absences',     collections: ['rh_pointages','rh_planning','rh_absences'] },
+  achats:       { label: 'Achats Fournisseurs',                    collections: ['commandes','paiements'] },
+  journal:      { label: "Journal d'activité & Audit",             collections: ['journal','audit_trail','audit_caisses'] },
+  support:      { label: 'Messages de support',                    collections: ['support_messages'] },
+  fidelite:     { label: 'Club TeMa Family — membres test',        collections: ['customers','loyalty_transactions','member_prices'] },
+  fournisseurs: { label: 'Fournisseurs (fiches test)',             collections: ['fournisseurs'] },
+  produits:     { label: 'Catalogue produits (suppression complète)', collections: ['produits'] }
 };
 
 function renderReinitialisation() {
@@ -10636,7 +10569,8 @@ async function purgerDonneesAvantOuverture() {
   if (!txt || txt.value.trim() !== 'REINITIALISER') { showToast('Veuillez taper REINITIALISER pour confirmer', 'error'); return; }
 
   const categoriesChoisies = Object.entries(REINIT_CATEGORIES).filter(([cle]) => document.getElementById(`reinit-cat-${cle}`)?.checked);
-  const resetStock = !!document.getElementById('reinit-stock')?.checked;
+  const supprimerProduits = !!document.getElementById('reinit-cat-produits')?.checked;
+  const resetStock = !supprimerProduits && !!document.getElementById('reinit-stock')?.checked;
   if (!categoriesChoisies.length && !resetStock) { showToast('Sélectionnez au moins une catégorie à réinitialiser', 'error'); return; }
 
   const collectionsAEffacer = categoriesChoisies.flatMap(([, cat]) => cat.collections);
