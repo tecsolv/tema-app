@@ -1402,6 +1402,7 @@
         <div class="nav-item" id="nav-journal" onclick="navigate('journal')" style="display:none"><span class="icon">📜</span> Journal d'Activité</div>
         <div class="nav-item" id="nav-support" onclick="navigate('support')" style="display:none"><span class="icon">💬</span> Support <span class="badge" id="support-badge" style="display:none">0</span></div>
         <div class="nav-item" id="nav-reinitialisation" onclick="navigate('reinitialisation')" style="display:none"><span class="icon">🔄</span> Réinitialisation</div>
+        <div class="nav-item" id="nav-club-tema" onclick="navigate('club-tema')" style="display:none"><span class="icon">🌟</span> Club TeMa Family</div>
       </div>
     </div>
     <div class="nav-group" data-group="diffusion">
@@ -2636,6 +2637,12 @@
       </div>
     </div>
 
+    <!-- MODULE CLUB TEMA FAMILY — Fidélité (Admin) -->
+    <div class="page" id="page-club-tema">
+      <div class="alert alert-info no-print">🌟 Programme de fidélité Club TeMa Family — membres, étoiles et récompenses. Accessible à l'Administrateur.</div>
+      <div id="club-tema-content"></div>
+    </div>
+
     <!-- MODULE RH — TABLEAU DE BORD -->
     <div class="page" id="page-rh-dashboard">
       <div class="alert alert-info no-print">📊 Indicateurs Ressources Humaines en temps réel — effectif, statuts et contrats arrivant à échéance.</div>
@@ -3840,6 +3847,18 @@
   <div class="pos-modal-box payment-box">
     <button class="pos-modal-close" onclick="closePosModal('modal-payment')">×</button>
     <h2>💳 Encaissement</h2>
+    <!-- ── Club TeMa Family — Identification membre ── -->
+    <div id="loyalty-panel" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">🌟 Club TeMa Family</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="tel" id="loyalty-phone-input" placeholder="📱 N° téléphone membre..."
+          style="flex:1;padding:7px 10px;border:1px solid #bae6fd;border-radius:8px;font-size:13px;background:#fff;outline:none"
+          oninput="searchLoyaltyCustomer()">
+        <button onclick="clearLoyalty()" title="Effacer"
+          style="padding:6px 10px;border:none;background:#e0f2fe;border-radius:8px;cursor:pointer;font-size:13px;color:#0369a1;flex-shrink:0">✕</button>
+      </div>
+      <div id="loyalty-result" style="margin-top:7px"></div>
+    </div>
     <div class="payment-total-display">
       <div class="ptd-label">Total à payer</div>
       <div class="ptd-amount" id="pay-total-display">0 FCFA</div>
@@ -3879,6 +3898,42 @@
     <div class="receipt-print" id="receipt-content"></div>
     <button class="btn-print" onclick="imprimerTicket()">🖨️ Imprimer le ticket</button>
     <button class="btn-new-sale" onclick="nouvelleVente()">➕ Nouvelle vente</button>
+  </div>
+</div>
+
+<!-- POS MODAL: Club TeMa Family — Inscription nouveau membre -->
+<div class="pos-modal-overlay" id="modal-loyalty-create">
+  <div class="pos-modal-box" style="max-width:400px">
+    <button class="pos-modal-close" onclick="closePosModal('modal-loyalty-create')">×</button>
+    <h2 style="font-size:18px;margin-bottom:6px;color:var(--primary)">🌟 Inscrire au Club TeMa Family</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px">Le membre gagnera des étoiles dès cette vente.</p>
+    <div class="form-group"><label>Téléphone *</label><input class="form-control" id="loyalty-new-phone" type="tel" placeholder="+241 07 00 00 00"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Prénom</label><input class="form-control" id="loyalty-new-prenom" placeholder="Prénom"></div>
+      <div class="form-group"><label>Nom *</label><input class="form-control" id="loyalty-new-nom" placeholder="Nom de famille"></div>
+    </div>
+    <button onclick="createLoyaltyCustomer()"
+      style="width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px">
+      ✅ Inscrire et continuer
+    </button>
+  </div>
+</div>
+
+<!-- POS MODAL: Club TeMa Family — Échange de récompense (POS) -->
+<div class="pos-modal-overlay" id="modal-loyalty-redeem">
+  <div class="pos-modal-box" style="max-width:420px">
+    <button class="pos-modal-close" onclick="closePosModal('modal-loyalty-redeem')">×</button>
+    <h2 style="font-size:18px;margin-bottom:6px">🎁 Récompenses disponibles</h2>
+    <p id="loyalty-redeem-subtitle" style="color:#64748b;font-size:13px;margin-bottom:18px"></p>
+    <div id="loyalty-rewards-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+</div>
+
+<!-- MODAL standard: Club TeMa Family — Détail membre (Admin) -->
+<div class="modal-overlay" id="modal-loyalty-member">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('modal-loyalty-member')">×</button>
+    <div id="loyalty-member-content"></div>
   </div>
 </div>
 
@@ -4407,6 +4462,8 @@ let mcPlaylists = [], mcTracks = [], mcSources = [];
 
 let ecritures = [], releves = [], rapprochements = [];
 let transactionsMM = [], ventesServices = [];
+let loyaltyCustomers = [];
+let _loyaltyCurrentCustomer = null;
 // ── RH (Phase RH-A) ────────────────────────────────────────
 let rhEmployes = [], rhContrats = [];
 let rhListenersDemarres = false;
@@ -5503,7 +5560,13 @@ function demarrerListeners() {
     if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
   }, err => console.error('caisses:', err));
 
-  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15];
+  // Listener Club TeMa Family — membres fidélité
+  const uLoyalty = db.collection('customers').orderBy('lastName').onSnapshot(snap => {
+    loyaltyCustomers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (document.getElementById('page-club-tema')?.classList.contains('active')) renderClubTema();
+  }, err => console.error('customers:', err));
+
+  unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15, uLoyalty];
 
   // Listeners Suivi des présences / Tableau de bord caisses (Gérant/Admin)
   if (estGerantOuAdmin()) {
@@ -5745,7 +5808,7 @@ function appliquerFiltrePermissionsEmployes() {
 function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier) {
   // Masquer tous les items optionnels d'abord
   ['nav-comptabilite','nav-rapprochement','nav-rentabilite',
-   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-media-center','nav-reinitialisation','nav-pos','nav-presences',
+   'nav-admin-section','nav-comptes','nav-suivicaisse','nav-journal','nav-support','nav-media-center','nav-reinitialisation','nav-club-tema','nav-pos','nav-presences',
    'nav-section-rh','nav-rh-employes','nav-rh-contrats','nav-rh-dashboard',
    'nav-rh-presences','nav-rh-absences','nav-rh-planning','nav-rh-parametres','nav-rh-avances','nav-rh-paie','nav-rh-formations'].forEach(id => {
     const el = document.getElementById(id);
@@ -5775,6 +5838,7 @@ function appliquerFiltreNavigation(isAdmin, isGerant, isComptable, isMagasinier)
     document.getElementById('nav-support').style.display = 'flex';
     document.getElementById('nav-media-center').style.display = 'flex';
     document.getElementById('nav-reinitialisation').style.display = 'flex';
+    document.getElementById('nav-club-tema').style.display = 'flex';
   }
 
   // Accès POS : Admin et Gérant (Phase P3A-Correctif — via session caisse réelle)
@@ -6564,6 +6628,7 @@ function posOuvrirPaiement() {
   document.getElementById('payment-change').style.display='none';
   document.getElementById('cash-section').style.display='';
   document.getElementById('btn-confirm-pay').disabled=true;
+  clearLoyalty();
   document.getElementById('modal-payment').classList.add('open');
 }
 
@@ -6648,6 +6713,8 @@ async function confirmerVente() {
       });
     }
     await batch.commit();
+    // Fidélité Club TeMa Family : créditer les étoiles après la vente
+    addLoyaltyPoints(ticketNum, total);
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
     const numPiecesVente = genererNumPieces(posPanier.length);
     posPanier.forEach((item, idx) => {
@@ -6659,6 +6726,286 @@ async function confirmerVente() {
     showToast('✅ Vente enregistrée — ' + posF(total));
   } catch(err) { showToast('Erreur : '+err.message,'error'); btn.disabled=false; btn.textContent='✅ Valider la vente'; }
 }
+
+// ─────────────────────────────────────────────────────────────
+// CLUB TEMA FAMILY — MODULE FIDÉLITÉ
+// ─────────────────────────────────────────────────────────────
+const LOYALTY_TIERS = {
+  member: {min:0,   max:499,      label:'Membre', color:'#64748b'},
+  silver: {min:500, max:1499,     label:'Argent', color:'#94a3b8'},
+  gold:   {min:1500,max:Infinity, label:'Or',     color:'#f59e0b'}
+};
+const LOYALTY_REWARDS = [
+  {stars:50,  label:'Cadeau surprise'},
+  {stars:100, label:'Crédit 500 FCFA',      value:500},
+  {stars:200, label:'Crédit 1 000 FCFA',    value:1000},
+  {stars:500, label:'Produit ≤ 2 500 FCFA', value:2500}
+];
+function calculateStars(amount) { return Math.floor((amount||0) / 500); }
+function getTier(stars) {
+  if ((stars||0) >= 1500) return {key:'gold',   ...LOYALTY_TIERS.gold};
+  if ((stars||0) >= 500)  return {key:'silver', ...LOYALTY_TIERS.silver};
+  return {key:'member', ...LOYALTY_TIERS.member};
+}
+
+function searchLoyaltyCustomer() {
+  const phone = (document.getElementById('loyalty-phone-input')?.value||'').replace(/\s/g,'');
+  const res = document.getElementById('loyalty-result');
+  if (!res) return;
+  if (phone.length < 6) { res.innerHTML=''; _loyaltyCurrentCustomer=null; return; }
+  const found = loyaltyCustomers.find(c => (c.phone||'').replace(/\s/g,'') === phone);
+  if (found) {
+    _loyaltyCurrentCustomer = found;
+    showLoyaltyCustomerFound(found);
+  } else {
+    _loyaltyCurrentCustomer = null;
+    const {total} = calculerTotaux();
+    const starsEarned = calculateStars(total);
+    res.innerHTML = `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 11px;font-size:12px">
+      <div style="font-weight:700;color:#c2410c">Numéro non inscrit</div>
+      <div style="color:#78350f;margin-top:3px">
+        <a href="#" onclick="event.preventDefault();openCreateLoyaltyModal('${phone.replace(/'/g,"\\'")}');return false"
+           style="color:#ea580c;font-weight:700;text-decoration:underline">Inscrire ce numéro au Club</a>
+      </div>
+      <div style="color:#92400e;margin-top:3px">+${starsEarned} ⭐ crédités après la vente</div>
+    </div>`;
+  }
+}
+
+function showLoyaltyCustomerFound(customer) {
+  const res = document.getElementById('loyalty-result');
+  if (!res) return;
+  const {total} = calculerTotaux();
+  const starsEarned = calculateStars(total);
+  const tier = getTier(customer.stars||0);
+  const newStars = (customer.stars||0) + starsEarned;
+  const available = LOYALTY_REWARDS.filter(r => (customer.stars||0) >= r.stars);
+  res.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 11px;font-size:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-weight:700;color:#166534">${customer.firstName||''} ${customer.lastName||''}</div>
+      <div style="background:${tier.color};color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700">${tier.label}</div>
+    </div>
+    <div style="color:#15803d">⭐ ${(customer.stars||0).toLocaleString('fr-FR')} étoiles actuelles &nbsp;→&nbsp; <strong>+${starsEarned}</strong> après cette vente (total : ${newStars.toLocaleString('fr-FR')})</div>
+    ${available.length ? `<button onclick="openRedeemModal()"
+      style="margin-top:8px;width:100%;padding:6px;background:#16a34a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">
+      🎁 ${available.length} récompense${available.length>1?'s':''} disponible${available.length>1?'s':''}
+    </button>` : ''}
+  </div>`;
+}
+
+function clearLoyalty() {
+  _loyaltyCurrentCustomer = null;
+  const inp = document.getElementById('loyalty-phone-input');
+  const res = document.getElementById('loyalty-result');
+  if (inp) inp.value='';
+  if (res) res.innerHTML='';
+}
+
+function openCreateLoyaltyModal(phone) {
+  const inp = document.getElementById('loyalty-new-phone');
+  if (inp) inp.value = phone||'';
+  const nom = document.getElementById('loyalty-new-nom');
+  const prenom = document.getElementById('loyalty-new-prenom');
+  if (nom) nom.value='';
+  if (prenom) prenom.value='';
+  document.getElementById('modal-loyalty-create').classList.add('open');
+}
+
+async function createLoyaltyCustomer() {
+  const phone    = (document.getElementById('loyalty-new-phone')?.value||'').trim();
+  const lastName = (document.getElementById('loyalty-new-nom')?.value||'').trim();
+  const firstName= (document.getElementById('loyalty-new-prenom')?.value||'').trim();
+  if (!phone || !lastName) { showToast('Téléphone et nom sont requis', 'error'); return; }
+  try {
+    const ref = await db.collection('customers').add({
+      phone, firstName, lastName, stars:0, tier:'member', totalSpent:0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastPurchase: null
+    });
+    _loyaltyCurrentCustomer = {id:ref.id, phone, firstName, lastName, stars:0, tier:'member', totalSpent:0};
+    showLoyaltyCustomerFound(_loyaltyCurrentCustomer);
+    closePosModal('modal-loyalty-create');
+    showToast(`✅ ${firstName} ${lastName} inscrit(e) au Club TeMa Family`);
+  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+}
+
+function openRedeemModal() {
+  if (!_loyaltyCurrentCustomer) return;
+  const c = _loyaltyCurrentCustomer;
+  const available = LOYALTY_REWARDS.filter(r => (c.stars||0) >= r.stars);
+  const subtitle = document.getElementById('loyalty-redeem-subtitle');
+  if (subtitle) subtitle.textContent = `${c.firstName||''} ${c.lastName||''} — ${(c.stars||0).toLocaleString('fr-FR')} étoile${(c.stars||0)!==1?'s':''}`;
+  const listEl = document.getElementById('loyalty-rewards-list');
+  if (listEl) {
+    if (!available.length) {
+      listEl.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:16px">Aucune récompense disponible</p>';
+    } else {
+      listEl.innerHTML = available.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${r.label}</div>
+            <div style="font-size:12px;color:#64748b">Coût : ${r.stars} ⭐</div>
+          </div>
+          <button onclick="redeemReward(${r.stars},'${r.label.replace(/'/g,"\\'")}',${r.value||0})"
+            style="padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+            Échanger
+          </button>
+        </div>`).join('');
+    }
+  }
+  document.getElementById('modal-loyalty-redeem').classList.add('open');
+}
+
+async function redeemReward(starsRequired, label, value) {
+  if (!_loyaltyCurrentCustomer) return;
+  const c = _loyaltyCurrentCustomer;
+  if ((c.stars||0) < starsRequired) { showToast("Pas assez d'étoiles", 'error'); return; }
+  const newStars = (c.stars||0) - starsRequired;
+  try {
+    await db.collection('customers').doc(c.id).update({
+      stars: firebase.firestore.FieldValue.increment(-starsRequired),
+      tier: getTier(newStars).key
+    });
+    await db.collection('loyalty_transactions').add({
+      customerId: c.id, phone: c.phone, amount: 0,
+      starsEarned: 0, starsUsed: starsRequired, type: 'redeem',
+      rewardLabel: label, saleId: null, date: today(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    _loyaltyCurrentCustomer = {...c, stars: newStars, tier: getTier(newStars).key};
+    showLoyaltyCustomerFound(_loyaltyCurrentCustomer);
+    closePosModal('modal-loyalty-redeem');
+    showToast(`🎁 Récompense "${label}" accordée !`);
+  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+}
+
+async function addLoyaltyPoints(saleId, total) {
+  if (!_loyaltyCurrentCustomer) return;
+  const c = _loyaltyCurrentCustomer;
+  const starsEarned = calculateStars(total);
+  if (starsEarned <= 0) return;
+  const newStars = (c.stars||0) + starsEarned;
+  try {
+    await db.collection('customers').doc(c.id).update({
+      stars: firebase.firestore.FieldValue.increment(starsEarned),
+      totalSpent: firebase.firestore.FieldValue.increment(total),
+      tier: getTier(newStars).key, lastPurchase: today()
+    });
+    await db.collection('loyalty_transactions').add({
+      customerId: c.id, phone: c.phone, amount: total,
+      starsEarned, starsUsed: 0, type: 'earn',
+      rewardLabel: '', saleId, date: today(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`⭐ +${starsEarned} étoile${starsEarned!==1?'s':''} pour ${c.firstName||c.lastName||c.phone}`);
+  } catch(err) { console.error('addLoyaltyPoints:', err); }
+}
+
+// Tableau de bord Admin — Club TeMa Family
+function renderClubTema() {
+  const el = document.getElementById('club-tema-content');
+  if (!el) return;
+  const total = loyaltyCustomers.length;
+  const gold   = loyaltyCustomers.filter(c => getTier(c.stars||0).key === 'gold').length;
+  const silver = loyaltyCustomers.filter(c => getTier(c.stars||0).key === 'silver').length;
+  const totalStars  = loyaltyCustomers.reduce((s,c) => s+(c.stars||0), 0);
+  const totalSpent  = loyaltyCustomers.reduce((s,c) => s+(c.totalSpent||0), 0);
+  const searchVal = document.getElementById('club-search')?.value?.toLowerCase() || '';
+  const filtered = searchVal
+    ? loyaltyCustomers.filter(c =>
+        `${c.firstName||''} ${c.lastName||''} ${c.phone||''}`.toLowerCase().includes(searchVal))
+    : [...loyaltyCustomers];
+  const sorted = filtered.sort((a,b) => (b.stars||0)-(a.stars||0));
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:22px">
+      <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-info"><h3>${total}</h3><p>Membres total</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid #f59e0b"><div class="kpi-icon">🥇</div><div class="kpi-info"><h3>${gold}</h3><p>Membres Or</p></div></div>
+      <div class="kpi-card" style="border-left:4px solid #94a3b8"><div class="kpi-icon">🥈</div><div class="kpi-info"><h3>${silver}</h3><p>Membres Argent</p></div></div>
+      <div class="kpi-card"><div class="kpi-icon">⭐</div><div class="kpi-info"><h3>${totalStars.toLocaleString('fr-FR')}</h3><p>Étoiles en circulation</p></div></div>
+      <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${new Intl.NumberFormat('fr-FR').format(Math.round(totalSpent))}</h3><p>Dépenses cumulées (FCFA)</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <h2>🌟 Membres (${filtered.length})</h2>
+        <input type="text" id="club-search" placeholder="🔍 Nom, téléphone..."
+          style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;min-width:200px"
+          oninput="renderClubTema()" value="${searchVal.replace(/"/g,'&quot;')}">
+      </div>
+      <div class="card-body table-wrap">
+        <table><thead><tr>
+          <th>Nom</th><th>Téléphone</th><th>Niveau</th><th>Étoiles</th><th>Total dépensé</th><th>Dernière visite</th><th>Actions</th>
+        </tr></thead><tbody>
+        ${sorted.length ? sorted.map(c => {
+          const t = getTier(c.stars||0);
+          return `<tr>
+            <td>${c.firstName||''} ${c.lastName||''}</td>
+            <td>${c.phone||'—'}</td>
+            <td><span style="background:${t.color};color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">${t.label}</span></td>
+            <td style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</td>
+            <td>${posF(c.totalSpent||0)}</td>
+            <td>${c.lastPurchase||'—'}</td>
+            <td><button onclick="openLoyaltyMemberModal('${c.id}')"
+              style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Détails</button></td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Aucun membre inscrit</td></tr>'}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+function openLoyaltyMemberModal(id) {
+  const c = loyaltyCustomers.find(m => m.id === id);
+  if (!c) return;
+  const t = getTier(c.stars||0);
+  const available = LOYALTY_REWARDS.filter(r => (c.stars||0) >= r.stars);
+  document.getElementById('loyalty-member-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px;margin-bottom:4px">🌟</div>
+      <div style="font-size:20px;font-weight:800">${c.firstName||''} ${c.lastName||''}</div>
+      <div style="display:inline-block;background:${t.color};color:#fff;border-radius:12px;padding:3px 14px;font-size:12px;font-weight:700;margin-top:6px">${t.label}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;font-size:13px">
+      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Téléphone</div><div style="font-weight:700">${c.phone||'—'}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Étoiles</div><div style="font-weight:700;color:var(--primary)">⭐ ${(c.stars||0).toLocaleString('fr-FR')}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Total dépensé</div><div style="font-weight:700">${posF(c.totalSpent||0)}</div></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Dernière visite</div><div style="font-weight:700">${c.lastPurchase||'—'}</div></div>
+    </div>
+    <div style="font-weight:700;margin-bottom:10px;font-size:14px">Récompenses :</div>
+    ${available.length ? available.map(r=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 14px;margin-bottom:9px">
+        <div>
+          <div style="font-weight:700;font-size:13px">${r.label}</div>
+          <div style="font-size:12px;color:#64748b">Coût : ${r.stars} ⭐</div>
+        </div>
+        <button onclick="adminRedeemReward('${c.id}',${r.stars},'${r.label.replace(/'/g,"\\'")}');closeModal('modal-loyalty-member')"
+          style="padding:7px 14px;background:var(--success);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">
+          Accorder
+        </button>
+      </div>`).join('')
+    : '<p style="color:var(--text-muted);font-size:13px">Aucune récompense disponible pour ce membre.</p>'}`;
+  openModal('modal-loyalty-member');
+}
+
+async function adminRedeemReward(customerId, starsRequired, label) {
+  const c = loyaltyCustomers.find(m => m.id === customerId);
+  if (!c || (c.stars||0) < starsRequired) { showToast("Pas assez d'étoiles", 'error'); return; }
+  const newStars = (c.stars||0) - starsRequired;
+  try {
+    await db.collection('customers').doc(customerId).update({
+      stars: firebase.firestore.FieldValue.increment(-starsRequired),
+      tier: getTier(newStars).key
+    });
+    await db.collection('loyalty_transactions').add({
+      customerId, phone: c.phone, amount: 0,
+      starsEarned: 0, starsUsed: starsRequired, type: 'redeem',
+      rewardLabel: label, saleId: null, date: today(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`🎁 Récompense "${label}" accordée à ${c.firstName||c.lastName}`);
+    renderClubTema();
+  } catch(err) { showToast('Erreur : '+err.message, 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────
 
 function afficherTicketPOS(data) {
   const lignes=data.items.map(i=>`<div class="r-item"><span>${i.nom} ×${i.qte}</span><span>${posF0(i.total)} F</span></div>`).join('');
@@ -7520,7 +7867,8 @@ const pageTitles = {
   'rh-parametres':'Administration — Paramètres RH — Paramètres de Paie',
   'rh-avances':'Ressources Humaines — Avances & Prêts',
   'rh-paie':'Ressources Humaines — Paie',
-  'rh-formations':'Ressources Humaines — Formations'
+  'rh-formations':'Ressources Humaines — Formations',
+  'club-tema':'Club TeMa Family — Programme de Fidélité'
 };
 
 function toggleUserMenu(e) {
@@ -7702,6 +8050,7 @@ function rafraichirPage(page) {
   else if (page === 'rh-avances') renderRHAvancesPrets();
   else if (page === 'rh-paie') renderRHPaie();
   else if (page === 'rh-formations') renderRHFormations();
+  else if (page === 'club-tema') renderClubTema();
 }
 
 // ===== RAPPORTS (initialisation des dates par défaut) =====
