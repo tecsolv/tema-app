@@ -8819,10 +8819,12 @@ function renderCategories() {
     ...DEFAULT_CATS,
     ...customCats.map(nom => {
       const meta = {
-        'Pâtisserie':       {icon:'🧁', color:'#e91e8c'},
-        'Électroménager':   {icon:'🔌', color:'#e67e22'},
-        'Beauté & Bien-Être':{icon:'💄', color:'#d81b60'},
-      }[nom] || {icon:'📦', color:'#64748b'};
+        'Pâtisserie':             {icon:'🧁', color:'#e91e8c'},
+        'Électroménager':         {icon:'🔌', color:'#e67e22'},
+        'Beauté & Bien-Être':     {icon:'💄', color:'#d81b60'},
+        'Boissons Spiritueuses':  {icon:'🥃', color:'#7c3a00'},
+        'Boissons Rafraîchissantes':{icon:'🧃', color:'#0e7490'},
+      }[nom] || {icon: CAT_EMOJI[nom] || '📦', color:'#64748b'};
       return {nom, ...meta};
     })
   ];
