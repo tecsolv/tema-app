@@ -1477,7 +1477,9 @@
           <option value="ok">Stock OK</option><option value="low">Stock faible</option><option value="critical">Stock critique</option>
         </select>
         <button class="btn btn-primary" onclick="nouveauProduit()">+ Nouveau Produit</button>
+        <button class="btn btn-outline btn-sm" onclick="ouvrirImportInventaire()" title="Importer depuis un fichier CSV">⬆ Importer</button>
         <button class="btn btn-outline btn-sm" onclick="exportInventaireCSV()">⬇ CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="exportInventairePDF()">🖨 PDF</button>
       </div>
       <div class="card">
         <div class="card-header"><h2>📦 Inventaire des Articles</h2><span style="font-size:12px;color:var(--text-muted)" id="inv-count"></span></div>
@@ -2846,6 +2848,55 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- MODAL: Import Inventaire CSV -->
+<div class="modal-overlay" id="modal-import-inventaire">
+  <div class="modal" style="max-width:760px;width:95vw">
+    <div class="modal-header">
+      <h3>⬆ Importer des articles — Inventaire</h3>
+      <button class="modal-close" onclick="closeModal('modal-import-inventaire')">×</button>
+    </div>
+    <div style="padding:18px">
+      <!-- Étape 1 : Instructions + fichier -->
+      <div id="import-inv-step1">
+        <div style="background:var(--bg-soft,#eef2f6);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.7">
+          <strong>Comment procéder :</strong><br>
+          1. Téléchargez le modèle CSV ci-dessous.<br>
+          2. Remplissez-le avec Excel, LibreOffice ou Google Sheets.<br>
+          3. Enregistrez en <strong>.csv</strong> et importez-le ici.<br>
+          <span style="color:var(--text-muted)">Les colonnes <em>Article</em> et <em>Prix Vente</em> sont obligatoires. Les autres sont optionnelles.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="telechargerModeleCSV()">📥 Télécharger le modèle CSV</button>
+          <span style="font-size:12px;color:var(--text-muted)">Colonnes : Article · Référence · Catégorie · Stock · Stock Min · Unité · Prix Achat · Prix Vente · Description</span>
+        </div>
+        <div class="form-group">
+          <label>Choisir votre fichier CSV</label>
+          <input type="file" accept=".csv,text/csv" id="import-inv-file" onchange="lireCSVImport(event)" class="form-control" style="padding:8px">
+        </div>
+        <div id="import-inv-erreur" style="display:none;color:#c0392b;font-size:13px;margin-top:8px"></div>
+      </div>
+      <!-- Étape 2 : Prévisualisation -->
+      <div id="import-inv-step2" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong id="import-inv-count-label"></strong>
+          <button class="btn btn-outline btn-sm" onclick="reinitImportInventaire()">← Changer de fichier</button>
+        </div>
+        <div id="import-inv-preview-warn" style="display:none;background:#fef3cd;border:1px solid #f0ad4e;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px"></div>
+        <div style="max-height:300px;overflow-y:auto;margin-bottom:14px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr id="import-inv-thead" style="background:var(--bg-soft,#eef2f6);position:sticky;top:0"></tr></thead>
+            <tbody id="import-inv-tbody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" id="btn-confirmer-import" onclick="confirmerImportInventaire()">✅ Importer dans l'inventaire</button>
+          <span id="import-inv-progress" style="font-size:13px;color:var(--text-muted)"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: Produit -->
 <div class="modal-overlay" id="modal-produit">
@@ -13400,6 +13451,238 @@ function exportInventaireCSV() {
   a.href=url; a.download=`TeMa_Inventaire_${today()}.csv`; a.click();
   URL.revokeObjectURL(url);
   showToast('Export CSV téléchargé');
+}
+
+// ---- Import inventaire depuis CSV ----
+
+let _importRows = [];
+
+function telechargerModeleCSV() {
+  const header = 'Article,Référence,Catégorie,Stock,Stock Min,Unité,Prix Achat (FCFA),Prix Vente (FCFA),Description';
+  const exemples = [
+    '"Stylo Bic Bleu","STY-001","Fournitures Scolaires","50","10","pcs","150","250","Stylo à bille bleu"',
+    '"Cahier 200 pages","CAH-001","Fournitures Scolaires","30","5","pcs","400","700",""',
+    '"Savon Lux 100g","SAV-001","Épicerie","100","20","pcs","200","350","Savon de toilette"',
+    '"Chemise Enfant T8","HAB-001","Habits Enfants","15","3","pcs","1500","2500","Taille 8 ans"',
+  ];
+  const csv = [header, ...exemples].join('\n');
+  const blob = new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Modele_Import_Inventaire_TeMa.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Modèle CSV téléchargé ✓');
+}
+
+function ouvrirImportInventaire() {
+  reinitImportInventaire();
+  openModal('modal-import-inventaire');
+}
+
+function reinitImportInventaire() {
+  _importRows = [];
+  document.getElementById('import-inv-file').value = '';
+  document.getElementById('import-inv-erreur').style.display = 'none';
+  document.getElementById('import-inv-step1').style.display = '';
+  document.getElementById('import-inv-step2').style.display = 'none';
+  document.getElementById('import-inv-progress').textContent = '';
+  document.getElementById('btn-confirmer-import').disabled = false;
+}
+
+function parseCSVLigne(ligne) {
+  const res = []; let champ = ''; let dansQuotes = false;
+  for (let i = 0; i < ligne.length; i++) {
+    const c = ligne[i];
+    if (c === '"') { dansQuotes = !dansQuotes; }
+    else if (c === ',' && !dansQuotes) { res.push(champ.trim()); champ = ''; }
+    else { champ += c; }
+  }
+  res.push(champ.trim());
+  return res;
+}
+
+function lireCSVImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const errEl = document.getElementById('import-inv-erreur');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) {
+      errEl.textContent = 'Fichier vide ou invalide — vérifiez que le fichier contient des données.';
+      errEl.style.display = '';
+      return;
+    }
+    // Détecter et ignorer la ligne d'en-tête
+    const headerLine = lines[0].toLowerCase();
+    const hasHeader = headerLine.includes('article') || headerLine.includes('nom') || headerLine.includes('ref');
+    const dataLines = hasHeader ? lines.slice(1) : lines;
+
+    const rows = [];
+    const warns = [];
+    const catsConnus = getAllCatNames().map(c => c.toLowerCase());
+
+    dataLines.forEach((line, idx) => {
+      if (!line.trim()) return;
+      const cols = parseCSVLigne(line);
+      const nom = (cols[0] || '').replace(/^"|"$/g, '').trim();
+      if (!nom) return;
+      const ref = (cols[1] || '').replace(/^"|"$/g, '').trim();
+      const cat = (cols[2] || '').replace(/^"|"$/g, '').trim();
+      const stock = parseInt(cols[3]) || 0;
+      const stockMin = parseInt(cols[4]) || 5;
+      const unite = (cols[5] || 'pcs').replace(/^"|"$/g, '').trim() || 'pcs';
+      const pachat = parseFloat((cols[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+      const pvente = parseFloat((cols[7] || '0').replace(/[^0-9.]/g, '')) || 0;
+      const desc = (cols[8] || '').replace(/^"|"$/g, '').trim();
+
+      if (pvente === 0) warns.push(`Ligne ${idx + (hasHeader ? 2 : 1)} — "${nom}" : prix de vente à 0.`);
+      if (cat && !catsConnus.includes(cat.toLowerCase())) {
+        warns.push(`Ligne ${idx + (hasHeader ? 2 : 1)} — catégorie "${cat}" non reconnue (sera importée telle quelle).`);
+      }
+      rows.push({nom, ref, cat, stock, stockMin, unite, pachat, pvente, desc});
+    });
+
+    if (!rows.length) {
+      errEl.textContent = 'Aucune ligne valide trouvée dans le fichier.';
+      errEl.style.display = '';
+      return;
+    }
+
+    errEl.style.display = 'none';
+    _importRows = rows;
+
+    // Afficher la prévisualisation
+    document.getElementById('import-inv-count-label').textContent = `${rows.length} article(s) prêt(s) à importer`;
+    const warnEl = document.getElementById('import-inv-preview-warn');
+    if (warns.length) {
+      warnEl.innerHTML = '⚠️ Avertissements :<br>' + warns.map(w => '• ' + w).join('<br>');
+      warnEl.style.display = '';
+    } else { warnEl.style.display = 'none'; }
+
+    document.getElementById('import-inv-thead').innerHTML =
+      ['Article','Réf','Catégorie','Stock','St. Min','Unité','P. Achat','P. Vente','Description']
+        .map(h => `<th style="padding:6px 8px;border:1px solid var(--border);text-align:left;white-space:nowrap">${h}</th>`).join('');
+    document.getElementById('import-inv-tbody').innerHTML = rows.map(r =>
+      `<tr>${[r.nom, r.ref||'—', r.cat||'—', r.stock, r.stockMin, r.unite, FCFA(r.pachat), FCFA(r.pvente), r.desc||'—']
+        .map(v => `<td style="padding:5px 8px;border:1px solid var(--border)">${v}</td>`).join('')}</tr>`
+    ).join('');
+
+    document.getElementById('import-inv-step1').style.display = 'none';
+    document.getElementById('import-inv-step2').style.display = '';
+  };
+  reader.onerror = () => { errEl.textContent = 'Impossible de lire le fichier.'; errEl.style.display = ''; };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function confirmerImportInventaire() {
+  if (!_importRows.length) return;
+  if (!confirm(`Importer ${_importRows.length} article(s) dans l'inventaire Firestore ?\n\nCette action ajoutera de nouveaux articles — elle ne modifie pas les articles existants.`)) return;
+  const btn = document.getElementById('btn-confirmer-import');
+  const prog = document.getElementById('import-inv-progress');
+  btn.disabled = true;
+  let imported = 0;
+  const ts = firebase.firestore.FieldValue.serverTimestamp();
+  try {
+    for (let i = 0; i < _importRows.length; i += 400) {
+      const chunk = _importRows.slice(i, i + 400);
+      const batch = db.batch();
+      chunk.forEach(r => {
+        const ref = db.collection('produits').doc();
+        batch.set(ref, {...r, createdBy: currentUser.label, createdAt: ts, updatedAt: ts});
+      });
+      await batch.commit();
+      imported += chunk.length;
+      prog.textContent = `${imported}/${_importRows.length} articles importés…`;
+    }
+    showToast(`✅ ${imported} article(s) importé(s) dans l'inventaire`);
+    consigner('Import inventaire CSV', `${imported} article(s) importé(s) par ${currentUser.label}`);
+    closeModal('modal-import-inventaire');
+  } catch(err) {
+    showToast('Erreur : ' + err.message, 'error');
+    btn.disabled = false;
+  }
+}
+
+// ---- Export PDF inventaire ----
+
+function exportInventairePDF() {
+  const fournNom = id => (fournisseurs.find(f=>f.id===id)||{nom:'—'}).nom;
+  const q = (document.getElementById('search-inv')||{}).value?.toLowerCase().trim()||'';
+  const cat = (document.getElementById('filter-cat')||{}).value||'';
+  const fs = (document.getElementById('filter-stock')||{}).value||'';
+  const liste = produits.filter(p => {
+    if (q && !p.nom?.toLowerCase().includes(q) && !p.ref?.toLowerCase().includes(q)) return false;
+    if (cat && p.cat !== cat) return false;
+    if (fs && stockStatut(p) !== fs) return false;
+    return true;
+  });
+  if (!liste.length) { showToast('Aucun article à exporter', 'error'); return; }
+
+  const totalVal = liste.reduce((s,p) => s + (p.stock||0)*(p.pachat||0), 0);
+  const nomMois = new Date().toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+  const badgeClr = s => s==='ok'?'#1e8449':s==='low'?'#d68910':'#c0392b';
+  const badgeTxt = s => s==='ok'?'OK':s==='low'?'Faible':'Critique';
+
+  const html = `
+    <style>
+      body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;margin:20px}
+      h1{margin:0;font-size:18px;color:#1a1a1a}
+      h2{margin:4px 0 0;font-size:13px;color:#C8981A;font-weight:400}
+      .sub{color:#888;font-size:11px}
+      table{width:100%;border-collapse:collapse;margin-top:16px;font-size:11px}
+      th{background:#f0f0f0;padding:6px 8px;border:1px solid #ddd;text-align:left;white-space:nowrap}
+      td{padding:5px 8px;border:1px solid #eee;vertical-align:top}
+      tr:nth-child(even){background:#fafafa}
+      .badge{display:inline-block;border-radius:10px;padding:1px 8px;font-size:10px;color:#fff;font-weight:700}
+      tfoot td{font-weight:700;background:#f0f0f0;border:1px solid #ddd;padding:6px 8px}
+      @media print{@page{size:A4 landscape;margin:15mm}}
+    </style>
+    <div style="border-bottom:3px solid #C8981A;padding-bottom:10px;margin-bottom:4px">
+      <h1>🏪 TeMa Boutique — Inventaire des Articles</h1>
+      <h2>État du stock — ${nomMois}</h2>
+      <div class="sub">Généré le ${new Date().toLocaleDateString('fr-FR')} · ${liste.length} article(s) · Valeur totale : ${FCFA(totalVal)}</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Article</th><th>Catégorie</th><th>Fournisseur</th>
+        <th style="text-align:center">Stock</th><th style="text-align:center">St. Min</th>
+        <th>Unité</th><th style="text-align:right">Prix Achat</th>
+        <th style="text-align:right">Prix Vente</th><th style="text-align:right">Valeur stock</th>
+        <th style="text-align:center">Statut</th>
+      </tr></thead>
+      <tbody>
+        ${liste.map((p,i) => {
+          const st = stockStatut(p);
+          return `<tr>
+            <td style="color:#999">${p.ref||String(i+1).padStart(3,'0')}</td>
+            <td><strong>${p.nom||'—'}</strong>${p.desc?`<br><span style="color:#999;font-size:10px">${p.desc}</span>`:''}</td>
+            <td>${p.cat||'—'}</td>
+            <td>${fournNom(p.fournId)}</td>
+            <td style="text-align:center;font-weight:700">${p.stock||0}</td>
+            <td style="text-align:center;color:#888">${p.stockMin||0}</td>
+            <td>${p.unite||'pcs'}</td>
+            <td style="text-align:right">${FCFA(p.pachat||0)}</td>
+            <td style="text-align:right;font-weight:700;color:#1a7a6e">${FCFA(p.pvente||0)}</td>
+            <td style="text-align:right">${FCFA((p.stock||0)*(p.pachat||0))}</td>
+            <td style="text-align:center"><span class="badge" style="background:${badgeClr(st)}">${badgeTxt(st)}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot><tr>
+        <td colspan="9" style="text-align:right">VALEUR TOTALE STOCK</td>
+        <td style="text-align:right">${FCFA(totalVal)}</td>
+        <td></td>
+      </tr></tfoot>
+    </table>
+    <div class="sub" style="margin-top:16px;text-align:center">TeMa Boutique — Document généré automatiquement</div>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Inventaire TeMa — ${today()}</title></head><body>${html}</body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 400);
+  showToast('PDF inventaire généré — utilisez "Imprimer" → "Enregistrer en PDF" ✓');
 }
 
 // ════════════════════════════════════════════════════════════
