@@ -1604,7 +1604,7 @@
         <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-tresorerie" onclick="suiviCaisseNavigate('tresorerie')" style="flex:1;min-width:110px">🏭 Comptes Fournisseurs</button>
         <button class="btn btn-sm caisse-tab-btn active" id="suivi-tab-btn-journal" onclick="suiviCaisseNavigate('journal')" style="flex:1;min-width:110px">📋 Journal</button>
         <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-tableau" onclick="suiviCaisseNavigate('tableau')" style="flex:1;min-width:110px">📊 Tableau de Bord</button>
-        <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-ia" onclick="suiviCaisseNavigate('ia')" style="flex:1;min-width:110px">🤖 Analyse IA</button>
+        <button class="btn btn-sm caisse-tab-btn" id="suivi-tab-btn-ia" onclick="suiviCaisseNavigate('ia')" style="flex:1;min-width:110px">🧠 Analyse IA</button>
       </div>
 
       <!-- ONGLET TRÉSORERIE -->
@@ -1709,23 +1709,25 @@
 
       <!-- ONGLET ANALYSE IA -->
       <div class="caisse-tab" id="suivi-tab-ia">
+        <!-- Notifications proactives Nora -->
+        <div id="agent-notifications" style="display:none;margin-bottom:14px"></div>
         <div class="card">
-          <div class="card-header"><h2>🤖 Analyse Conseiller — Amadou Cissé</h2></div>
+          <div class="card-header"><h2>🧠 Nora — Analyse &amp; Conseils TeMa Boutique</h2></div>
           <div class="card-body">
             <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
-              Pose une question en français sur tes ventes (ex: "Quelle zone performe le mieux ?", "Ai-je couvert le loyer ce mois ?") et reçois une analyse construite à partir de tes vraies données, dans le style d'un conseiller commercial expérimenté.
+              Nora analyse en temps réel les données de la boutique — ventes par zone, couverture du loyer, Club TeMa Family et calendrier commercial ivoirien. Pose une question ou laisse Nora effectuer son bilan automatique.
             </p>
             <div class="form-group">
               <label>Question (optionnel)</label>
               <textarea class="form-control" id="caisse-ia-question" rows="2" placeholder="Ex: Quelle zone performe le mieux ce mois-ci ?"></textarea>
             </div>
-            <button class="btn btn-primary" onclick="lancerAnalyseCaisseIA()" id="caisse-ia-btn">🤖 Lancer l'analyse</button>
+            <button class="btn btn-primary" onclick="lancerAnalyseCaisseIA()" id="caisse-ia-btn">🧠 Lancer l'analyse</button>
             <div id="caisse-ia-resultat" style="display:none;margin-top:16px;background:rgba(26,122,110,.08);border:1px solid rgba(26,122,110,.25);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap"></div>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h2>📌 Rappels Clés</h2></div>
-          <div class="card-body" style="font-size:13px;line-height:2">
+          <div class="card-body" id="rappels-cles" style="font-size:13px;line-height:2">
             🎯 Objectif : 10 000 FCFA/jour minimum<br>
             🏠 Loyer : 300 000 FCFA/mois à couvrir<br>
             💰 Revenu net famille visé (mois 3) : +150 000 FCFA<br>
@@ -12498,6 +12500,7 @@ function suiviCaisseNavigate(tab) {
   document.getElementById('suivi-tab-' + tab).classList.add('active');
   document.getElementById('suivi-tab-btn-' + tab).classList.add('active');
   renderSuiviCaisse();
+  if (tab === 'ia') { renderRappelsCles(); runNoraAutoAnalyse(); initNoraClock(); }
 }
 
 function ventesCaisseDuJour(date) { return ventesCaisse.filter(v => v.date === date); }
@@ -12843,71 +12846,293 @@ function renderCaisseTableau() {
 }
 
 // ---- Analyse "conseiller" basée sur les vraies données de vente (calcul local, pas d'appel externe) ----
-function lancerAnalyseCaisseIA() {
-  if (!ventesCaisse.length) { showToast('Aucune vente à analyser pour le moment', 'error'); return; }
-  const btn = document.getElementById('caisse-ia-btn');
-  const box = document.getElementById('caisse-ia-resultat');
-  btn.disabled = true; btn.textContent = '🤖 Analyse en cours...';
-  box.style.display = 'none';
-  setTimeout(() => {
-    const question = document.getElementById('caisse-ia-question').value.trim();
-    box.textContent = genererAnalyseCaisse(question);
-    box.style.display = 'block';
-    btn.disabled = false; btn.textContent = "🤖 Lancer l'analyse";
-  }, 600);
+// ---- NORA — Agente d'analyse commerciale TeMa Boutique ----
+
+function getEasterDate(yr) {
+  const a=yr%19,b=Math.floor(yr/100),c=yr%100,d=Math.floor(b/4),e=b%4;
+  const f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4;
+  const l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+  const month=Math.floor((h+l-7*m+114)/31)-1,day=((h+l-7*m+114)%31)+1;
+  return new Date(yr,month,day);
 }
 
-function genererAnalyseCaisse(question = '') {
-  const moisActuel = today().slice(0,7);
-  const ventesMois = ventesCaisse.filter(v => (v.date||'').startsWith(moisActuel));
-  const totalMois = ventesMois.reduce((s,v) => s + (v.montant||0), 0);
-  const totalJour = totalCaisseJour(today());
-  const sz = statsZonesCaisse(ventesMois);
-  const zonesTriees = Object.entries(sz).sort((a,b) => b[1].total - a[1].total);
-  const meilleureZone = zonesTriees[0];
-  const pireZone = zonesTriees[zonesTriees.length-1];
-  const jours = [...new Set(ventesCaisse.map(v=>v.date))];
-  const moyJour = jours.length ? Math.round(ventesCaisse.reduce((s,v)=>s+(v.montant||0),0) / jours.length) : 0;
-  const sp = {};
-  ventesMois.forEach(v => { sp[v.modePaiement] = (sp[v.modePaiement]||0) + (v.montant||0); });
-  const modeTop = Object.entries(sp).sort((a,b)=>b[1]-a[1])[0];
+function getMothersDayCI(yr) {
+  const may31=new Date(yr,4,31);
+  return new Date(yr,4,31-may31.getDay());
+}
 
-  const lignes = [`👤 Amadou Cissé — Conseil du jour pour TeMa`];
+function getNextCalendarEvent() {
+  const now=new Date();
+  const mk=(y,m,d)=>new Date(y,m,d);
+  const buildYear=yr=>[
+    {name:'Rentrée scolaire',          date:mk(yr,8,1),   emoji:'📚', conseil:'Réapprovisionner Zone B (cahiers, fournitures, calculatrices). Créer un espace "Coin Rentrée" visible depuis l\'entrée.'},
+    {name:'Préparation fêtes fin d\'année',date:mk(yr,10,15),emoji:'🎄',conseil:'Commander pâtisseries sur commande et décorations festives. Mettre Zone C en avant pour les cadeaux enfants.'},
+    {name:'Noël',                      date:mk(yr,11,25), emoji:'🎁', conseil:'Forte affluence prévue — toutes caisses actives, stock des articles phares plein, pâtisseries en vitrine.'},
+    {name:'Nouvel An',                 date:mk(yr,0,1),   emoji:'🥂', conseil:'Ambiance festive, produits spéciaux et pâtisseries. Renouveler les vœux aux membres Club TeMa Family.'},
+    {name:'Préparation Saint-Valentin',date:mk(yr,0,15),  emoji:'💕', conseil:'Préparer décorations rose/rouge, pâtisseries cœur sur commande, cadeaux Zone C.'},
+    {name:'Saint-Valentin',            date:mk(yr,1,14),  emoji:'❤️', conseil:'Déco rose/rouge maximale. Pâtisseries et cadeaux en vitrine. Accepter les commandes de dernière minute.'},
+    {name:'Pâques',                    date:getEasterDate(yr), emoji:'🐣',conseil:'Pâtisseries et chocolats à anticiper 2 semaines avant. Ambiance printanière dans la boutique.'},
+    {name:'Fête des Mères',            date:getMothersDayCI(yr),emoji:'🌸',conseil:'Zone C et pâtisseries en vedette. Offres "Cadeau Maman" — vêtements enfants + pâtisserie personnalisée.'},
+    {name:'Journée de l\'Enfant',      date:mk(yr,5,1),   emoji:'🧒', conseil:'Promotions Zone C visibles. Jouets, vêtements enfants et accessoires avec prix affichés.'},
+    {name:'Grandes vacances',          date:mk(yr,6,1),   emoji:'☀️', conseil:'Forte demande Zone C. S\'assurer que le stock vêtements enfants et jouets est au maximum.'},
+    {name:'Anniversaire TeMa Boutique',date:mk(yr,7,15),  emoji:'🎂', conseil:'Événement fidélité annuel — bonus d\'étoiles Club TeMa Family, décoration boutique, promotion spéciale.'},
+  ];
+  const y=now.getFullYear();
+  const all=[...buildYear(y),...buildYear(y+1)];
+  const upcoming=all
+    .map(e=>({...e,daysLeft:Math.ceil((e.date-now)/86400000)}))
+    .filter(e=>e.daysLeft>0)
+    .sort((a,b)=>a.daysLeft-b.daysLeft);
+  return upcoming[0]||{name:'Rentrée scolaire',daysLeft:300,emoji:'📚',date:new Date(),conseil:'Préparer Zone B pour la rentrée scolaire.'};
+}
 
-  if (question) {
-    const ql = question.toLowerCase();
-    if (/zone|performe|meilleur/.test(ql) && meilleureZone) {
-      lignes.push(`Ta zone la plus performante ce mois est ${ZONES_CAISSE[meilleureZone[0]]?.label} (zone ${meilleureZone[0]}) avec ${FCFA(meilleureZone[1].total)} sur ${meilleureZone[1].count} vente(s).${pireZone && pireZone[0]!==meilleureZone[0] ? ` À l'inverse, ${ZONES_CAISSE[pireZone[0]]?.label} est en retrait avec ${FCFA(pireZone[1].total)}.` : ''} Mets en avant les articles qui marchent dans la zone gagnante, et demande-toi pourquoi l'autre traîne : achalandage, prix ou choix des produits ?`);
-    } else if (/loyer|couvert|couvrir/.test(ql)) {
-      lignes.push(totalMois >= LOYER_MOIS
-        ? `Oui, le loyer de ${FCFA(LOYER_MOIS)} est couvert ce mois-ci : tu as encaissé ${FCFA(totalMois)}, soit ${FCFA(totalMois - LOYER_MOIS)} de marge. Mets cette marge de côté plutôt que de la dépenser tout de suite.`
-        : `Pas encore : il manque ${FCFA(LOYER_MOIS - totalMois)} pour couvrir le loyer (tu es à ${FCFA(totalMois)} sur ${FCFA(LOYER_MOIS)}). Concentre-toi sur ${meilleureZone ? ZONES_CAISSE[meilleureZone[0]]?.label : 'ta zone la plus vendeuse'} et vise ${FCFA(OBJECTIF_JOUR)}/jour pour rattraper le rythme.`);
-    } else if (/objectif|10\s?000|jour/.test(ql)) {
-      lignes.push(totalJour >= OBJECTIF_JOUR
-        ? `Bravo, l'objectif du jour (${FCFA(OBJECTIF_JOUR)}) est atteint avec ${FCFA(totalJour)} encaissés. Ta moyenne sur la période est de ${FCFA(moyJour)}/jour — reste régulier.`
-        : `Pas encore : tu es à ${FCFA(totalJour)}, il manque ${FCFA(OBJECTIF_JOUR - totalJour)} pour les ${FCFA(OBJECTIF_JOUR)}/jour. Ta moyenne sur la période est ${FCFA(moyJour)}/jour — ${moyJour >= OBJECTIF_JOUR ? "tu es globalement dans le rythme, la journée n'est peut-être pas finie" : 'pousse un peu plus en fin de journée'}.`);
-    } else if (/produit|réapprovis|stock|article/.test(ql)) {
-      const articleCount = {};
-      ventesMois.forEach(v => { articleCount[v.article] = (articleCount[v.article]||0) + v.quantite; });
-      const topArticle = Object.entries(articleCount).sort((a,b)=>b[1]-a[1])[0];
-      lignes.push(topArticle
-        ? `L'article qui sort le plus ce mois est "${topArticle[0]}" avec ${topArticle[1]} unité(s) vendues. Vérifie en priorité son stock dans l'Inventaire pour ne pas rater de ventes par rupture.`
-        : `Pas encore assez de ventes ce mois pour dégager une tendance produit fiable — continue à bien noter chaque vente.`);
-    } else {
-      lignes.push(`Sur la période, tu as encaissé ${FCFA(totalMois)} ce mois (moyenne ${FCFA(moyJour)}/jour).${meilleureZone ? ` Ta zone la plus active est ${ZONES_CAISSE[meilleureZone[0]]?.label} (${FCFA(meilleureZone[1].total)}).` : ''} Pose une question plus précise sur une zone, le loyer, l'objectif du jour ou les produits à réapprovisionner pour un conseil ciblé.`);
-    }
-  } else {
-    lignes.push(`1. Bilan : aujourd'hui ${FCFA(totalJour)} encaissés, ce mois ${FCFA(totalMois)} au total (objectif loyer : ${FCFA(LOYER_MOIS)}).`);
-    if (meilleureZone) lignes.push(`2. Zone la plus performante : ${ZONES_CAISSE[meilleureZone[0]]?.label} (zone ${meilleureZone[0]}) avec ${FCFA(meilleureZone[1].total)} sur ${meilleureZone[1].count} vente(s)${modeTop ? `, principalement réglées en ${modeTop[0]}` : ''}.`);
-    lignes.push(`3. Conseil : ${totalMois >= LOYER_MOIS ? `le loyer est déjà couvert — mets de côté la marge de ${FCFA(totalMois - LOYER_MOIS)} et investis dans le réassort des articles qui se vendent le mieux.` : `pousse les ventes vers ${meilleureZone ? ZONES_CAISSE[meilleureZone[0]]?.label : 'ta meilleure zone'} et vise ${FCFA(OBJECTIF_JOUR)}/jour pour combler les ${FCFA(Math.max(0,LOYER_MOIS - totalMois))} qui manquent au loyer.`}`);
-    if (pireZone && zonesTriees.length > 1 && pireZone[1].total < (meilleureZone?.[1].total||0) * 0.3) {
-      lignes.push(`4. ⚠️ Alerte : la zone ${ZONES_CAISSE[pireZone[0]]?.label} est nettement en retrait (${FCFA(pireZone[1].total)}) — vérifie l'achalandage, les prix ou le choix des produits dans cette zone.`);
-    } else if (totalJour < OBJECTIF_JOUR && new Date().getHours() >= 17) {
-      lignes.push(`4. ⚠️ Alerte : il est déjà tard et l'objectif du jour (${FCFA(OBJECTIF_JOUR)}) n'est pas atteint (${FCFA(totalJour)} encaissés) — pense à relancer les clients habituels avant la fermeture.`);
-    } else {
-      lignes.push(`4. Pas d'alerte particulière — continue à enregistrer chaque vente le jour même pour garder des chiffres fiables.`);
+function renderRappelsCles() {
+  const el=document.getElementById('rappels-cles');
+  if(!el) return;
+  const ev=getNextCalendarEvent();
+  const urgent=ev.daysLeft<=21;
+  el.innerHTML=`
+    🎯 Objectif : 10 000 FCFA/jour minimum<br>
+    🏠 Loyer : 300 000 FCFA/mois à couvrir<br>
+    💰 Revenu net famille visé (mois 3) : +150 000 FCFA<br>
+    🚫 Zéro crédit client les 3 premiers mois<br>
+    📓 Enregistrer chaque vente le jour même<br>
+    <span style="color:${urgent?'#c0392b':'var(--text-accent)'};font-weight:${urgent?'700':'500'}">
+      ${ev.emoji} Prochain événement : <strong>${ev.name}</strong> dans <strong>${ev.daysLeft} jour${ev.daysLeft>1?'s':''}</strong>${urgent?' ⚠️':''}
+    </span>`;
+}
+
+function checkIrregularitesNora() {
+  const alerts=[];
+  const now=new Date();
+  const todayStr=today();
+  const moisActuel=todayStr.slice(0,7);
+
+  // 1. Aucune vente après 14h
+  if(now.getHours()>=14) {
+    if(!ventesCaisse.filter(v=>v.date===todayStr).length) {
+      alerts.push({type:'warning',message:'Aucune vente enregistrée aujourd\'hui. Vérifier que la caisse est active et que les ventes sont bien saisies.'});
     }
   }
+
+  // 2. Couverture loyer < 60% après le 15 du mois
+  if(now.getDate()>=15) {
+    const totalM=ventesCaisse.filter(v=>(v.date||'').startsWith(moisActuel)).reduce((s,v)=>s+(v.montant||0),0);
+    const pct=totalM/LOYER_MOIS;
+    if(pct<0.6) {
+      alerts.push({type:'danger',message:`Couverture loyer à ${Math.round(pct*100)}% — il manque ${FCFA(LOYER_MOIS-totalM)} pour couvrir le loyer ce mois. Priorité : pousser les ventes Zones A et B.`});
+    }
+  }
+
+  // 3. Prochain événement dans 21 jours ou moins
+  const ev=getNextCalendarEvent();
+  if(ev.daysLeft<=21) {
+    alerts.push({type:'info',message:`${ev.emoji} ${ev.name} dans ${ev.daysLeft} jour${ev.daysLeft>1?'s':''} — ${ev.conseil}`});
+  }
+
+  // 4. Zone sans vente ces 3 derniers jours
+  const limit3=new Date(Date.now()-3*86400000);
+  const recentes=ventesCaisse.filter(v=>{const d=new Date((v.date||'')+'T00:00:00');return d>=limit3;});
+  const szR=statsZonesCaisse(recentes);
+  ['A','B','C','D'].forEach(k=>{
+    if(!szR[k]||szR[k].count===0) {
+      alerts.push({type:'warning',message:`Zone ${k} — ${ZONES_CAISSE[k]?.label} : aucune vente ces 3 derniers jours. Vérifier l'achalandage et les prix.`});
+    }
+  });
+
+  // 5. Membres fidélité inactifs 30+ jours
+  const limit30=new Date(Date.now()-30*86400000);
+  const inactifs=loyaltyCustomers.filter(c=>{
+    if(!c.lastPurchase) return true;
+    const d=c.lastPurchase?.toDate?c.lastPurchase.toDate():new Date(c.lastPurchase);
+    return d<limit30;
+  }).length;
+  if(inactifs>0) {
+    alerts.push({type:'info',message:`${inactifs} membre${inactifs>1?'s':''} Club TeMa Family inactif${inactifs>1?'s':''} depuis 30+ jours — penser à les relancer via WhatsApp.`});
+  }
+
+  return alerts;
+}
+
+function showNoraNotifications(alerts) {
+  const zone=document.getElementById('agent-notifications');
+  if(!zone) return;
+  if(!alerts.length){zone.style.display='none';zone.innerHTML='';return;}
+  const bgMap={danger:'rgba(192,57,43,.10)',warning:'rgba(230,126,34,.10)',info:'rgba(26,122,110,.08)'};
+  const borderMap={danger:'#c0392b',warning:'#e67e22',info:'rgba(26,122,110,.3)'};
+  const iconMap={danger:'ti-alert-circle',warning:'ti-alert-triangle',info:'ti-info-circle'};
+  zone.innerHTML=alerts.map(a=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:8px;background:${bgMap[a.type]||bgMap.info};border:1px solid ${borderMap[a.type]||borderMap.info};border-radius:10px;font-size:13px;line-height:1.6">
+      <i class="ti ${iconMap[a.type]||iconMap.info}" style="flex-shrink:0;margin-top:2px"></i>
+      <span>${a.message}</span>
+    </div>`).join('');
+  zone.style.display='block';
+}
+
+function runNoraAutoAnalyse() {
+  const question=(document.getElementById('caisse-ia-question')?.value||'').trim();
+  const alerts=checkIrregularitesNora();
+  showNoraNotifications(alerts);
+  if(question) return;
+  if(!ventesCaisse.length) return;
+  const btn=document.getElementById('caisse-ia-btn');
+  const box=document.getElementById('caisse-ia-resultat');
+  btn.disabled=true; btn.textContent='🧠 Analyse en cours...';
+  box.style.display='none';
+  setTimeout(()=>{
+    box.textContent=genererAnalyseNora('');
+    box.style.display='block';
+    btn.disabled=false; btn.textContent="🧠 Lancer l'analyse";
+  },500);
+}
+
+let _noraClock=null;
+function initNoraClock() {
+  if(_noraClock) return;
+  _noraClock=setInterval(()=>{
+    if(document.getElementById('suivi-tab-ia')?.classList.contains('active')) {
+      showNoraNotifications(checkIrregularitesNora());
+    }
+  },60*60*1000);
+}
+
+function lancerAnalyseCaisseIA() {
+  const btn=document.getElementById('caisse-ia-btn');
+  const box=document.getElementById('caisse-ia-resultat');
+  const question=(document.getElementById('caisse-ia-question')?.value||'').trim();
+  showNoraNotifications(checkIrregularitesNora());
+  if(!ventesCaisse.length&&!question){showToast('Aucune vente à analyser pour le moment','error');return;}
+  btn.disabled=true; btn.textContent='🧠 Analyse en cours...';
+  box.style.display='none';
+  setTimeout(()=>{
+    box.textContent=genererAnalyseNora(question);
+    box.style.display='block';
+    btn.disabled=false; btn.textContent="🧠 Lancer l'analyse";
+  },600);
+}
+
+function genererAnalyseNora(question='') {
+  const moisActuel=today().slice(0,7);
+  const ventesMois=ventesCaisse.filter(v=>(v.date||'').startsWith(moisActuel));
+  const totalMois=ventesMois.reduce((s,v)=>s+(v.montant||0),0);
+  const totalJour=totalCaisseJour(today());
+  const sz=statsZonesCaisse(ventesMois);
+  const zonesTriees=Object.entries(sz).sort((a,b)=>b[1].total-a[1].total);
+  const meilleureZone=zonesTriees[0];
+  const pireZone=zonesTriees[zonesTriees.length-1];
+  const jours=[...new Set(ventesCaisse.map(v=>v.date))];
+  const moyJour=jours.length?Math.round(ventesCaisse.reduce((s,v)=>s+(v.montant||0),0)/jours.length):0;
+  const sp={};
+  ventesMois.forEach(v=>{sp[v.modePaiement]=(sp[v.modePaiement]||0)+(v.montant||0);});
+  const modeTop=Object.entries(sp).sort((a,b)=>b[1]-a[1])[0];
+  const now=new Date();
+  const ev=getNextCalendarEvent();
+  const pct=Math.round(totalMois/LOYER_MOIS*100);
+  const joursMoisRestants=new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate();
+
+  const limit30=new Date(Date.now()-30*86400000);
+  const totalMembres=loyaltyCustomers.length;
+  const membresActifs=loyaltyCustomers.filter(c=>{
+    if(!c.lastPurchase) return false;
+    const d=c.lastPurchase?.toDate?c.lastPurchase.toDate():new Date(c.lastPurchase);
+    return d>=limit30;
+  }).length;
+  const inactifs=totalMembres-membresActifs;
+
+  const lignes=[`🧠 Nora — Analyse TeMa Boutique — ${now.toLocaleDateString('fr-FR')}`];
+
+  if(question) {
+    const ql=question.toLowerCase();
+
+    if(/zone|performe|meilleur/.test(ql)) {
+      if(meilleureZone) {
+        lignes.push(`📊 Zone la plus performante ce mois :\n${ZONES_CAISSE[meilleureZone[0]]?.emoji||''} ${ZONES_CAISSE[meilleureZone[0]]?.label} (Zone ${meilleureZone[0]}) — ${FCFA(meilleureZone[1].total)} sur ${meilleureZone[1].count} vente(s).`);
+        if(pireZone&&pireZone[0]!==meilleureZone[0]) lignes.push(`Zone en retrait : ${ZONES_CAISSE[pireZone[0]]?.label} (${FCFA(pireZone[1].total)}).`);
+        lignes.push(`\n✅ Actions :\n1. Renforcer les articles phares de la Zone ${meilleureZone[0]} — ils génèrent la récurrence.\n2. Pour la zone en retrait : vérifier l'achalandage, les prix et l'affichage.\n3. Viser ${FCFA(OBJECTIF_JOUR)}/jour pour tenir le rythme du loyer.`);
+      } else {
+        lignes.push(`Pas encore assez de ventes ce mois pour dégager une tendance par zone. Continue à bien enregistrer chaque vente.`);
+      }
+
+    } else if(/loyer|couvert|couvrir/.test(ql)) {
+      if(totalMois>=LOYER_MOIS) {
+        lignes.push(`✅ BONNE NOUVELLE — Le loyer de ${FCFA(LOYER_MOIS)} est couvert : ${FCFA(totalMois)} encaissés ce mois (${pct}%). Marge : ${FCFA(totalMois-LOYER_MOIS)}.`);
+        lignes.push(`\n✅ Actions :\n1. Mettre la marge de côté — ne pas la dépenser en réassort non urgent.\n2. Continuer à viser ${FCFA(OBJECTIF_JOUR)}/jour pour consolider le revenu net famille.\n3. Bon moment pour relancer les ${inactifs} membres Club TeMa Family inactifs.`);
+      } else {
+        const manque=LOYER_MOIS-totalMois;
+        const objectifR=joursMoisRestants>0?Math.ceil(manque/joursMoisRestants):manque;
+        lignes.push(`⚠️ Loyer pas encore couvert : ${FCFA(totalMois)} sur ${FCFA(LOYER_MOIS)} nécessaires (${pct}%). Manque : ${FCFA(manque)}.`);
+        lignes.push(`\n✅ Actions :\n1. Viser ${FCFA(objectifR)}/jour sur les ${joursMoisRestants} jours restants pour combler l'écart.\n2. Concentrer l'effort sur ${meilleureZone?ZONES_CAISSE[meilleureZone[0]]?.label:'ta zone la plus active'} — c'est là que le potentiel est le plus fort.\n3. Zéro crédit client jusqu'à la fin du mois.`);
+      }
+
+    } else if(/objectif|10\s?000|jour/.test(ql)) {
+      if(totalJour>=OBJECTIF_JOUR) {
+        lignes.push(`✅ BONNE NOUVELLE — Objectif du jour atteint : ${FCFA(totalJour)} encaissés (objectif : ${FCFA(OBJECTIF_JOUR)}). Moyenne de la période : ${FCFA(moyJour)}/jour.`);
+        lignes.push(`\n✅ Actions :\n1. Maintenir ce rythme — la régularité est la clé.\n2. Réapprovisionner les articles les plus vendus aujourd'hui avant la rupture.\n3. Enregistrer toutes les ventes avant la fermeture.`);
+      } else {
+        lignes.push(`⚠️ Objectif du jour pas encore atteint : ${FCFA(totalJour)} encaissés — il manque ${FCFA(OBJECTIF_JOUR-totalJour)} pour les ${FCFA(OBJECTIF_JOUR)}. Moyenne de la période : ${FCFA(moyJour)}/jour.`);
+        lignes.push(`\n✅ Actions :\n1. ${now.getHours()<18?'La journée n\'est pas finie — intensifier les échanges en caisse.':'Demain, ouvrir tôt et maximiser les ventes en matinée.'}\n2. Proposer les articles à forte rotation aux clients qui passent.\n3. Relancer les membres Club TeMa Family actifs via WhatsApp.`);
+      }
+
+    } else if(/produit|réapprovis|stock|article/.test(ql)) {
+      const cnt={};
+      ventesMois.forEach(v=>{cnt[v.article]=(cnt[v.article]||0)+(v.quantite||1);});
+      const tops=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+      if(tops.length) {
+        lignes.push(`📦 Articles les plus vendus ce mois :\n${tops.map((a,i)=>`${i+1}. "${a[0]}" — ${a[1]} unité(s)`).join('\n')}`);
+        lignes.push(`\n✅ Actions :\n1. Vérifier en priorité le stock de "${tops[0][0]}" — rupture = ventes perdues.\n2. Anticiper la demande : ${ev.name} dans ${ev.daysLeft} jours.\n3. Pour les articles lents : envisager une promotion ou un repositionnement.`);
+      } else {
+        lignes.push(`Pas encore assez de données ce mois pour dégager une tendance produit. Continue à bien enregistrer chaque vente avec le nom de l'article.`);
+      }
+
+    } else if(/fidél|club|membre|loyal|étoile/.test(ql)) {
+      lignes.push(`👥 Club TeMa Family :\n• ${totalMembres} membre${totalMembres>1?'s':''} inscrits\n• ${membresActifs} actif${membresActifs>1?'s':''} ces 30 derniers jours\n• ${inactifs} inactif${inactifs>1?'s':''} à relancer`);
+      lignes.push(`\n✅ Actions :\n1. Relancer les ${inactifs} membres inactifs par WhatsApp avec une offre personnalisée.\n2. Encourager chaque nouveau client à s'inscrire au Club TeMa Family.\n3. Vérifier dans la section Club TeMa Family les membres proches d'un niveau supérieur — les encourager à revenir.`);
+
+    } else if(/calendrier|événement|fête|rentrée|noël|valentin|pâques|mères|enfant|vacances|anniv/.test(ql)) {
+      lignes.push(`📅 DANS ${ev.daysLeft} JOUR${ev.daysLeft>1?'S':''} — ${ev.emoji} ${ev.name}\n${ev.conseil}`);
+      lignes.push(`\n✅ Actions :\n1. ${ev.daysLeft<=7?'URGENT — préparer maintenant, c\'est dans moins d\'une semaine.':ev.daysLeft<=21?'Commencer les préparatifs cette semaine.':'Planifier les commandes dans les prochaines semaines.'}\n2. Informer les clients réguliers via WhatsApp des offres spéciales prévues.\n3. Vérifier que le stock est suffisant pour répondre à la demande pendant l'événement.`);
+
+    } else {
+      lignes.push(`Voici un bilan général de TeMa Boutique :\n• Ce mois : ${FCFA(totalMois)} encaissés (${pct}% du loyer)\n• Aujourd'hui : ${FCFA(totalJour)}\n• Moyenne / jour : ${FCFA(moyJour)}\n• Zone phare : ${meilleureZone?`${ZONES_CAISSE[meilleureZone[0]]?.label} (${FCFA(meilleureZone[1].total)})`:'-'}\n• Club TeMa Family : ${totalMembres} membres, ${membresActifs} actifs\n• Prochain événement : ${ev.emoji} ${ev.name} dans ${ev.daysLeft} jours`);
+      lignes.push(`\nPose une question précise — ex: "loyer", "zone", "objectif", "produits", "fidélité", "calendrier" — pour une analyse ciblée.`);
+    }
+
+  } else {
+    // Bilan automatique
+    if(totalMois>=LOYER_MOIS) {
+      lignes.push(`✅ BONNE NOUVELLE — Le loyer est couvert : ${FCFA(totalMois)} encaissés ce mois (${pct}%). Marge disponible : ${FCFA(totalMois-LOYER_MOIS)}.`);
+    } else {
+      lignes.push(`1. Bilan mensuel : ${FCFA(totalMois)} encaissés ce mois (${pct}% du loyer de ${FCFA(LOYER_MOIS)}). Manque : ${FCFA(LOYER_MOIS-totalMois)}.`);
+    }
+
+    lignes.push(`2. Aujourd'hui : ${FCFA(totalJour)} encaissés — objectif : ${FCFA(OBJECTIF_JOUR)}.${totalJour>=OBJECTIF_JOUR?' ✅':''}`);
+
+    if(meilleureZone) {
+      lignes.push(`3. Zone la plus performante : ${ZONES_CAISSE[meilleureZone[0]]?.emoji||''} ${ZONES_CAISSE[meilleureZone[0]]?.label} (Zone ${meilleureZone[0]}) — ${FCFA(meilleureZone[1].total)} sur ${meilleureZone[1].count} vente(s)${modeTop?`, principalement en ${modeTop[0]}`:''}. Moyenne / jour actif : ${FCFA(moyJour)}.`);
+    }
+
+    if(pireZone&&zonesTriees.length>1&&pireZone[1].total<(meilleureZone?.[1].total||1)*0.3) {
+      lignes.push(`⚠️ ALERTE — Zone ${ZONES_CAISSE[pireZone[0]]?.label} nettement en retrait (${FCFA(pireZone[1].total)}) — vérifier l'achalandage, les prix ou le choix des produits.`);
+    } else if(totalJour<OBJECTIF_JOUR&&now.getHours()>=17) {
+      lignes.push(`⚠️ ALERTE — ${now.getHours()}h et l'objectif du jour (${FCFA(OBJECTIF_JOUR)}) pas encore atteint (${FCFA(totalJour)}) — relancer les clients habituels avant la fermeture.`);
+    } else {
+      lignes.push(`4. Pas d'alerte particulière — continuer à enregistrer chaque vente le jour même.`);
+    }
+
+    lignes.push('5. Club TeMa Family : '+totalMembres+' membre'+(totalMembres>1?'s':'')+' inscrits — '+membresActifs+' actif'+(membresActifs>1?'s':'')+' ce mois. '+(inactifs>0?(inactifs+' à relancer par WhatsApp.'):'Bonne rétention ✅'));
+
+    if(ev.daysLeft<=21) {
+      lignes.push(`\n📅 DANS ${ev.daysLeft} JOUR${ev.daysLeft>1?'S':''} — ${ev.emoji} ${ev.name}\n${ev.conseil}`);
+    } else {
+      lignes.push(`6. Prochain événement commercial : ${ev.emoji} ${ev.name} dans ${ev.daysLeft} jours.`);
+    }
+
+    const p1=totalJour<OBJECTIF_JOUR?`Atteindre les ${FCFA(OBJECTIF_JOUR)} — manque ${FCFA(OBJECTIF_JOUR-totalJour)}.`:`Maintenir le rythme et réapprovisionner les articles phares.`;
+    const p3=inactifs>0?`Relancer ${inactifs} membre${inactifs>1?'s':''} Club TeMa Family inactifs.`:`Inviter les nouveaux clients à rejoindre le Club TeMa Family.`;
+    lignes.push(`\n✅ Priorités du jour :\n1. ${p1}\n2. Enregistrer toutes les ventes avant la fermeture (boutique ouverte jusqu'à 20h).\n3. ${p3}`);
+  }
+
   return lignes.join('\n\n');
 }
 
