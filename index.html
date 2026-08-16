@@ -7736,7 +7736,9 @@ async function confirmerDemarrageSession() {
   if (!requireCashier()) return;
   const c = posCaisseChoisie;
   if (!c) return;
-  const fonds = parseFloat(document.getElementById('sc-fonds-caisse').value) || 0;
+  const fondsVal = document.getElementById('sc-fonds-caisse').value.trim();
+  if (fondsVal === '') { showToast('Veuillez saisir le fonds de caisse initial (0 minimum)', 'error'); document.getElementById('sc-fonds-caisse').focus(); return; }
+  const fonds = parseFloat(fondsVal) || 0;
   if (fonds < 0) { showToast('Le fonds de caisse ne peut pas être négatif', 'error'); return; }
   const note = document.getElementById('sc-session-note').value.trim();
   const caisseRef = db.collection('caisses').doc(c.id);
@@ -8170,7 +8172,9 @@ async function consignerAuditCaisse(type, caisse, session, motif, extra = {}) {
 
 // Ouverture manuelle (Gérant/Admin via Caisse POS, sans caisse physique attribuée)
 async function ouvrirSessionCaisse() {
-  const fonds=parseFloat(document.getElementById('fonds-caisse').value)||0;
+  const fondsVal = document.getElementById('fonds-caisse').value.trim();
+  if (fondsVal === '') { showToast('Veuillez saisir le fonds de caisse initial (0 minimum)', 'error'); document.getElementById('fonds-caisse').focus(); return; }
+  const fonds=parseFloat(fondsVal)||0;
   const note=document.getElementById('session-note').value.trim();
   const now = posDateHeure();
   try {
