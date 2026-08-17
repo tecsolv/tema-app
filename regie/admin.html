@@ -1,858 +1,897 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TeMa — Régie</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.3.0/tabler-icons.min.css">
-  <style>
-    :root {
-      --gold:       #C8981A;
-      --gold-hover: rgba(200,152,26,0.15);
-      --teal:       #1A7A6E;
-      --teal-dim:   #0f4f47;
-      --teal-hover: rgba(26,122,110,0.15);
-      --bg:         #0a0f1a;
-      --surface:    #131929;
-      --surface2:   #1a2235;
-      --input-bg:   #0d1220;
-      --border:     rgba(255,255,255,0.06);
-      --border-in:  rgba(255,255,255,0.1);
-      --text:       #ffffff;
-      --muted:      rgba(255,255,255,0.5);
-      --muted-dim:  rgba(255,255,255,0.28);
-      --red:        #ef4444;
-      --green:      #22c55e;
-      --font:       'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      overflow: hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeMa — Régie Publicitaire</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* ═══════════════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:          transparent;
+  --surface:     rgba(22,14,4,0.72);
+  --surface-2:   rgba(32,20,6,0.78);
+  --surface-3:   rgba(44,28,10,0.85);
+  --border:      rgba(220,185,120,0.14);
+  --border-2:    rgba(220,185,120,0.24);
+  --gold:        #C8981A;
+  --gold-light:  #E0B040;
+  --gold-dim:    rgba(200,152,26,0.14);
+  --gold-dim2:   rgba(200,152,26,0.26);
+  --teal:        #1A7A6E;
+  --teal-light:  #4ecdc4;
+  --teal-dim:    rgba(26,122,110,0.18);
+  --red:         #DC2626;
+  --red-dim:     rgba(220,38,38,0.15);
+  --live:        #22C55E;
+  --live-dim:    rgba(34,197,94,0.15);
+  --pause:       #F59E0B;
+  --pause-dim:   rgba(245,158,11,0.15);
+  --text:        #EDD9B2;
+  --text-dim:    rgba(237,217,178,0.58);
+  --text-mute:   rgba(237,217,178,0.32);
+  --radius:      10px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.5);
+}
+html, body {
+  height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1D1408 url('bg_regie.png') center/cover no-repeat scroll;
+  color: var(--text); font-size: 13px; overflow: hidden;
+}
 
-    /* ── CONTAINER PRINCIPAL ── */
-    .regie-container {
-      display: grid;
-      grid-template-rows: 52px 1fr;
-      height: 100vh;
-    }
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
-    /* ── HEADER ── */
-    .regie-header {
-      background: #080d18;
-      border-bottom: 0.5px solid rgba(255,255,255,0.07);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      flex-shrink: 0;
-    }
-    .regie-logo {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #fff;
-    }
-    .regie-logo span { color: var(--gold); }
-    .regie-logo em { font-style: normal; color: rgba(255,255,255,0.6); font-weight: 400; }
-    .regie-logo-sep { color: rgba(255,255,255,0.2); margin: 0 6px; font-weight: 300; }
-    .regie-logo-sub { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.03em; }
-    .regie-header-actions { display: flex; align-items: center; gap: 10px; }
+/* ═══════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════ */
+.app { display: flex; flex-direction: column; height: 100vh; }
 
-    .btn-upload-header {
-      background: rgba(26,122,110,0.15);
-      border: 1px solid rgba(26,122,110,0.3);
-      color: #4ecdc4;
-      border-radius: 7px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: var(--font);
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: all 0.15s;
-    }
-    .btn-upload-header:hover {
-      background: rgba(26,122,110,0.25);
-      border-color: rgba(26,122,110,0.5);
-    }
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px; padding: 0 18px; flex-shrink: 0;
+  background: rgba(15,8,2,0.72); backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--border-2);
+  position: relative; z-index: 10;
+}
+.header-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.brand-logo {
+  font-size: 17px; font-weight: 800; letter-spacing: -0.5px; color: var(--text);
+}
+.brand-logo span { color: var(--gold); }
+.brand-logo em { font-style: normal; color: var(--teal-light); }
+.brand-sep { width: 1px; height: 20px; background: var(--border-2); }
+.brand-sub {
+  font-size: 11px; font-weight: 600; color: var(--text-dim);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.header-actions { display: flex; align-items: center; gap: 8px; }
 
-    .btn-urgence {
-      background: rgba(220,38,38,0.12);
-      border: 1px solid rgba(220,38,38,0.3);
-      color: #f87171;
-      border-radius: 7px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: var(--font);
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      transition: all 0.15s;
-    }
-    .btn-urgence:hover { background: rgba(220,38,38,0.22); border-color: rgba(220,38,38,0.5); }
-    .btn-urgence.active-emergency {
-      background: #DC2626; border-color: #DC2626; color: #fff;
-      animation: pulse-red 2s infinite;
-    }
-    @keyframes pulse-red {
-      0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
-      50%      { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
-    }
+.btn-upload-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; border: 1px solid var(--gold);
+  background: var(--gold-dim); color: var(--gold); transition: all .15s;
+}
+.btn-upload-header:hover { background: var(--gold-dim2); }
 
-    /* ── CORPS DEUX COLONNES ── */
-    .regie-body {
-      display: grid;
-      grid-template-columns: 400px 1fr;
-      overflow: hidden;
-    }
-    .regie-left {
-      border-right: 0.5px solid rgba(255,255,255,0.06);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    .regie-right {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      padding: 24px;
-      overflow-y: auto;
-    }
+.btn-urgence {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  border: 1px solid rgba(220,38,38,0.35); background: var(--red-dim);
+  color: #F87171; transition: all .15s;
+}
+.btn-urgence:hover { background: rgba(220,38,38,0.25); border-color: rgba(220,38,38,0.6); }
+.btn-urgence.active-emergency {
+  background: var(--red); border-color: var(--red); color: #fff;
+  animation: urgencePulse 1.5s ease-in-out infinite;
+}
+@keyframes urgencePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
 
-    /* ── ZONE INFO SÉLECTION ── */
-    #selected-info {
-      padding: 24px 24px 20px;
-      border-bottom: 0.5px solid rgba(255,255,255,0.06);
-      min-height: 140px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .selected-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-      color: rgba(255,255,255,0.2);
-    }
-    .selected-placeholder i { font-size: 28px; margin-bottom: 4px; }
-    .selected-placeholder p { font-size: 12px; line-height: 1.7; }
-    .selected-zone-num {
-      font-size: 56px;
-      font-weight: 900;
-      line-height: 1;
-      color: var(--gold);
-      letter-spacing: -0.03em;
-      margin-bottom: 4px;
-    }
-    .selected-zone-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-    .selected-now {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 10px;
-      line-height: 1.6;
-    }
-    .selected-now strong { color: rgba(255,255,255,0.8); }
-    .selected-stats {
-      font-size: 11px;
-      color: var(--muted-dim);
-      margin-top: 6px;
-    }
+.btn-surveillance {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 7px; font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  border: 1px solid var(--border-2); background: transparent;
+  color: var(--text-dim); transition: all .15s;
+}
+.btn-surveillance:hover { border-color: var(--teal-light); color: var(--teal-light); }
+.btn-surveillance.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-light); }
 
-    /* ── LISTE ÉCRANS ── */
-    .screen-list { flex: 1; padding: 8px 0; }
-    .screen-list-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--muted-dim);
-      padding: 10px 24px 6px;
-    }
-    .screen-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 11px 24px;
-      cursor: pointer;
-      transition: background 0.12s;
-      border-left: 2px solid transparent;
-    }
-    .screen-row:hover:not(.non-clickable) { background: rgba(255,255,255,0.03); }
-    .screen-row.selected {
-      background: rgba(200,152,26,0.05);
-      border-left-color: var(--gold);
-    }
-    .screen-row.non-clickable { cursor: default; opacity: 0.35; }
-    .screen-row-num {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.05);
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.15s;
-    }
-    .screen-row-num.active {
-      background: rgba(200,152,26,0.15);
-      color: var(--gold);
-    }
-    .screen-row-info { flex: 1; min-width: 0; }
-    .screen-row-zone {
-      font-size: 12px;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 3px;
-    }
+/* ═══════════════════════════════════════════════════════
+   BODY — 3 COLUMNS
+═══════════════════════════════════════════════════════ */
+.body { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── STATUS PILLS ── */
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 7px; border-radius: 999px;
-      font-size: 9px; font-weight: 600;
-    }
-    .s-live  { background: rgba(34,197,94,.12);   color: #22c55e; border: 1px solid rgba(34,197,94,.22);   }
-    .s-pause { background: rgba(245,158,11,.12);  color: #f59e0b; border: 1px solid rgba(245,158,11,.22);  }
-    .s-off   { background: rgba(100,116,139,.10); color: #64748b; border: 1px solid rgba(100,116,139,.2);  }
-    .s-conn  { background: rgba(78,205,196,.10);  color: #4ecdc4; border: 1px solid rgba(78,205,196,.22);  }
-    .s-prev  { background: rgba(255,255,255,.04); color: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.08); }
-    .dot-status { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-    .dot-live  { background: #22c55e; }
-    .dot-pause { background: #f59e0b; }
-    .dot-off   { background: #64748b; }
-    .dot-conn  { background: #4ecdc4; }
-    .dot-dim   { background: rgba(255,255,255,.2); }
+/* ═══════════════════════════════════════════════════════
+   LEFT PANEL — SCREENS
+═══════════════════════════════════════════════════════ */
+.panel-left {
+  width: 210px; flex-shrink: 0;
+  background: rgba(15,8,2,0.68); backdrop-filter: blur(18px) saturate(150%);
+  border-right: 1px solid var(--border-2);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel-left-header {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-left-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.screen-count-badge {
+  font-size: 10px; font-weight: 700; padding: 1px 7px;
+  background: var(--gold-dim); color: var(--gold); border-radius: 20px;
+}
+.screen-list { flex: 1; overflow-y: auto; padding: 8px 8px; }
+.screen-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; margin-bottom: 3px;
+  transition: all .15s; position: relative;
+}
+.screen-item:hover { background: var(--surface-2); border-color: var(--border); }
+.screen-item.selected {
+  background: var(--surface-3); border-color: var(--gold-dim2);
+}
+.screen-item.non-clickable { cursor: default; opacity: 0.5; }
+.screen-item.non-clickable:hover { background: transparent; border-color: transparent; }
 
-    /* ── COLONNE DROITE — EMPTY ── */
-    #right-empty {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      color: rgba(255,255,255,.18);
-      text-align: center;
-    }
-    #right-empty i { font-size: 52px; }
-    #right-empty p { font-size: 13px; line-height: 1.9; }
+.screen-num {
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+  background: var(--surface-3); color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.screen-item.selected .screen-num {
+  background: var(--gold-dim2); color: var(--gold); border-color: var(--gold);
+}
+.screen-item-body { flex: 1; min-width: 0; }
+.screen-zone { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.screen-now  { font-size: 10px; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.screen-status { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-    /* ── PREVIEW SECTION ── */
-    #preview-section {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .preview-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .preview-label span { color: rgba(255,255,255,0.7); font-weight: 400; text-transform: none; letter-spacing: 0; }
-    #preview-frame {
-      background: #000;
-      border-radius: 10px;
-      border: 0.5px solid rgba(255,255,255,.07);
-      aspect-ratio: 16 / 7;
-      width: 100%;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .badge-live {
-      position: absolute; top: 10px; left: 10px;
-      background: rgba(239,68,68,.88); color: #fff;
-      font-size: 9px; font-weight: 700;
-      padding: 3px 8px; border-radius: 4px;
-      letter-spacing: .06em; z-index: 10;
-    }
-    .badge-idle {
-      position: absolute; top: 10px; left: 10px;
-      background: rgba(245,158,11,.75); color: #fff;
-      font-size: 9px; font-weight: 700;
-      padding: 3px 8px; border-radius: 4px; z-index: 10;
-    }
-    .preview-empty {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px; color: rgba(255,255,255,.2); height: 100%; width: 100%;
-    }
-    .preview-empty i { font-size: 36px; }
-    .preview-empty p { font-size: 12px; text-align: center; line-height: 1.6; }
-    .preview-controls {
-      display: flex; gap: 8px;
-    }
-    .preview-nav-btn {
-      flex: 1; background: var(--surface2); color: var(--muted);
-      border: 1px solid var(--border-in); border-radius: 8px;
-      padding: 8px 10px; font-size: 11px; font-family: var(--font);
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
-      transition: all 0.15s;
-    }
-    .preview-nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
-    .preview-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-    .btn-pause-screen {
-      background: rgba(200,152,26,0.1); border: 1px solid rgba(200,152,26,0.28);
-      color: var(--gold); border-radius: 8px; padding: 8px 18px;
-      font-size: 12px; font-weight: 700; font-family: var(--font);
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all 0.15s; flex-shrink: 0;
-    }
-    .btn-pause-screen:hover { background: rgba(200,152,26,0.2); border-color: var(--gold); }
-    .btn-pause-screen.is-paused { background: rgba(26,122,110,0.12); border-color: rgba(26,122,110,0.35); color: #4ecdc4; }
-    .btn-pause-screen.is-paused:hover { background: rgba(26,122,110,0.22); }
+/* Status pills */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.pill-live   { background: var(--live-dim);  color: var(--live);  }
+.pill-off    { background: rgba(255,255,255,0.05); color: var(--text-mute); }
+.pill-pause  { background: var(--pause-dim); color: var(--pause); }
+.pill-conn   { background: var(--teal-dim);  color: var(--teal-light); }
+.pill-prev   { background: rgba(255,255,255,0.04); color: var(--text-mute); }
 
-    /* ── PLAYLIST SECTION ── */
-    #playlist-section {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .playlist-header {
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .playlist-title { font-size: 13px; font-weight: 700; }
-    .playlist-count {
-      font-size: 11px; color: var(--muted);
-      background: rgba(255,255,255,0.05);
-      padding: 2px 9px; border-radius: 999px;
-      border: 1px solid var(--border);
-    }
-    .playlist-items-container {}
+/* Status dots */
+.dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-live  { background: var(--live);  box-shadow: 0 0 0 2px rgba(34,197,94,0.25); animation: pulseDot 1.5s ease-in-out infinite; }
+.dot-off   { background: rgba(255,255,255,0.2); }
+.dot-pause { background: var(--pause); }
+.dot-conn  { background: var(--teal-light); }
+.dot-dim   { background: rgba(255,255,255,0.1); }
+@keyframes pulseDot {
+  0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.25); }
+  50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
 
-    /* ── PLAYLIST ITEMS ── */
-    .playlist-item {
-      border: 1.5px solid var(--border);
-      border-radius: 10px; padding: 11px;
-      display: grid; grid-template-columns: 64px 1fr auto;
-      gap: 10px; align-items: center; margin-bottom: 8px;
-      background: var(--surface); transition: border-color 0.15s;
-    }
-    .playlist-item:hover { border-color: rgba(255,255,255,0.13); }
-    .playlist-item.inactive { opacity: 0.45; }
-    .playlist-item.is-live { border-left: 3px solid #ef4444 !important; background: rgba(239,68,68,.04); }
+.alert-badge {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); box-shadow: 0 0 0 2px var(--surface);
+  animation: pulseDotRed 1.5s ease-in-out infinite;
+}
+@keyframes pulseDotRed {
+  0%,100% { box-shadow: 0 0 0 2px var(--surface); }
+  50%      { box-shadow: 0 0 6px var(--red), 0 0 0 2px var(--surface); }
+}
 
-    .item-thumb {
-      width: 64px; height: 42px; border-radius: 7px;
-      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0;
-      position: relative; cursor: pointer;
-    }
-    .item-thumb img, .item-thumb video { width: 100%; height: 100%; object-fit: cover; }
-    .item-thumb:hover::after {
-      content: '▶';
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.55);
-      display: flex; align-items: center; justify-content: center;
-      color: #C8981A; font-size: 16px; border-radius: 6px;
-    }
-    .badge-local {
-      position: absolute; top: 10px; left: 10px;
-      background: rgba(200,152,26,0.88); color: #fff;
-      font-size: 9px; font-weight: 700;
-      padding: 3px 9px; border-radius: 4px;
-      letter-spacing: 0.07em; z-index: 10;
-    }
-    .item-info { min-width: 0; }
-    .item-name {
-      font-size: 12px; font-weight: 600; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
-    }
-    .item-meta { display: flex; gap: 4px; flex-wrap: wrap; }
-    .tag {
-      font-size: 9px; font-weight: 600;
-      padding: 2px 7px; border-radius: 999px;
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
-    .tag-video { background: rgba(126,34,206,0.2); color: #c4b5fd; }
-    .tag-image { background: rgba(29,78,216,0.2);  color: #93c5fd; }
-    .tag-auto  { background: rgba(255,255,255,.06); color: rgba(255,255,255,.4); }
-    .tag-live  { background: rgba(239,68,68,0.2);  color: #f87171; }
-    .tag-sched { background: var(--gold-hover);    color: var(--gold); }
-    .tag-dur   { background: var(--gold-hover);    color: var(--gold); }
+.panel-left-footer {
+  padding: 10px 10px; border-top: 1px solid var(--border);
+}
 
-    .item-actions { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
-    .action-row   { display: flex; gap: 4px; }
-    .btn-icon {
-      width: 28px; height: 28px; border-radius: 7px;
-      border: 1.5px solid var(--border-in);
-      background: var(--input-bg); cursor: pointer; font-size: 13px;
-      display: flex; align-items: center; justify-content: center; color: var(--muted);
-      transition: all 0.12s;
-    }
-    .btn-icon:hover        { border-color: var(--gold); color: var(--gold); }
-    .btn-icon.danger:hover { border-color: var(--red);  color: var(--red);  }
-    .btn-icon.move:hover   { border-color: var(--teal); color: var(--teal); }
-    .btn-icon[disabled]    { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+/* ═══════════════════════════════════════════════════════
+   CENTER PANEL
+═══════════════════════════════════════════════════════ */
+.panel-center {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;
+  background: rgba(6,3,0,0.25);
+}
 
-    .toggle-wrap { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .toggle {
-      width: 30px; height: 17px; border-radius: 999px;
-      background: rgba(255,255,255,0.15); position: relative;
-      flex-shrink: 0; transition: background 0.2s;
-    }
-    .toggle.on { background: var(--teal); }
-    .toggle::after {
-      content: ''; position: absolute; width: 12px; height: 12px;
-      border-radius: 50%; background: #fff; top: 2.5px; left: 2.5px; transition: left 0.2s;
-    }
-    .toggle.on::after { left: calc(100% - 14.5px); }
-    .toggle-label { font-size: 10px; font-weight: 600; color: var(--muted); }
-    .toggle.on + .toggle-label { color: var(--teal); }
+/* Alerts */
+#alerts-zone {
+  display: none; flex-direction: column; gap: 3px;
+  padding: 6px 10px 0; flex-shrink: 0; overflow-y: auto; max-height: 160px;
+}
+.alert-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 7px;
+  background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.25);
+  min-width: 0;
+}
+.alert-icon { font-size: 14px; flex-shrink: 0; }
+.alert-body { flex: 1; min-width: 0; }
+.alert-title { font-size: 11px; font-weight: 600; color: #F87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-meta  { font-size: 10px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-alert-watch {
+  font-size: 10px; padding: 3px 8px; border-radius: 5px; cursor: pointer;
+  font-family: inherit; font-weight: 600;
+  background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); color: #F87171;
+  white-space: nowrap;
+}
+.btn-alert-dismiss {
+  font-size: 10px; padding: 3px 6px; border-radius: 5px; cursor: pointer;
+  font-family: inherit; background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+}
 
-    .playlist-empty {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 36px 20px; gap: 10px; color: var(--muted);
-    }
-    .playlist-empty i { font-size: 32px; }
-    .playlist-empty p { font-size: 12px; text-align: center; line-height: 1.6; }
+/* Preview area */
+.preview-area {
+  flex-shrink: 0; padding: 8px 12px 0; position: relative;
+}
+.preview-topbar {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+}
+.preview-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.preview-media-name { color: var(--gold); }
+.preview-frame {
+  width: 100%; aspect-ratio: 16/9; max-height: 280px;
+  border-radius: 10px; overflow: hidden; position: relative;
+  background: #000; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.preview-frame video, .preview-frame img {
+  width: 100%; height: 100%; object-fit: contain;
+}
+.preview-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--text-mute);
+}
+.preview-empty i { font-size: 36px; }
+.preview-empty p { font-size: 12px; }
+.badge-live {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.08em; background: var(--live); color: #fff;
+  animation: badgePulse 1.5s ease-in-out infinite;
+}
+.badge-idle {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  background: rgba(0,0,0,0.6); color: var(--text-dim); border: 1px solid var(--border);
+}
+.badge-local {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  background: var(--gold-dim2); color: var(--gold); border: 1px solid var(--gold);
+}
+@keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:.7} }
 
-    /* ── MODAL UPLOAD ── */
-    #upload-modal {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.72);
-      z-index: 700;
-      align-items: center;
-      justify-content: center;
-    }
-    .upload-modal-inner {
-      background: #131929;
-      border: 0.5px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 24px;
-      width: 480px;
-      max-width: 95vw;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .upload-modal-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
-    }
-    .upload-modal-title { font-size: 14px; font-weight: 700; }
-    .btn-close-modal {
-      background: none; border: none; color: var(--muted);
-      cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 4px;
-    }
-    .btn-close-modal:hover { color: var(--text); }
+/* Surveillance bar */
+#surveillance-progress {
+  display: none; height: 2px; border-radius: 2px; margin-top: 6px;
+  background: var(--teal); transition: width 0s linear; width: 0%;
+}
+#surveillance-indicator {
+  display: none; align-items: center; gap: 6px; margin-top: 5px;
+  font-size: 10px; font-weight: 600; color: var(--text-dim);
+}
 
-    /* ── UPLOAD COMPACT ── */
-    .upload-compact {
-      border: 1.5px dashed rgba(200,152,26,0.3); border-radius: 10px;
-      padding: 16px 14px; display: flex; align-items: center; gap: 12px;
-      cursor: pointer; transition: all 0.2s; user-select: none;
-    }
-    .upload-compact:hover, .upload-compact.dragover {
-      border-color: var(--gold); background: var(--gold-hover);
-    }
-    .upload-compact i { font-size: 24px; color: var(--gold); flex-shrink: 0; }
-    .upload-txt { font-size: 12px; color: var(--muted); line-height: 1.6; }
-    .upload-txt em { font-style: normal; color: var(--gold); font-weight: 600; }
-    .upload-txt span { font-size: 10px; color: var(--muted-dim); }
+/* Transport controls */
+.transport {
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 12px 6px; flex-shrink: 0;
+}
+.transport-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+  border: 1px solid var(--border-2); background: var(--surface); color: var(--text-dim);
+  white-space: nowrap;
+}
+.transport-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+.transport-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+.transport-btn.is-paused { border-color: var(--teal); color: var(--teal-light); background: var(--teal-dim); }
+.transport-btn.danger { border-color: rgba(220,38,38,0.3); color: #F87171; background: var(--red-dim); }
+.transport-btn.danger:hover { background: rgba(220,38,38,0.25); }
+.transport-spacer { flex: 1; }
+.screen-nav-label { font-size: 10px; color: var(--text-mute); white-space: nowrap; }
+@media (max-width: 900px) { .tb-label { display: none; } }
 
-    /* ── CONFIG PANEL ── */
-    .config-panel {
-      background: var(--surface2); border: 1px solid rgba(200,152,26,0.2);
-      border-radius: 10px; padding: 14px; margin-top: 12px;
-    }
-    .config-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
-    }
-    .config-filename {
-      font-size: 12px; font-weight: 600; color: var(--gold);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px;
-    }
-    .btn-cancel-upload {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: 16px; line-height: 1; padding: 0 2px;
-    }
-    .btn-cancel-upload:hover { color: var(--red); }
-    .config-preview {
-      border-radius: 7px; overflow: hidden; max-height: 110px; background: #000;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
-    }
-    .config-preview img, .config-preview video { max-height: 110px; max-width: 100%; object-fit: contain; }
+/* Playlist section */
+.playlist-section {
+  flex: 1; overflow-y: auto; padding: 0 12px 12px; display: none; flex-direction: column;
+  min-height: 0;
+}
+.playlist-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0 6px; flex-shrink: 0;
+  border-top: 1px solid var(--border); margin-top: 2px;
+}
+.playlist-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.playlist-title { font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.playlist-count {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; background: var(--surface-2); color: var(--text-dim); white-space: nowrap;
+}
+.btn-add-to-screen {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  border: 1px solid var(--gold); background: var(--gold-dim); color: var(--gold);
+  transition: all .15s;
+}
+.btn-add-to-screen:hover { background: var(--gold-dim2); }
 
-    .field-label {
-      font-size: 10px; font-weight: 600; color: var(--muted);
-      letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px;
-    }
-    .field-input {
-      width: 100%; padding: 8px 10px; border: 1.5px solid var(--border-in);
-      border-radius: 8px; font-size: 12px; font-family: var(--font);
-      outline: none; background: var(--input-bg); color: var(--text);
-    }
-    .field-input:focus { border-color: var(--gold); }
-    .field-input[readonly] { color: var(--muted); cursor: default; }
-    select.field-input {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer;
-    }
-    select.field-input option { background: var(--input-bg); color: var(--text); }
-    select.field-input option:disabled { color: var(--muted-dim); }
-    .field-note { font-size: 10px; color: var(--muted-dim); margin-top: 3px; font-style: italic; display: none; }
-    .config-field { margin-top: 10px; }
+.playlist-items { display: flex; flex-direction: column; gap: 6px; }
+.playlist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: all .15s; position: relative;
+}
+.playlist-item:hover { border-color: var(--border-2); background: var(--surface-2); }
+.playlist-item.is-live { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+.playlist-item.inactive { opacity: 0.5; }
 
-    /* ── CHIPS ÉCRANS ── */
-    .screen-selector { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-    .screen-chip {
-      display: flex; align-items: center; gap: 4px; padding: 4px 10px;
-      border-radius: 999px; border: 1.5px solid var(--border-in); font-size: 11px;
-      font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--muted);
-      user-select: none; background: var(--surface);
-    }
-    .screen-chip input { display: none; }
-    .screen-chip.checked { border-color: var(--teal); background: var(--teal-hover); color: #4ecdc4; }
-    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; }
-    .screen-chip.checked .screen-dot { background: var(--teal); }
+.item-thumb {
+  width: 56px; height: 36px; border-radius: 5px; overflow: hidden;
+  background: var(--surface-3); flex-shrink: 0;
+}
+.item-thumb video, .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+.tag {
+  font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+.tag-video { background: rgba(99,102,241,0.15); color: #A5B4FC; }
+.tag-image { background: var(--gold-dim); color: var(--gold); }
+.tag-live  { background: var(--live-dim); color: var(--live); }
+.tag-dur   { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.tag-auto  { background: var(--teal-dim); color: var(--teal-light); }
+.tag-sched { background: rgba(245,158,11,0.12); color: var(--pause); }
 
-    /* ── PROGRAMMATION ── */
-    .schedule-toggle-row {
-      display: flex; align-items: center; gap: 8px; margin-top: 10px;
-      padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
-      cursor: pointer; user-select: none;
-    }
-    .schedule-toggle-row span { font-size: 11px; font-weight: 600; color: var(--muted); }
-    .schedule-toggle-row.active span { color: var(--gold); }
-    .schedule-body { display: none; margin-top: 7px; padding: 10px; background: var(--input-bg); border-radius: 8px; border: 1px solid var(--border); }
-    .schedule-body.open { display: block; }
-    .schedule-row { margin-bottom: 9px; }
-    .schedule-row:last-child { margin-bottom: 0; }
-    .schedule-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-    .schedule-dates { display: flex; gap: 5px; align-items: center; }
-    .schedule-dates span { color: var(--muted-dim); font-size: 10px; }
-    .schedule-dates input[type="date"] {
-      flex: 1; padding: 5px 7px; background: var(--surface); border: 1px solid var(--border-in);
-      border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 11px; outline: none;
-    }
-    .days-selector { display: flex; gap: 3px; flex-wrap: wrap; }
-    .day-chip {
-      width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-in);
-      background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none;
-    }
-    .day-chip.selected { background: var(--gold-hover); border-color: var(--gold); color: var(--gold); }
-    .time-range { display: flex; gap: 5px; align-items: center; }
-    .time-range span { color: var(--muted-dim); font-size: 10px; }
-    .time-range input[type="time"] {
-      flex: 1; padding: 5px 7px; background: var(--surface); border: 1px solid var(--border-in);
-      border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 11px; outline: none;
-    }
+.item-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+.action-row { display: flex; gap: 3px; }
+.btn-icon {
+  width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-dim); cursor: pointer; font-family: inherit;
+  font-size: 11px; display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.btn-icon:hover        { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+.btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.btn-icon.move:hover   { border-color: var(--teal-light); color: var(--teal-light); background: var(--teal-dim); }
+.btn-icon[disabled]    { opacity: 0.3; cursor: default; pointer-events: none; }
 
-    /* ── BTN PUBLISH ── */
-    .btn-upload {
-      width: 100%; background: var(--teal); color: #fff; border: none; border-radius: 8px;
-      padding: 10px; font-size: 12px; font-weight: 700; font-family: var(--font);
-      cursor: pointer; letter-spacing: 0.04em; margin-top: 10px;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .btn-upload:hover { background: var(--teal-dim); }
-    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+.toggle-wrap {
+  display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 1px;
+}
+.toggle {
+  width: 26px; height: 14px; border-radius: 7px; background: rgba(255,255,255,0.12);
+  position: relative; transition: background .2s; flex-shrink: 0;
+}
+.toggle::after {
+  content:''; position: absolute; top: 2px; left: 2px;
+  width: 10px; height: 10px; border-radius: 50%; background: #fff;
+  transition: transform .2s;
+}
+.toggle.on { background: var(--teal); }
+.toggle.on::after { transform: translateX(12px); }
+.toggle-label { font-size: 10px; color: var(--text-mute); }
 
-    /* ── PROGRESS ── */
-    .upload-progress-wrap { margin-top: 7px; display: none; }
-    .upload-progress-wrap.visible { display: block; }
-    .upload-progress-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
-    .progress-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--gold); border-radius: 999px; width: 0%; transition: width 0.2s; }
+.playlist-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 30px; color: var(--text-mute); text-align: center;
+}
+.playlist-empty i { font-size: 28px; }
+.playlist-empty p { font-size: 12px; line-height: 1.5; }
 
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
-      padding: 10px 18px; border-radius: 9px; font-size: 13px; font-weight: 500;
-      z-index: 9000; transition: transform 0.3s ease; white-space: nowrap;
-    }
-    .toast.show    { transform: translateX(-50%) translateY(0); }
-    .toast.success { background: #14532d; border-color: var(--green); }
-    .toast.error   { background: #450a0a; border-color: var(--red); }
+/* Empty state center */
+#right-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; color: var(--text-mute); text-align: center;
+  padding: 20px;
+}
+#right-empty i { font-size: 42px; }
+#right-empty p { font-size: 13px; line-height: 1.6; }
 
-    /* ── EMERGENCY MODAL ── */
-    .emergency-backdrop {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-      z-index: 800; align-items: center; justify-content: center;
-    }
-    .emergency-backdrop.open { display: flex; }
-    .emergency-modal {
-      background: #1a0a0a; border: 1px solid rgba(220,38,38,0.4); border-radius: 16px;
-      padding: 28px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
-    }
-    .emergency-modal h2 { font-size: 16px; color: #ef4444; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-    .emergency-modal > p { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .em-field   { margin-bottom: 16px; }
-    .em-label   { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
-    .em-input   { width: 100%; background: #0f1623; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-family: var(--font); font-size: 14px; padding: 10px 12px; outline: none; resize: none; }
-    .em-input:focus { border-color: #ef4444; }
-    .em-colors  { display: flex; gap: 10px; }
-    .em-colors > div { flex: 1; }
-    .em-sub-label { font-size: 10px; color: var(--muted-dim); margin-bottom: 4px; }
-    .color-row  { display: flex; gap: 6px; align-items: center; }
-    .color-row input[type="color"] { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: none; }
-    .color-row span { font-size: 12px; color: var(--muted); }
-    .dur-options { display: flex; gap: 8px; flex-wrap: wrap; }
-    .dur-option {
-      flex: 1; min-width: 70px; text-align: center; padding: 8px;
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-      cursor: pointer; font-size: 12px; color: var(--muted); user-select: none;
-    }
-    .dur-option.selected { border-color: #ef4444; background: rgba(220,38,38,0.15); color: #fca5a5; }
-    .em-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
-    .btn-cancel-em {
-      flex: 1; background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border);
-      border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 600; font-family: var(--font); cursor: pointer;
-    }
-    .btn-cancel-em:hover { background: rgba(255,255,255,0.1); }
-    .btn-trigger {
-      flex: 2; background: #DC2626; color: #fff; border: none; border-radius: 8px;
-      padding: 11px; font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer;
-    }
-    .btn-trigger:hover { background: #b91c1c; }
+/* Transfer popover */
+.transfer-popover {
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: 9px; padding: 10px; z-index: 50;
+  box-shadow: var(--shadow); min-width: 220px; margin: 4px 0 0 auto;
+  position: relative;
+}
+.tp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.tp-title  { font-size: 12px; font-weight: 700; }
+.tp-close  { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; }
+.tp-subtitle { font-size: 10px; color: var(--text-mute); margin-bottom: 6px; }
+.tp-list { display: flex; flex-direction: column; gap: 3px; }
+.tp-row { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; border: 1px solid var(--border); }
+.tp-row:hover { background: rgba(255,255,255,0.03); }
+.tp-num  { font-size: 12px; font-weight: 800; color: var(--gold); min-width: 16px; }
+.tp-zone { font-size: 10px; color: var(--text-mute); flex: 1; }
+.tp-btn  { font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.tp-btn-move { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(200,152,26,0.25); }
+.tp-btn-move:hover { background: var(--gold-dim2); }
+.tp-btn-copy { background: var(--teal-dim); color: var(--teal-light); border: 1px solid rgba(26,122,110,0.25); }
+.tp-btn-copy:hover { background: rgba(26,122,110,0.25); }
 
-    /* ── SURVEILLANCE ── */
-    .right-panel-header { display: flex; justify-content: flex-end; padding-bottom: 4px; flex-shrink: 0; }
-    .btn-surveillance {
-      font-size: 10px; font-weight: 600; padding: 5px 12px; border-radius: 7px;
-      cursor: pointer; font-family: inherit;
-      background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.4); transition: all 0.15s;
-    }
-    .btn-surveillance:hover { background: rgba(26,122,110,0.1); border-color: rgba(26,122,110,0.3); color: #4ecdc4; }
-    .btn-surveillance.active { background: rgba(26,122,110,0.15); border-color: #1A7A6E; color: #4ecdc4; }
-    #surveillance-progress { height: 2px; width: 0%; background: var(--teal); border-radius: 0 0 4px 4px; display: none; }
-    #surveillance-indicator { display: none; align-items: center; gap: 8px; font-size: 10px; padding: 5px 0; }
+/* ═══════════════════════════════════════════════════════
+   RIGHT PANEL — GALLERY
+═══════════════════════════════════════════════════════ */
+.panel-right {
+  width: 260px; flex-shrink: 0;
+  background: rgba(15,8,2,0.68); backdrop-filter: blur(18px) saturate(150%);
+  border-left: 1px solid var(--border-2);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel-right-header {
+  padding: 12px 14px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.panel-right-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-mute); margin-bottom: 8px;
+}
+.gallery-filters { display: flex; gap: 4px; flex-wrap: wrap; }
+.gallery-filter-btn {
+  padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+  cursor: pointer; font-family: inherit; letter-spacing: 0.03em; transition: all .12s;
+  border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+}
+.gallery-filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+.gallery-filter-btn.active { background: var(--gold-dim2); border-color: var(--gold); color: var(--gold); }
 
-    /* ── ALERTES HORS LIGNE ── */
-    #alerts-zone { display: none; flex-direction: column; gap: 6px; }
-    .alert-item {
-      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-      border-radius: 9px; border: 0.5px solid rgba(239,68,68,0.25);
-      background: rgba(239,68,68,0.05); animation: alertPulse 2s ease-in-out infinite;
-    }
-    @keyframes alertPulse {
-      0%, 100% { border-color: rgba(239,68,68,0.25); }
-      50%       { border-color: rgba(239,68,68,0.5);  }
-    }
-    .alert-icon  { font-size: 16px; color: #ef4444; flex-shrink: 0; }
-    .alert-body  { flex: 1; min-width: 0; }
-    .alert-title { font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-    .alert-meta  { font-size: 9px; color: rgba(255,255,255,0.3); }
-    .alert-actions { display: flex; gap: 5px; flex-shrink: 0; }
-    .alert-btn-view {
-      font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 5px;
-      background: rgba(239,68,68,0.12); color: #ef4444;
-      border: 1px solid rgba(239,68,68,0.25); cursor: pointer; font-family: inherit;
-    }
-    .alert-btn-dismiss {
-      font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 5px;
-      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3);
-      border: 1px solid rgba(255,255,255,0.08); cursor: pointer; font-family: inherit;
-    }
-    .screen-row { position: relative; }
-    .alert-badge {
-      position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
-      border-radius: 50%; background: #ef4444;
-      box-shadow: 0 0 0 2px rgba(239,68,68,0.3);
-      animation: badgePulse 1.5s ease-in-out infinite;
-    }
-    @keyframes badgePulse {
-      0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.3); }
-      50%       { box-shadow: 0 0 0 5px rgba(239,68,68,0.1); }
-    }
+.gallery-scroll { flex: 1; overflow-y: auto; padding: 10px; }
+.gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gallery-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; cursor: pointer; transition: all .15s;
+  position: relative;
+}
+.gallery-card:hover { border-color: var(--border-2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.gallery-thumb {
+  width: 100%; aspect-ratio: 16/9; background: #000;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative;
+}
+.gallery-thumb video, .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-thumb-icon { font-size: 24px; color: var(--text-mute); }
+.gallery-type-badge {
+  position: absolute; top: 5px; left: 5px;
+  font-size: 8px; font-weight: 800; padding: 2px 5px; border-radius: 4px;
+  letter-spacing: 0.04em; backdrop-filter: blur(4px);
+}
+.gallery-type-video { background: rgba(99,102,241,0.85); color: #fff; }
+.gallery-type-image { background: rgba(200,152,26,0.85); color: #fff; }
+.gallery-live-badge {
+  position: absolute; top: 5px; right: 5px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--live); box-shadow: 0 0 0 2px rgba(34,197,94,0.25);
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+.gallery-body { padding: 7px 8px 8px; }
+.gallery-name {
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+}
+.gallery-meta { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 5px; }
+.gallery-actions { display: flex; gap: 4px; }
+.gallery-action-btn {
+  flex: 1; padding: 4px 0; border-radius: 5px; font-size: 10px; font-weight: 600;
+  cursor: pointer; font-family: inherit; border: 1px solid var(--border);
+  background: transparent; color: var(--text-dim); transition: all .12s;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+}
+.gallery-action-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+.gallery-action-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
 
-    /* ── TRANSFER POPOVER ── */
-    .transfer-popover {
-      background: #0f1623; border: 1px solid rgba(200,152,26,0.3);
-      border-radius: 10px; padding: 12px; margin: 6px 0 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: fadeIn 0.15s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .tp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .tp-title  { font-size: 11px; font-weight: 700; color: #fff; }
-    .tp-close  { color: rgba(255,255,255,0.3); cursor: pointer; font-size: 14px; line-height: 1; }
-    .tp-close:hover { color: #fff; }
-    .tp-subtitle {
-      font-size: 9px; color: rgba(255,255,255,0.3); line-height: 1.6;
-      margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid rgba(255,255,255,0.06);
-    }
-    .tp-list { display: flex; flex-direction: column; gap: 4px; }
-    .tp-row {
-      display: flex; align-items: center; gap: 10px; padding: 7px 8px;
-      border-radius: 7px; border: 0.5px solid rgba(255,255,255,0.05); transition: background 0.1s;
-    }
-    .tp-row:hover { background: rgba(255,255,255,0.04); }
-    .tp-num  { font-size: 13px; font-weight: 800; color: #C8981A; min-width: 18px; }
-    .tp-zone { font-size: 10px; color: rgba(255,255,255,0.5); flex: 1; }
-    .tp-status  { flex-shrink: 0; }
-    .tp-actions { display: flex; gap: 5px; flex-shrink: 0; }
-    .tp-btn {
-      font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 5px;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
-    }
-    .tp-btn-move { background: rgba(200,152,26,0.12); color: #C8981A; border: 1px solid rgba(200,152,26,0.25); }
-    .tp-btn-move:hover { background: rgba(200,152,26,0.22); }
-    .tp-btn-copy { background: rgba(26,122,110,0.12); color: #4ecdc4; border: 1px solid rgba(26,122,110,0.25); }
-    .tp-btn-copy:hover { background: rgba(26,122,110,0.22); }
-  </style>
+.gallery-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; padding: 40px 20px;
+  color: var(--text-mute); text-align: center;
+}
+.gallery-empty i { font-size: 32px; }
+.gallery-empty p { font-size: 12px; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════════════
+   ASSIGN LIST
+═══════════════════════════════════════════════════════ */
+.assign-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); transition: all .15s;
+}
+.assign-item:hover { border-color: var(--teal); background: var(--teal-dim); }
+.assign-item.already { opacity: 0.45; cursor: default; pointer-events: none; }
+.assign-item.already:hover { border-color: var(--border); background: var(--surface-2); }
+.assign-thumb {
+  width: 54px; height: 34px; border-radius: 5px; overflow: hidden;
+  background: #000; flex-shrink: 0;
+}
+.assign-thumb video, .assign-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.assign-info { flex: 1; min-width: 0; }
+.assign-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.assign-meta { display: flex; gap: 4px; margin-top: 2px; }
+.assign-status { font-size: 10px; color: var(--text-mute); white-space: nowrap; flex-shrink: 0; }
+.assign-add-btn {
+  padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  background: var(--teal-dim); border: 1px solid var(--teal); color: var(--teal-light);
+  white-space: nowrap; flex-shrink: 0;
+}
+.assign-add-btn:hover { background: rgba(26,122,110,0.3); }
+.assign-already-badge {
+  padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+  background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: var(--live);
+  white-space: nowrap; flex-shrink: 0;
+}
+.assign-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 30px; color: var(--text-mute); text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UPLOAD MODAL
+═══════════════════════════════════════════════════════ */
+#upload-modal {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center;
+}
+.upload-modal-inner {
+  background: var(--surface); border: 1px solid var(--border-2);
+  border-radius: 14px; width: 480px; max-width: 95vw; max-height: 90vh;
+  overflow-y: auto; box-shadow: var(--shadow);
+}
+.upload-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+}
+.upload-modal-title { font-size: 15px; font-weight: 700; }
+.btn-close-modal {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 2px; transition: color .12s;
+}
+.btn-close-modal:hover { color: var(--text); }
+
+.upload-compact {
+  margin: 16px 20px; border: 2px dashed var(--border-2);
+  border-radius: 10px; padding: 24px; display: flex; align-items: center;
+  gap: 12px; cursor: pointer; transition: all .15s;
+}
+.upload-compact:hover, .upload-compact.dragover {
+  border-color: var(--teal); background: var(--teal-dim);
+}
+.upload-compact i { font-size: 28px; color: var(--teal-light); flex-shrink: 0; }
+.upload-txt { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.upload-txt em { color: var(--teal-light); font-style: normal; }
+.upload-txt span { font-size: 11px; color: var(--text-mute); }
+
+.config-panel { padding: 0 20px 20px; }
+.config-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; padding: 8px 10px;
+  background: var(--surface-2); border-radius: 7px; border: 1px solid var(--border);
+}
+.config-filename { font-size: 12px; font-weight: 600; color: var(--teal-light); }
+.btn-cancel-upload {
+  background: none; border: none; color: var(--text-mute); cursor: pointer;
+  font-size: 14px; transition: color .12s;
+}
+.btn-cancel-upload:hover { color: var(--red); }
+
+.config-preview { margin-bottom: 12px; border-radius: 7px; overflow: hidden; text-align: center; }
+.config-field { margin-bottom: 10px; }
+.field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-mute); margin-bottom: 5px; }
+.field-input {
+  width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 13px;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
+}
+.field-input:focus { border-color: var(--gold); }
+.field-note { font-size: 10px; color: var(--text-mute); margin-top: 4px; display: none; }
+
+.screen-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+.screen-chip {
+  display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+  border-radius: 7px; cursor: pointer; transition: all .12s;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-dim); font-size: 12px; font-weight: 600; user-select: none;
+}
+.screen-chip input { display: none; }
+.screen-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); transition: background .12s;
+}
+.screen-chip.checked { background: var(--gold-dim2); border-color: var(--gold); color: var(--gold); }
+.screen-chip.checked .screen-dot { background: var(--gold); }
+
+.schedule-toggle-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 0;
+  cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-dim);
+  border-top: 1px solid var(--border); margin-top: 6px;
+}
+.schedule-body { display: none; flex-direction: column; gap: 8px; padding: 8px 0; }
+.schedule-body.open { display: flex; }
+.schedule-row { display: flex; align-items: center; gap: 10px; }
+.schedule-label { font-size: 10px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.06em; min-width: 70px; }
+.schedule-dates, .time-range { display: flex; align-items: center; gap: 6px; }
+.schedule-dates input, .time-range input {
+  padding: 5px 8px; border-radius: 6px; font-size: 11px;
+  background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text); font-family: inherit;
+}
+.days-selector { display: flex; gap: 4px; }
+.day-chip {
+  width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; font-size: 11px; font-weight: 700;
+  border: 1px solid var(--border); color: var(--text-mute); transition: all .12s;
+}
+.day-chip.selected { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-light); }
+
+.upload-progress-wrap { display: none; margin-bottom: 10px; }
+.upload-progress-wrap.visible { display: block; }
+.upload-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.progress-track { height: 4px; border-radius: 2px; background: var(--surface-3); }
+.progress-fill  { height: 100%; border-radius: 2px; background: var(--teal); transition: width .2s linear; }
+
+.btn-upload {
+  width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; border: 1px solid var(--teal);
+  background: var(--teal-dim); color: var(--teal-light); transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-upload:hover { background: rgba(26,122,110,0.25); }
+.btn-upload:disabled { opacity: 0.4; cursor: default; }
+
+/* ═══════════════════════════════════════════════════════
+   EMERGENCY MODAL
+═══════════════════════════════════════════════════════ */
+.emergency-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+}
+.emergency-backdrop.open { display: flex; }
+.emergency-modal {
+  background: #1A0707; border: 1px solid rgba(220,38,38,0.4);
+  border-radius: 14px; width: 480px; max-width: 95vw;
+  padding: 24px 28px; box-shadow: 0 0 40px rgba(220,38,38,0.2);
+}
+.emergency-modal h2 { font-size: 16px; font-weight: 800; color: #F87171; margin-bottom: 6px; }
+.emergency-modal p  { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid rgba(220,38,38,0.2); }
+.em-field { margin-bottom: 16px; }
+.em-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+.em-input {
+  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(220,38,38,0.3);
+  border-radius: 8px; padding: 10px 12px; color: #fff; font-family: inherit; font-size: 13px;
+  resize: none; outline: none; transition: border-color .15s;
+}
+.em-input:focus { border-color: rgba(220,38,38,0.6); }
+.em-colors { display: flex; gap: 24px; }
+.em-sub-label { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+.color-row { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); }
+.color-row input[type=color] { width: 36px; height: 36px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; padding: 2px; background: none; }
+.dur-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.dur-option {
+  padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); transition: all .15s;
+}
+.dur-option:hover { border-color: rgba(220,38,38,0.4); color: #F87171; }
+.dur-option.selected { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.5); color: #F87171; }
+.em-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-cancel-em {
+  flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); transition: all .15s;
+}
+.btn-cancel-em:hover { background: rgba(255,255,255,0.1); }
+.btn-trigger {
+  flex: 2; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; background: var(--red);
+  border: none; color: #fff; transition: background .15s;
+}
+.btn-trigger:hover { background: #B91C1C; }
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+  padding: 10px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  color: var(--text); z-index: 9999; transition: transform .3s, opacity .3s;
+  opacity: 0; pointer-events: none; max-width: 360px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: rgba(26,122,110,0.9); border-color: var(--teal); color: #fff; }
+.toast.error   { background: rgba(220,38,38,0.9);  border-color: var(--red); color: #fff; }
+</style>
 </head>
 <body>
+<div class="app">
 
-<div class="regie-container">
-
-  <!-- ── HEADER ── -->
-  <header class="regie-header">
-    <div class="regie-logo">
-      Te<span>Ma</span>-<em>Boutique</em>
-      <span class="regie-logo-sep">·</span>
-      <span class="regie-logo-sub">Régie Publicitaire</span>
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-logo">Te<span>Ma</span>-<em>Boutique</em></div>
+      <div class="brand-sep"></div>
+      <div class="brand-sub">Régie Publicitaire</div>
     </div>
-    <div class="regie-header-actions">
-      <button class="btn-upload-header" onclick="openUploadModal()">↑ Uploader un média</button>
-      <button class="btn-urgence" id="btn-urgence" onclick="toggleUrgence()">⚠ Urgence</button>
+    <div class="header-actions">
+      <button class="btn-surveillance" id="btn-surveillance" onclick="toggleSurveillance()" title="Surveiller tous les écrans automatiquement">
+        <i class="ti ti-eye"></i> Surveillance
+      </button>
+      <button class="btn-upload-header" onclick="openUploadModal()">
+        <i class="ti ti-upload"></i> Uploader un média
+      </button>
+      <button class="btn-urgence" id="btn-urgence" onclick="toggleUrgence()">
+        <i class="ti ti-alert-triangle"></i> Urgence
+      </button>
     </div>
   </header>
 
-  <!-- ── CORPS ── -->
-  <div class="regie-body">
+  <!-- ══════════ BODY — 3 COLONNES ══════════ -->
+  <div class="body">
 
-    <!-- ═══ COLONNE GAUCHE ═══ -->
-    <div class="regie-left">
-
-      <!-- Zone info sélection -->
-      <div id="selected-info">
-        <div class="selected-placeholder">
-          <i class="ti ti-device-tv"></i>
-          <p>Sélectionnez un écran<br>pour gérer son contenu</p>
-        </div>
+    <!-- ══ GAUCHE : ÉCRANS ══ -->
+    <aside class="panel-left">
+      <div class="panel-left-header">
+        <span class="panel-left-title">Écrans de diffusion</span>
+        <span class="screen-count-badge">6</span>
       </div>
-
-      <!-- Liste des écrans -->
-      <div class="screen-list">
-        <div class="screen-list-label">Écrans de diffusion</div>
-        <div id="screen-list-container"></div>
+      <div class="screen-list" id="screen-list-container"></div>
+      <div class="panel-left-footer">
       </div>
+    </aside>
 
-    </div>
-
-    <!-- ═══ COLONNE DROITE ═══ -->
-    <div class="regie-right">
-
-      <!-- Header panneau droit -->
-      <div class="right-panel-header">
-        <button class="btn-surveillance" id="btn-surveillance"
-          onclick="toggleSurveillance()"
-          title="Surveiller automatiquement tous les écrans">
-          👁 Surveillance
-        </button>
-      </div>
+    <!-- ══ CENTRE : PREVIEW + PLAYLIST ══ -->
+    <main class="panel-center">
 
       <!-- Alertes hors ligne -->
       <div id="alerts-zone"></div>
 
       <!-- Empty state -->
       <div id="right-empty">
-        <i class="ti ti-device-tv"></i>
-        <p>Sélectionnez un écran à gauche<br>pour gérer son contenu et voir<br>ce qui diffuse en boutique</p>
+        <i class="ti ti-device-tv" style="font-size:48px"></i>
+        <p>Sélectionnez un écran<br>pour gérer son contenu et<br>voir ce qui diffuse en boutique.</p>
       </div>
 
-      <!-- Section Preview -->
-      <div id="preview-section">
-        <div class="preview-label">APERÇU EN COURS — <span id="preview-media-name">—</span></div>
-        <div id="preview-frame">
-          <div class="preview-empty">
-            <i class="ti ti-device-tv-off"></i>
-            <p>Aucune diffusion en cours</p>
+      <!-- Preview -->
+      <div id="preview-section" style="display:none">
+        <div class="preview-area">
+          <div class="preview-topbar">
+            <div class="preview-label">APERÇU EN COURS — <span class="preview-media-name" id="preview-media-name">—</span></div>
+          </div>
+          <div class="preview-frame" id="preview-frame">
+            <div class="preview-empty">
+              <i class="ti ti-device-tv-off"></i>
+              <p>Aucune diffusion en cours</p>
+            </div>
+          </div>
+          <div id="surveillance-progress"></div>
+          <div id="surveillance-indicator"></div>
+        </div>
+
+        <!-- Transport Controls -->
+        <div class="transport">
+          <button class="transport-btn" id="btn-prev-screen" onclick="prevScreen()" title="Écran précédent">
+            <i class="ti ti-player-skip-back"></i> <span class="tb-label">Précédent</span>
+          </button>
+          <button class="transport-btn danger" id="btn-stop-screen" onclick="stopScreen()" title="Arrêter la diffusion">
+            <i class="ti ti-player-stop"></i> <span class="tb-label">Stop</span>
+          </button>
+          <button class="transport-btn" id="btn-pause-screen" onclick="toggleScreenPause()" title="Pause / Reprendre">
+            <i class="ti ti-player-pause"></i> <span class="tb-label">Pause</span>
+          </button>
+          <button class="transport-btn" id="btn-next-screen" onclick="nextScreen()" title="Écran suivant">
+            <span class="tb-label">Suivant</span> <i class="ti ti-player-skip-forward"></i>
+          </button>
+          <div class="transport-spacer"></div>
+          <div class="screen-nav-label" id="screen-nav-label"></div>
+        </div>
+      </div>
+
+      <!-- Playlist -->
+      <div class="playlist-section" id="playlist-section">
+        <div class="playlist-header">
+          <div class="playlist-title-row">
+            <span class="playlist-title" id="playlist-title">Contenus</span>
+            <span class="playlist-count" id="playlist-count">0 médias</span>
+          </div>
+          <button class="btn-add-to-screen" onclick="openAssignModal()" title="Assigner un média déjà uploadé à cet écran">
+            <i class="ti ti-plus"></i> Ajouter
+          </button>
+        </div>
+        <div class="playlist-items" id="playlist-items-container"></div>
+      </div>
+
+    </main>
+
+    <!-- ══ DROITE : GALERIE ══ -->
+    <aside class="panel-right">
+      <div class="panel-right-header">
+        <div class="panel-right-title">Galerie média</div>
+        <div class="gallery-filters">
+          <button class="gallery-filter-btn active" onclick="setGalleryFilter('all',this)">Tous</button>
+          <button class="gallery-filter-btn" onclick="setGalleryFilter('video',this)">Vidéos</button>
+          <button class="gallery-filter-btn" onclick="setGalleryFilter('image',this)">Images</button>
+          <button class="gallery-filter-btn" onclick="setGalleryFilter('sched',this)">Programmés</button>
+        </div>
+      </div>
+      <div class="gallery-scroll">
+        <div class="gallery-grid" id="gallery-container">
+          <div class="gallery-empty" style="grid-column:1/-1">
+            <i class="ti ti-photo-off"></i>
+            <p>Aucun média chargé.<br>Uploadez votre premier contenu.</p>
           </div>
         </div>
-        <div id="surveillance-progress"></div>
-        <div id="surveillance-indicator"></div>
-        <div class="preview-controls">
-          <button class="preview-nav-btn" id="btn-prev-screen" onclick="prevScreen()">
-            <i class="ti ti-player-skip-back"></i> Précédent
-          </button>
-          <button class="btn-pause-screen" id="btn-pause-screen" onclick="toggleScreenPause()">
-            <i class="ti ti-player-pause"></i> Pause
-          </button>
-          <button class="preview-nav-btn" id="btn-next-screen" onclick="nextScreen()">
-            Suivant <i class="ti ti-player-skip-forward"></i>
-          </button>
-        </div>
       </div>
+    </aside>
 
-      <!-- Section Playlist -->
-      <div id="playlist-section">
-        <div class="playlist-header">
-          <div class="playlist-title" id="playlist-title">Contenus</div>
-          <div class="playlist-count" id="playlist-count">—</div>
-        </div>
-        <div class="playlist-items-container" id="playlist-items-container"></div>
-      </div>
+  </div><!-- /body -->
+</div><!-- /app -->
 
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL UPLOAD ── -->
-<div id="upload-modal" onclick="handleModalBackdropClick(event)">
+<!-- ══════════ UPLOAD MODAL ══════════ -->
+<div id="upload-modal" onclick="handleModalBackdropClick(event)" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;">
   <div class="upload-modal-inner" onclick="event.stopPropagation()">
     <div class="upload-modal-header">
-      <div class="upload-modal-title">Uploader un média</div>
+      <div class="upload-modal-title"><i class="ti ti-upload" style="margin-right:6px"></i>Uploader un média</div>
       <button class="btn-close-modal" onclick="closeUploadModal()">×</button>
     </div>
-
     <div class="upload-compact" id="upload-compact"
       onclick="triggerFileInput()"
       ondragover="handleDragOver(event)"
       ondragleave="handleDragLeave(event)"
       ondrop="handleDrop(event)">
-      <i class="ti ti-upload"></i>
+      <i class="ti ti-file-upload" style="font-size:32px;color:var(--teal-light)"></i>
       <div class="upload-txt">
-        Glisser un fichier ou <em>parcourir</em><br>
-        <span>JPG · PNG · MP4 · WEBM · GIF</span>
+        Glisser un fichier ici ou <em>parcourir</em><br>
+        <span>JPG · PNG · WEBP · GIF · MP4 · WEBM</span>
       </div>
-      <input type="file" id="file-input" accept="image/*,video/*"
-             onchange="handleFile(this.files[0])" style="display:none">
+      <input type="file" id="file-input" accept="image/*,video/*" onchange="handleFile(this.files[0])" style="display:none">
     </div>
-
     <div class="config-panel" id="config-panel" style="display:none">
       <div class="config-header">
         <div class="config-filename" id="config-filename">—</div>
         <button class="btn-cancel-upload" onclick="cancelUpload()" title="Annuler">✕</button>
       </div>
-
       <div class="config-preview" id="config-preview-container"></div>
-
       <div class="config-field">
-        <div class="field-label">Nom</div>
-        <input type="text" id="media-name" class="field-input" placeholder="Nom du média">
+        <div class="field-label">Nom du média</div>
+        <input type="text" id="media-name" class="field-input" placeholder="Nom affiché dans la galerie">
       </div>
-
       <div class="config-field">
-        <div class="field-label">Durée</div>
+        <div class="field-label">Durée d'affichage</div>
         <select id="media-duration" class="field-input" onchange="updateDurationNote()">
           <option value="0" id="opt-auto" disabled>Automatique (vidéo)</option>
           <option value="5">5 secondes</option>
@@ -867,37 +906,17 @@
         </select>
         <div class="field-note" id="duration-note"></div>
       </div>
-
       <div class="config-field">
-        <div class="field-label">Assigner à</div>
+        <div class="field-label">Assigner aux écrans</div>
         <div class="screen-selector">
-          <label class="screen-chip checked" id="chip-1">
-            <input type="checkbox" value="1" checked onchange="toggleChip(this)">
-            <div class="screen-dot"></div>1
-          </label>
-          <label class="screen-chip checked" id="chip-2">
-            <input type="checkbox" value="2" checked onchange="toggleChip(this)">
-            <div class="screen-dot"></div>2
-          </label>
-          <label class="screen-chip" id="chip-3">
-            <input type="checkbox" value="3" onchange="toggleChip(this)">
-            <div class="screen-dot"></div>3
-          </label>
-          <label class="screen-chip checked" id="chip-4">
-            <input type="checkbox" value="4" checked onchange="toggleChip(this)">
-            <div class="screen-dot"></div>4
-          </label>
-          <label class="screen-chip" id="chip-5">
-            <input type="checkbox" value="5" onchange="toggleChip(this)">
-            <div class="screen-dot"></div>5
-          </label>
-          <label class="screen-chip checked" id="chip-6">
-            <input type="checkbox" value="6" checked onchange="toggleChip(this)">
-            <div class="screen-dot"></div>6
-          </label>
+          <label class="screen-chip checked" id="chip-1"><input type="checkbox" value="1" checked onchange="toggleChip(this)"><div class="screen-dot"></div>1</label>
+          <label class="screen-chip checked" id="chip-2"><input type="checkbox" value="2" checked onchange="toggleChip(this)"><div class="screen-dot"></div>2</label>
+          <label class="screen-chip"         id="chip-3"><input type="checkbox" value="3" onchange="toggleChip(this)"><div class="screen-dot"></div>3</label>
+          <label class="screen-chip checked" id="chip-4"><input type="checkbox" value="4" checked onchange="toggleChip(this)"><div class="screen-dot"></div>4</label>
+          <label class="screen-chip"         id="chip-5"><input type="checkbox" value="5" onchange="toggleChip(this)"><div class="screen-dot"></div>5</label>
+          <label class="screen-chip checked" id="chip-6"><input type="checkbox" value="6" checked onchange="toggleChip(this)"><div class="screen-dot"></div>6</label>
         </div>
       </div>
-
       <div class="schedule-toggle-row" id="sched-row" onclick="toggleSchedule()">
         <div class="toggle" id="sched-toggle"></div>
         <span>Programmation horaire</span>
@@ -932,7 +951,6 @@
           </div>
         </div>
       </div>
-
       <div class="upload-progress-wrap" id="progress-wrap">
         <div class="upload-progress-label">
           <span id="progress-filename">—</span>
@@ -940,7 +958,6 @@
         </div>
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
-
       <button class="btn-upload" id="btn-upload" onclick="uploadMedia()">
         <i class="ti ti-upload"></i> Publier sur les écrans
       </button>
@@ -948,18 +965,15 @@
   </div>
 </div>
 
-<!-- ── EMERGENCY MODAL ── -->
+<!-- ══════════ EMERGENCY MODAL ══════════ -->
 <div class="emergency-backdrop" id="em-backdrop" onclick="closeBackdrop(event)">
   <div class="emergency-modal" onclick="event.stopPropagation()">
-    <h2>⚠ DIFFUSION D'URGENCE</h2>
+    <h2><i class="ti ti-alert-triangle"></i> DIFFUSION D'URGENCE</h2>
     <p>Tous les écrans actifs seront interrompus immédiatement.</p>
-
     <div class="em-field">
       <div class="em-label">Message à afficher</div>
-      <textarea class="em-input" id="em-message" rows="3" maxlength="120"
-        placeholder="Texte court (max 120 caractères)"></textarea>
+      <textarea class="em-input" id="em-message" rows="3" maxlength="120" placeholder="Texte court (max 120 caractères)"></textarea>
     </div>
-
     <div class="em-field">
       <div class="em-label">Couleurs</div>
       <div class="em-colors">
@@ -981,7 +995,6 @@
         </div>
       </div>
     </div>
-
     <div class="em-field">
       <div class="em-label">Durée de diffusion</div>
       <div class="dur-options">
@@ -992,17 +1005,36 @@
         <div class="dur-option" data-min="0"  onclick="selectDur(this)">Manuel</div>
       </div>
     </div>
-
     <div class="em-actions">
       <button class="btn-cancel-em" onclick="closeEmergency()">Annuler</button>
-      <button class="btn-trigger" onclick="triggerEmergency()">⚠ Déclencher sur tous les écrans</button>
+      <button class="btn-trigger" onclick="triggerEmergency()"><i class="ti ti-alert-triangle"></i> Déclencher sur tous les écrans</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- FIREBASE SDK v8 -->
+<!-- ══════════ ASSIGN MODAL ══════════ -->
+<div id="assign-modal" onclick="handleAssignBackdrop(event)" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div class="upload-modal-inner" onclick="event.stopPropagation()" style="width:520px;">
+    <div class="upload-modal-header">
+      <div class="upload-modal-title"><i class="ti ti-device-tv" style="margin-right:6px"></i>Assigner à <span id="assign-screen-label">l'écran</span></div>
+      <button class="btn-close-modal" onclick="closeAssignModal()">×</button>
+    </div>
+    <div style="padding:12px 20px 4px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text-mute);margin-bottom:8px;">Sélectionnez un ou plusieurs médias déjà dans la galerie à ajouter à cet écran :</div>
+      <input type="text" id="assign-search" class="field-input" placeholder="Rechercher un média..." oninput="renderAssignList()" style="margin-bottom:0">
+    </div>
+    <div id="assign-list" style="padding:10px 20px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;">
+      <button class="btn-upload" onclick="openUploadModal();closeAssignModal();" style="flex:1;background:var(--gold-dim);border-color:var(--gold);color:var(--gold);">
+        <i class="ti ti-upload"></i> Uploader un nouveau fichier
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ FIREBASE SDK v8 ══════════ -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -1034,9 +1066,7 @@ const SCREEN_CONFIG = {
 };
 
 const NAVIGABLE_SCREENS = Object.entries(SCREEN_CONFIG)
-  .filter(([, c]) => c.installé)
-  .map(([id]) => id)
-  .sort();
+  .filter(([, c]) => c.installé).map(([id]) => id).sort();
 
 // ── ÉTAT GLOBAL
 let selectedFile    = null;
@@ -1047,6 +1077,7 @@ let selectedScreen  = null;
 let scheduleEnabled = false;
 let emergencyActive = false;
 let emDuration      = 15;
+let galleryFilter   = 'all';
 
 // ── AUTH ANONYME
 auth.signInAnonymously().catch(() => {});
@@ -1081,6 +1112,7 @@ function listenPlaylist() {
     playlistItems = [];
     snapshot.forEach(doc => { playlistItems.push({ id: doc.id, ...doc.data() }); });
     renderScreenList();
+    renderGallery();
     if (selectedScreen) renderScreenPlaylist(selectedScreen);
   });
 }
@@ -1092,89 +1124,79 @@ function listenPlaylist() {
 function getScreenStatus(screenId) {
   const data   = screensLiveData[screenId];
   const config = SCREEN_CONFIG[screenId];
-
-  if (!config?.installé) return { class: 's-prev',  text: 'Prévu',        dotClass: 'dot-dim',   clickable: false };
-
+  if (!config?.installé) return { pillClass: 'pill-prev', text: 'Prévu',        dotClass: 'dot-dim',   clickable: false };
   const lastMs   = data?.lastSeen?.toMillis?.() || 0;
   const secsAgo  = (Date.now() - lastMs) / 1000;
   const isOnline = data?.online === true && secsAgo < 300;
-
-  if (!isOnline)    return { class: 's-off',   text: 'Éteint',       dotClass: 'dot-off',   clickable: true };
-  if (data.paused)  return { class: 's-pause', text: 'En Pause',     dotClass: 'dot-pause', clickable: true };
-  if (data.playing) return { class: 's-live',  text: 'En diffusion', dotClass: 'dot-live',  clickable: true };
-  return                   { class: 's-conn',  text: 'Connecté',     dotClass: 'dot-conn',  clickable: true };
+  if (!isOnline)    return { pillClass: 'pill-off',   text: 'Éteint',       dotClass: 'dot-off',   clickable: true,  class: 's-off'  };
+  if (data.paused)  return { pillClass: 'pill-pause', text: 'En pause',     dotClass: 'dot-pause', clickable: true,  class: 's-pause'};
+  if (data.playing) return { pillClass: 'pill-live',  text: 'En diffusion', dotClass: 'dot-live',  clickable: true,  class: 's-live' };
+  return                   { pillClass: 'pill-conn',  text: 'Connecté',     dotClass: 'dot-conn',  clickable: true,  class: 's-conn' };
 }
 
 // ════════════════════════════════════════
-//  RENDU LISTE ÉCRANS (colonne gauche)
+//  RENDU LISTE ÉCRANS
 // ════════════════════════════════════════
 
 function renderScreenList() {
   const container = document.getElementById('screen-list-container');
   if (!container) return;
-
   container.innerHTML = Object.entries(SCREEN_CONFIG).map(([id, cfg]) => {
-    const status     = getScreenStatus(id);
+    const status    = getScreenStatus(id);
     const isSelected = id === selectedScreen;
-
-    return `<div class="screen-row ${isSelected ? 'selected' : ''} ${!status.clickable ? 'non-clickable' : ''}"
+    const sd        = screensLiveData[id];
+    const nowPlaying = sd?.currentMedia ? `<div class="screen-now">▶ ${sd.currentMedia}</div>` : '';
+    const hasAlert   = !!activeAlerts[id];
+    return `<div class="screen-item ${isSelected ? 'selected' : ''} ${!status.clickable ? 'non-clickable' : ''} ${hasAlert ? 'has-alert' : ''}"
       data-screen-id="${id}"
       ${status.clickable ? `onclick="selectScreen('${id}')"` : ''}>
-      <div class="screen-row-num ${isSelected ? 'active' : ''}">${id}</div>
-      <div class="screen-row-info">
-        <div class="screen-row-zone">${cfg.label}</div>
-        <div class="status-pill ${status.class}">
-          <div class="dot-status ${status.dotClass}"></div>
-          <span class="status-text">${status.text}</span>
+      <div class="screen-num">${id}</div>
+      <div class="screen-item-body">
+        <div class="screen-zone">${cfg.label}</div>
+        ${nowPlaying}
+        <div class="screen-status">
+          <div class="pill ${status.pillClass}">
+            <div class="dot ${status.dotClass}"></div>
+            ${status.text}
+          </div>
         </div>
       </div>
+      ${hasAlert ? '<div class="alert-badge"></div>' : ''}
     </div>`;
   }).join('');
 }
 
 function updateAllStatusPills() {
-  document.querySelectorAll('.screen-row[data-screen-id]').forEach(row => {
+  document.querySelectorAll('.screen-item[data-screen-id]').forEach(row => {
     const screenId = row.dataset.screenId;
     const status   = getScreenStatus(screenId);
-    const pill     = row.querySelector('.status-pill');
-    const dot      = row.querySelector('.dot-status');
-    const txt      = row.querySelector('.status-text');
-    if (pill) pill.className = `status-pill ${status.class}`;
-    if (dot)  dot.className  = `dot-status ${status.dotClass}`;
-    if (txt)  txt.textContent = status.text;
+    const pill     = row.querySelector('.pill');
+    const dot      = row.querySelector('.dot');
+    const txt      = pill?.querySelector ? null : null;
+    if (pill) { pill.className = `pill ${status.pillClass}`; pill.innerHTML = `<div class="dot ${status.dotClass}"></div> ${status.text}`; }
+    const sd = screensLiveData[screenId];
+    const nowEl = row.querySelector('.screen-now');
+    if (nowEl) nowEl.textContent = sd?.currentMedia ? `▶ ${sd.currentMedia}` : '';
+    else if (sd?.currentMedia) {
+      const body = row.querySelector('.screen-item-body');
+      if (body && !body.querySelector('.screen-now')) {
+        const d = document.createElement('div');
+        d.className = 'screen-now';
+        d.textContent = `▶ ${sd.currentMedia}`;
+        body.insertBefore(d, body.querySelector('.screen-status'));
+      }
+    }
   });
 }
 
 // ════════════════════════════════════════
-//  ZONE INFO SÉLECTION (haut colonne gauche)
+//  UPDATE SELECTED INFO (used by selectedScreen)
 // ════════════════════════════════════════
 
 function updateSelectedInfo(screenId) {
-  const el = document.getElementById('selected-info');
-  if (!el) return;
-  if (!screenId) {
-    el.innerHTML = `<div class="selected-placeholder">
-      <i class="ti ti-device-tv"></i>
-      <p>Sélectionnez un écran<br>pour gérer son contenu</p>
-    </div>`;
-    return;
-  }
-  const cfg    = SCREEN_CONFIG[screenId];
-  const status = getScreenStatus(screenId);
-  const sd     = screensLiveData[screenId];
-  const items  = playlistItems.filter(i => (i.screens || []).includes(screenId) && i.active);
-
-  el.innerHTML = `
-    <div class="selected-zone-num">${screenId}</div>
-    <div class="selected-zone-name">${cfg.label}</div>
-    <div class="status-pill ${status.class}" style="margin:6px 0 10px">
-      <div class="dot-status ${status.dotClass}"></div>
-      <span class="status-text">${status.text}</span>
-    </div>
-    ${sd?.currentMedia
-      ? `<div class="selected-now">En diffusion :<br><strong>${sd.currentMedia}</strong></div>`
-      : ''}
-    <div class="selected-stats">${items.length} média${items.length !== 1 ? 's' : ''} actif${items.length !== 1 ? 's' : ''}</div>`;
+  if (!screenId) return;
+  const titleEl = document.getElementById('playlist-title');
+  if (titleEl) titleEl.textContent = `Contenus — Écran ${screenId}`;
 }
 
 // ════════════════════════════════════════
@@ -1184,31 +1206,21 @@ function updateSelectedInfo(screenId) {
 function selectScreen(screenId) {
   const status = getScreenStatus(screenId);
   if (!status.clickable) return;
-
   if (surveillanceMode) {
     clearTimeout(surveillanceTimer);
     const btn = document.getElementById('btn-surveillance');
-    if (btn) btn.textContent = '👁 Reprendre';
+    if (btn) { btn.innerHTML = '<i class="ti ti-eye"></i> Reprendre'; btn.classList.remove('active'); }
+    surveillanceMode = false;
   }
-
   selectedScreen = screenId;
-
-  document.querySelectorAll('.screen-row').forEach(row => {
+  document.querySelectorAll('.screen-item').forEach(row => {
     const isThis = row.dataset.screenId === screenId;
     row.classList.toggle('selected', isThis);
-    const num = row.querySelector('.screen-row-num');
-    if (num) num.classList.toggle('active', isThis);
   });
-
   updateSelectedInfo(screenId);
-
   document.getElementById('right-empty').style.display      = 'none';
-  document.getElementById('preview-section').style.display  = 'flex';
+  document.getElementById('preview-section').style.display  = 'block';
   document.getElementById('playlist-section').style.display = 'flex';
-
-  const titleEl = document.getElementById('playlist-title');
-  if (titleEl) titleEl.textContent = `Contenus — Écran ${screenId}`;
-
   renderPreview(screenId);
   renderScreenPlaylist(screenId);
   updateNavButtons();
@@ -1217,18 +1229,13 @@ function selectScreen(screenId) {
 
 function deselectScreen() {
   selectedScreen = null;
-  document.querySelectorAll('.screen-row').forEach(r => {
-    r.classList.remove('selected');
-    const num = r.querySelector('.screen-row-num');
-    if (num) num.classList.remove('active');
-  });
-  updateSelectedInfo(null);
+  document.querySelectorAll('.screen-item').forEach(r => r.classList.remove('selected'));
   document.getElementById('playlist-section').style.display = 'none';
   if (surveillanceMode) {
     document.getElementById('right-empty').style.display     = 'none';
-    document.getElementById('preview-section').style.display = 'flex';
+    document.getElementById('preview-section').style.display = 'block';
     const btn = document.getElementById('btn-surveillance');
-    if (btn) { btn.classList.add('active'); btn.textContent = '👁 Surveillance ON'; }
+    if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="ti ti-eye"></i> Surveillance ON'; }
     rotateSurveillance();
   } else {
     document.getElementById('right-empty').style.display     = '';
@@ -1243,11 +1250,19 @@ function toggleScreenPause() {
     .catch(e => showToast('Erreur : ' + e.message, 'error'));
 }
 
+function stopScreen() {
+  if (!selectedScreen) return;
+  if (!confirm(`Arrêter la diffusion sur l'Écran ${selectedScreen} ?`)) return;
+  db.collection('screens').doc(selectedScreen).update({ paused: true, playing: false })
+    .then(() => showToast(`Écran ${selectedScreen} arrêté`, 'success'))
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
 function updatePauseButton() {
   const btn = document.getElementById('btn-pause-screen');
   if (!btn || !selectedScreen) return;
   const paused = screensLiveData[selectedScreen]?.paused === true;
-  btn.className = `btn-pause-screen${paused ? ' is-paused' : ''}`;
+  btn.className = `transport-btn${paused ? ' is-paused' : ''}`;
   btn.innerHTML = paused
     ? `<i class="ti ti-player-play"></i> Reprendre`
     : `<i class="ti ti-player-pause"></i> Pause`;
@@ -1257,15 +1272,16 @@ function updateNavButtons() {
   const idx     = NAVIGABLE_SCREENS.indexOf(selectedScreen);
   const prevBtn = document.getElementById('btn-prev-screen');
   const nextBtn = document.getElementById('btn-next-screen');
+  const navLbl  = document.getElementById('screen-nav-label');
   if (prevBtn) prevBtn.disabled = idx <= 0;
   if (nextBtn) nextBtn.disabled = idx >= NAVIGABLE_SCREENS.length - 1;
+  if (navLbl) navLbl.textContent = selectedScreen ? `Écran ${selectedScreen} / ${NAVIGABLE_SCREENS.length}` : '';
 }
 
 function prevScreen() {
   const idx = NAVIGABLE_SCREENS.indexOf(selectedScreen);
   if (idx > 0) selectScreen(NAVIGABLE_SCREENS[idx - 1]);
 }
-
 function nextScreen() {
   const idx = NAVIGABLE_SCREENS.indexOf(selectedScreen);
   if (idx < NAVIGABLE_SCREENS.length - 1) selectScreen(NAVIGABLE_SCREENS[idx + 1]);
@@ -1276,38 +1292,27 @@ function nextScreen() {
 // ════════════════════════════════════════
 
 function renderPreview(screenId) {
-  const frame  = document.getElementById('preview-frame');
-  const label  = document.getElementById('preview-media-name');
+  const frame = document.getElementById('preview-frame');
+  const label = document.getElementById('preview-media-name');
   if (!frame) return;
-
   const data   = screensLiveData[screenId];
   const isLive = getScreenStatus(screenId).class === 's-live';
   const badge  = isLive
     ? `<div class="badge-live">● EN DIRECT</div>`
     : `<div class="badge-idle">Dernière diffusion connue</div>`;
-
   if (data?.currentMediaUrl) {
     if (label) label.textContent = data.currentMedia || '—';
     if (data.currentMediaType === 'video') {
-      frame.innerHTML = `${badge}<video src="${data.currentMediaUrl}" controls autoplay muted playsinline
-        style="width:100%;height:100%;object-fit:contain;"></video>`;
+      frame.innerHTML = `${badge}<video src="${data.currentMediaUrl}" controls autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;"></video>`;
     } else {
-      frame.innerHTML = `${badge}<img src="${data.currentMediaUrl}" alt=""
-        style="width:100%;height:100%;object-fit:contain;">`;
+      frame.innerHTML = `${badge}<img src="${data.currentMediaUrl}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
     }
   } else if (data?.currentMedia) {
     if (label) label.textContent = data.currentMedia;
-    frame.innerHTML = `${badge}
-      <div class="preview-empty">
-        <i class="ti ti-player-play"></i>
-        <p>${data.currentMedia}</p>
-      </div>`;
+    frame.innerHTML = `${badge}<div class="preview-empty"><i class="ti ti-player-play"></i><p>${data.currentMedia}</p></div>`;
   } else {
     if (label) label.textContent = '—';
-    frame.innerHTML = `<div class="preview-empty">
-      <i class="ti ti-device-tv-off"></i>
-      <p>Aucune diffusion en cours</p>
-    </div>`;
+    frame.innerHTML = `<div class="preview-empty"><i class="ti ti-device-tv-off"></i><p>Aucune diffusion en cours</p></div>`;
   }
 }
 
@@ -1315,96 +1320,201 @@ function previewLocalMedia(url, type, name) {
   const frame = document.getElementById('preview-frame');
   const label = document.getElementById('preview-media-name');
   if (!frame) return;
-  const badge = `<div class="badge-local">▶ APERÇU LOCAL</div>`;
   if (type === 'video') {
-    frame.innerHTML = `${badge}<video src="${url}" controls autoplay muted playsinline
-      style="width:100%;height:100%;object-fit:contain;"></video>`;
+    frame.innerHTML = `<div class="badge-local">▶ APERÇU LOCAL</div><video src="${url}" controls autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;"></video>`;
   } else {
-    frame.innerHTML = `${badge}<img src="${url}" alt=""
-      style="width:100%;height:100%;object-fit:contain;">`;
+    frame.innerHTML = `<div class="badge-local">▶ APERÇU LOCAL</div><img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
   }
   if (label) label.textContent = name || '—';
 }
 
 // ════════════════════════════════════════
-//  PLAYLIST PER-SCREEN
+//  PLAYLIST PAR ÉCRAN
 // ════════════════════════════════════════
 
 function renderScreenPlaylist(screenId) {
   const items         = playlistItems.filter(i => (i.screens || []).includes(screenId));
   const liveMediaName = screensLiveData[screenId]?.currentMedia;
-
   const sorted = [...items].sort((a, b) => {
     if (a.name === liveMediaName) return -1;
     if (b.name === liveMediaName) return  1;
     return (a.order || 0) - (b.order || 0);
   });
-
   const countEl = document.getElementById('playlist-count');
   if (countEl) countEl.textContent = `${items.length} média${items.length !== 1 ? 's' : ''}`;
-
   const container = document.getElementById('playlist-items-container');
   if (!container) return;
-
   if (sorted.length === 0) {
-    container.innerHTML = `<div class="playlist-empty">
-      <i class="ti ti-photo-off"></i>
-      <p>Aucun média assigné à cet écran.<br>Utilisez le bouton "Uploader un média" en haut.</p>
-    </div>`;
+    container.innerHTML = `<div class="playlist-empty"><i class="ti ti-photo-off"></i><p>Aucun média assigné à cet écran.<br>Utilisez le bouton "Ajouter" pour en publier.</p></div>`;
     return;
   }
-
   container.innerHTML = sorted.map((item, idx) => {
-    const isLive    = item.name === liveMediaName;
-    const isFirst   = idx === 0;
-    const isLast    = idx === sorted.length - 1;
-    const typeTag   = item.type === 'video'
-      ? `<span class="tag tag-video">🎬 Vidéo</span>`
-      : `<span class="tag tag-image">🖼 Image</span>`;
-    const durTag    = item.type !== 'video'
-      ? `<span class="tag tag-dur">⏱ ${item.duration || 8}s</span>`
-      : `<span class="tag tag-auto">Auto</span>`;
-    const safeName  = (item.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-
+    const isLive  = item.name === liveMediaName;
+    const isFirst = idx === 0;
+    const isLast  = idx === sorted.length - 1;
+    const typeTag = item.type === 'video' ? `<span class="tag tag-video">🎬 Vidéo</span>` : `<span class="tag tag-image">🖼 Image</span>`;
+    const durTag  = item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration || 8}s</span>` : `<span class="tag tag-auto">Auto</span>`;
+    const safeName = (item.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `<div class="playlist-item ${item.active ? '' : 'inactive'} ${isLive ? 'is-live' : ''}"
-         id="item-${item.id}" style="cursor:pointer;"
-         onclick="previewLocalMedia('${item.url}', '${item.type}', '${safeName}')">
+      id="item-${item.id}" style="cursor:pointer;"
+      onclick="previewLocalMedia('${item.url}', '${item.type}', '${safeName}')">
       <div class="item-thumb">
-        ${item.type === 'video'
-          ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`
-          : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`}
+        ${item.type === 'video' ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>` : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`}
       </div>
       <div class="item-info">
         <div class="item-name">${item.name || 'Sans titre'}</div>
         <div class="item-meta">
-          ${typeTag}
-          ${durTag}
+          ${typeTag}${durTag}
           ${isLive ? `<span class="tag tag-live">● En direct</span>` : ''}
           ${item.schedule?.enabled ? `<span class="tag tag-sched">⏱ Programmé</span>` : ''}
         </div>
       </div>
       <div class="item-actions" onclick="event.stopPropagation()">
         <div class="action-row">
-          <button class="btn-icon move" title="Monter"
-            onclick="moveItem('${item.id}', -1)"
-            ${isFirst ? 'disabled' : ''}>↑</button>
-          <button class="btn-icon move" title="Descendre"
-            onclick="moveItem('${item.id}', 1)"
-            ${isLast ? 'disabled' : ''}>↓</button>
-          <button class="btn-icon transfer-btn" title="Transférer / Copier vers un autre écran"
-            onclick="event.stopPropagation(); toggleTransferPopover('${item.id}', '${screenId}')">⇄</button>
-          <button class="btn-icon danger" title="Retirer de cet écran"
-            onclick="removeFromScreen('${item.id}', '${screenId}')">✕</button>
-          <button class="btn-icon danger" title="Supprimer définitivement"
-            onclick="deleteItem('${item.id}', '${item.storagePath || ''}')">🗑</button>
+          <button class="btn-icon move" title="Monter" onclick="moveItem('${item.id}', -1)" ${isFirst ? 'disabled' : ''}>↑</button>
+          <button class="btn-icon move" title="Descendre" onclick="moveItem('${item.id}', 1)" ${isLast ? 'disabled' : ''}>↓</button>
+          <button class="btn-icon transfer-btn" title="Transférer vers un autre écran" onclick="event.stopPropagation();toggleTransferPopover('${item.id}','${screenId}')">⇄</button>
+          <button class="btn-icon danger" title="Retirer de cet écran" onclick="removeFromScreen('${item.id}','${screenId}')">✕</button>
+          <button class="btn-icon danger" title="Supprimer définitivement" onclick="deleteItem('${item.id}','${item.storagePath||''}')">🗑</button>
         </div>
-        <div class="toggle-wrap" onclick="toggleActive('${item.id}', ${item.active})">
+        <div class="toggle-wrap" onclick="toggleActive('${item.id}',${item.active})">
           <div class="toggle ${item.active ? 'on' : ''}"></div>
           <span class="toggle-label">${item.active ? 'Actif' : 'Inactif'}</span>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+// ════════════════════════════════════════
+//  GALERIE MÉDIA (panneau droit)
+// ════════════════════════════════════════
+
+function setGalleryFilter(type, btn) {
+  galleryFilter = type;
+  document.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderGallery();
+}
+
+function renderGallery() {
+  const container = document.getElementById('gallery-container');
+  if (!container) return;
+  let items = [...playlistItems];
+  if (galleryFilter === 'video') items = items.filter(i => i.type === 'video');
+  else if (galleryFilter === 'image') items = items.filter(i => i.type === 'image');
+  else if (galleryFilter === 'sched') items = items.filter(i => i.schedule?.enabled);
+  if (items.length === 0) {
+    container.innerHTML = `<div class="gallery-empty" style="grid-column:1/-1"><i class="ti ti-photo-off"></i><p>Aucun média${galleryFilter !== 'all' ? ' dans cette catégorie' : ''}.<br>Uploadez du contenu pour commencer.</p></div>`;
+    return;
+  }
+  const activeScreenItems = selectedScreen ? playlistItems.filter(i => (i.screens||[]).includes(selectedScreen)).map(i=>i.id) : [];
+  container.innerHTML = items.map(item => {
+    const safeName = (item.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const isLive   = Object.values(screensLiveData).some(s => s.currentMedia === item.name);
+    const thumbEl  = item.type === 'video'
+      ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`
+      : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+    const typeBadge = item.type === 'video'
+      ? `<span class="gallery-type-badge gallery-type-video">🎬 Vidéo</span>`
+      : `<span class="gallery-type-badge gallery-type-image">🖼 Image</span>`;
+    return `<div class="gallery-card" onclick="previewLocalMedia('${item.url}','${item.type}','${safeName}')">
+      <div class="gallery-thumb">
+        ${thumbEl}
+        ${typeBadge}
+        ${isLive ? '<div class="gallery-live-badge"></div>' : ''}
+      </div>
+      <div class="gallery-body">
+        <div class="gallery-name">${item.name || 'Sans titre'}</div>
+        <div class="gallery-meta">
+          ${item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration||8}s</span>` : `<span class="tag tag-auto">Auto</span>`}
+          ${item.schedule?.enabled ? `<span class="tag tag-sched">⏱ Prog.</span>` : ''}
+          ${!item.active ? `<span class="tag" style="background:rgba(255,255,255,0.06);color:var(--text-mute)">Inactif</span>` : ''}
+        </div>
+        <div class="gallery-actions" onclick="event.stopPropagation()">
+          <button class="gallery-action-btn" onclick="previewLocalMedia('${item.url}','${item.type}','${safeName}')" title="Prévisualiser">
+            <i class="ti ti-eye" style="font-size:11px"></i>
+          </button>
+          ${selectedScreen ? `<button class="gallery-action-btn" onclick="assignToSelectedScreen('${item.id}')" title="Assigner à l'écran ${selectedScreen}">
+            <i class="ti ti-device-tv" style="font-size:11px"></i>
+          </button>` : ''}
+          <button class="gallery-action-btn del" onclick="deleteItem('${item.id}','${item.storagePath||''}')" title="Supprimer">
+            <i class="ti ti-trash" style="font-size:11px"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+//  MODAL ASSIGNATION (médias existants)
+// ════════════════════════════════════════
+
+function openAssignModal() {
+  if (!selectedScreen) { showToast('Sélectionnez d\'abord un écran', 'error'); return; }
+  const cfg = SCREEN_CONFIG[selectedScreen];
+  const lbl = document.getElementById('assign-screen-label');
+  if (lbl) lbl.textContent = `l'Écran ${selectedScreen} — ${cfg?.label || ''}`;
+  document.getElementById('assign-search').value = '';
+  renderAssignList();
+  document.getElementById('assign-modal').style.display = 'flex';
+}
+
+function closeAssignModal() { document.getElementById('assign-modal').style.display = 'none'; }
+function handleAssignBackdrop(e) { if (e.target === document.getElementById('assign-modal')) closeAssignModal(); }
+
+function renderAssignList() {
+  const container = document.getElementById('assign-list');
+  if (!container || !selectedScreen) return;
+  const q = (document.getElementById('assign-search')?.value || '').toLowerCase();
+  const items = playlistItems.filter(i => !q || (i.name || '').toLowerCase().includes(q));
+  if (items.length === 0) {
+    container.innerHTML = `<div class="assign-empty"><i class="ti ti-photo-off" style="font-size:28px"></i><p>Aucun média dans la galerie.<br>Uploadez d'abord du contenu.</p></div>`;
+    return;
+  }
+  container.innerHTML = items.map(item => {
+    const already = (item.screens || []).includes(selectedScreen);
+    const typeTag = item.type === 'video'
+      ? `<span class="tag tag-video">🎬 Vidéo</span>`
+      : `<span class="tag tag-image">🖼 Image</span>`;
+    const durTag  = item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration||8}s</span>` : '';
+    const thumb   = item.type === 'video'
+      ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`
+      : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+    return `<div class="assign-item ${already ? 'already' : ''}">
+      <div class="assign-thumb">${thumb}</div>
+      <div class="assign-info">
+        <div class="assign-name">${item.name || 'Sans titre'}</div>
+        <div class="assign-meta">${typeTag}${durTag}</div>
+      </div>
+      <span class="assign-status">${(item.screens||[]).length} écran${(item.screens||[]).length!==1?'s':''}</span>
+      ${already
+        ? `<span class="assign-already-badge">✓ Déjà assigné</span>`
+        : `<button class="assign-add-btn" onclick="quickAssign('${item.id}')"><i class="ti ti-plus"></i> Assigner</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
+function quickAssign(itemId) {
+  const item = playlistItems.find(i => i.id === itemId); if (!item || !selectedScreen) return;
+  const screens = item.screens || [];
+  if (screens.includes(selectedScreen)) return;
+  db.collection('playlist').doc(itemId).update({ screens: [...screens, selectedScreen] })
+    .then(() => { showToast(`Assigné à l'Écran ${selectedScreen}`, 'success'); renderAssignList(); })
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
+}
+
+function assignToSelectedScreen(itemId) {
+  if (!selectedScreen) return;
+  const item = playlistItems.find(i => i.id === itemId);
+  if (!item) return;
+  const screens = item.screens || [];
+  if (screens.includes(selectedScreen)) { showToast('Déjà assigné à cet écran', 'error'); return; }
+  db.collection('playlist').doc(itemId).update({ screens: [...screens, selectedScreen] })
+    .then(() => showToast(`Assigné à l'Écran ${selectedScreen}`, 'success'))
+    .catch(e => showToast('Erreur : ' + e.message, 'error'));
 }
 
 // ════════════════════════════════════════
@@ -1420,84 +1530,73 @@ function closeUploadModal() {
 function handleModalBackdropClick(e) {
   if (e.target === document.getElementById('upload-modal')) closeUploadModal();
 }
-
-// ════════════════════════════════════════
-//  UPLOAD
-// ════════════════════════════════════════
-
-function triggerFileInput() {
-  document.getElementById('file-input').click();
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('upload-compact').classList.add('dragover');
-}
-function handleDragLeave(e) {
-  e.preventDefault();
-  document.getElementById('upload-compact').classList.remove('dragover');
-}
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-compact').classList.remove('dragover');
-  const f = e.dataTransfer.files[0];
-  if (f) handleFile(f);
-}
-
-function handleFile(file) {
-  if (!file) return;
-  const isVideo = file.type.startsWith('video/');
-  const isImage = file.type.startsWith('image/');
-  if (!isVideo && !isImage) {
-    showToast('Format non supporté. Utilisez JPG, PNG, WEBP, GIF, MP4 ou WEBM.', 'error');
-    return;
-  }
-  selectedFile = file;
-  detectedType = isVideo ? 'video' : 'image';
-
-  document.getElementById('config-filename').textContent = file.name;
-  document.getElementById('media-name').value = file.name.replace(/\.[^.]+$/, '');
-
-  const durSel  = document.getElementById('media-duration');
-  const optAuto = document.getElementById('opt-auto');
-  if (isVideo) {
-    optAuto.disabled = false;
-    durSel.value     = '0';
-  } else {
-    optAuto.disabled = true;
-    if (durSel.value === '0') durSel.value = '10';
-  }
-  updateDurationNote();
-
-  const previewBox = document.getElementById('config-preview-container');
-  previewBox.innerHTML = '';
-  const url = URL.createObjectURL(file);
-  if (isVideo) {
-    const v = document.createElement('video');
-    v.src = url; v.controls = true; v.muted = true;
-    v.style.cssText = 'max-height:110px;max-width:100%;';
-    previewBox.appendChild(v);
-  } else {
-    const img = document.createElement('img');
-    img.src = url;
-    img.style.cssText = 'max-height:110px;max-width:100%;object-fit:contain;';
-    previewBox.appendChild(img);
-  }
-
+function openUploadForCurrentScreen() {
+  openUploadModal();
   if (selectedScreen) {
     document.querySelectorAll('.screen-chip input').forEach(cb => {
       cb.checked = cb.value === selectedScreen;
       cb.closest('.screen-chip').classList.toggle('checked', cb.checked);
     });
   }
+}
+function openUploadForScreen(screenId) {
+  openUploadModal();
+  document.querySelectorAll('.screen-chip input').forEach(cb => {
+    cb.checked = cb.value === screenId;
+    cb.closest('.screen-chip').classList.toggle('checked', cb.checked);
+  });
+}
 
+// ════════════════════════════════════════
+//  UPLOAD
+// ════════════════════════════════════════
+
+function triggerFileInput() { document.getElementById('file-input').click(); }
+function handleDragOver(e)  { e.preventDefault(); document.getElementById('upload-compact').classList.add('dragover'); }
+function handleDragLeave(e) { e.preventDefault(); document.getElementById('upload-compact').classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-compact').classList.remove('dragover');
+  const f = e.dataTransfer.files[0]; if (f) handleFile(f);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+  if (!isVideo && !isImage) { showToast('Format non supporté. Utilisez JPG, PNG, WEBP, GIF, MP4 ou WEBM.', 'error'); return; }
+  selectedFile = file; detectedType = isVideo ? 'video' : 'image';
+  document.getElementById('config-filename').textContent = file.name;
+  document.getElementById('media-name').value = file.name.replace(/\.[^.]+$/, '');
+  const durSel  = document.getElementById('media-duration');
+  const optAuto = document.getElementById('opt-auto');
+  if (isVideo) { optAuto.disabled = false; durSel.value = '0'; }
+  else         { optAuto.disabled = true; if (durSel.value === '0') durSel.value = '10'; }
+  updateDurationNote();
+  const previewBox = document.getElementById('config-preview-container');
+  previewBox.innerHTML = '';
+  const url = URL.createObjectURL(file);
+  if (isVideo) {
+    const v = document.createElement('video');
+    v.src = url; v.controls = true; v.muted = true; v.style.cssText = 'max-height:110px;max-width:100%;';
+    previewBox.appendChild(v);
+  } else {
+    const img = document.createElement('img');
+    img.src = url; img.style.cssText = 'max-height:110px;max-width:100%;object-fit:contain;';
+    previewBox.appendChild(img);
+  }
+  if (selectedScreen) {
+    document.querySelectorAll('.screen-chip input').forEach(cb => {
+      cb.checked = cb.value === selectedScreen;
+      cb.closest('.screen-chip').classList.toggle('checked', cb.checked);
+    });
+  }
   document.getElementById('config-panel').style.display = 'block';
   document.getElementById('upload-compact').style.borderColor = 'var(--teal)';
 }
 
 function cancelUpload() {
-  selectedFile = null;
-  detectedType = null;
+  selectedFile = null; detectedType = null;
   document.getElementById('config-panel').style.display = 'none';
   document.getElementById('upload-compact').style.borderColor = '';
   document.getElementById('file-input').value = '';
@@ -1511,17 +1610,11 @@ function updateDurationNote() {
   const note = document.getElementById('duration-note');
   if (!detectedType) { note.style.display = 'none'; return; }
   note.style.display = 'block';
-  note.textContent = detectedType === 'video'
-    ? 'La vidéo joue intégralement, durée ignorée'
-    : 'Durée d\'affichage avant passage au suivant';
+  note.textContent = detectedType === 'video' ? 'La vidéo joue intégralement, durée ignorée' : 'Durée d\'affichage avant passage au suivant';
 }
 
-function toggleChip(input) {
-  input.closest('.screen-chip').classList.toggle('checked', input.checked);
-}
-function getSelectedScreens() {
-  return Array.from(document.querySelectorAll('.screen-chip input:checked')).map(c => c.value);
-}
+function toggleChip(input) { input.closest('.screen-chip').classList.toggle('checked', input.checked); }
+function getSelectedScreens() { return Array.from(document.querySelectorAll('.screen-chip input:checked')).map(c => c.value); }
 
 function toggleSchedule() {
   scheduleEnabled = !scheduleEnabled;
@@ -1539,7 +1632,7 @@ function getScheduleData() {
   const te = document.getElementById('sched-time-end').value;
   const days = Array.from(document.querySelectorAll('.day-chip.selected')).map(d => parseInt(d.dataset.day));
   return {
-    enabled:    true,
+    enabled: true,
     startDate:  s  ? firebase.firestore.Timestamp.fromDate(new Date(s))               : null,
     endDate:    e  ? firebase.firestore.Timestamp.fromDate(new Date(e + 'T23:59:59'))  : null,
     daysOfWeek: days,
@@ -1554,51 +1647,35 @@ function uploadMedia() {
   const duration = parseInt(document.getElementById('media-duration').value);
   const screens  = getSelectedScreens();
   if (screens.length === 0) { showToast('Sélectionnez au moins un écran.', 'error'); return; }
-
   const btn = document.getElementById('btn-upload');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader"></i> Upload en cours…';
-
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Upload en cours…';
   const pWrap = document.getElementById('progress-wrap');
   const pFill = document.getElementById('progress-fill');
   const pPct  = document.getElementById('progress-pct');
   const pFile = document.getElementById('progress-filename');
-  pWrap.classList.add('visible');
-  pFile.textContent = name;
-
+  pWrap.classList.add('visible'); pFile.textContent = name;
   const ext  = selectedFile.name.split('.').pop();
   const path = `media/${Date.now()}_${name.replace(/\s+/g,'_')}.${ext}`;
   const ref  = storage.ref(path);
   const task = ref.put(selectedFile);
-
   task.on('state_changed',
     snap => {
       const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-      pFill.style.width = pct + '%';
-      pPct.textContent  = pct + '%';
+      pFill.style.width = pct + '%'; pPct.textContent = pct + '%';
     },
     err => {
       showToast('Erreur upload : ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-upload"></i> Publier sur les écrans';
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-upload"></i> Publier sur les écrans';
       pWrap.classList.remove('visible');
     },
     async () => {
       const url       = await ref.getDownloadURL();
-      const nextOrder = playlistItems.length > 0
-        ? Math.max(...playlistItems.map(i => i.order || 0)) + 1 : 0;
-      const doc = {
-        name, url, type: detectedType, duration, screens,
-        active: true, order: nextOrder, storagePath: path,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      const sched = getScheduleData();
-      if (sched) doc.schedule = sched;
+      const nextOrder = playlistItems.length > 0 ? Math.max(...playlistItems.map(i => i.order || 0)) + 1 : 0;
+      const doc = { name, url, type: detectedType, duration, screens, active: true, order: nextOrder, storagePath: path, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+      const sched = getScheduleData(); if (sched) doc.schedule = sched;
       await db.collection('playlist').add(doc);
-
       showToast(`"${name}" publié !`, 'success');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-upload"></i> Publier sur les écrans';
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-upload"></i> Publier sur les écrans';
       cancelUpload();
     }
   );
@@ -1615,11 +1692,9 @@ function toggleActive(id, current) {
 }
 
 function moveItem(id, dir) {
-  const context = selectedScreen
-    ? playlistItems.filter(i => (i.screens || []).includes(selectedScreen))
-    : playlistItems;
-  const idx    = context.findIndex(i => i.id === id);
-  const target = idx + dir;
+  const context = selectedScreen ? playlistItems.filter(i => (i.screens||[]).includes(selectedScreen)) : playlistItems;
+  const idx     = context.findIndex(i => i.id === id);
+  const target  = idx + dir;
   if (target < 0 || target >= context.length) return;
   const batch   = db.batch();
   const itemRef = db.collection('playlist').doc(context[idx].id);
@@ -1630,8 +1705,7 @@ function moveItem(id, dir) {
 }
 
 function removeFromScreen(itemId, screenId) {
-  const item = playlistItems.find(i => i.id === itemId);
-  if (!item) return;
+  const item = playlistItems.find(i => i.id === itemId); if (!item) return;
   const newScreens = (item.screens || []).filter(s => s !== screenId);
   db.collection('playlist').doc(itemId).update({ screens: newScreens })
     .then(() => showToast(`Retiré de l'Écran ${screenId}`, 'success'))
@@ -1647,79 +1721,51 @@ function deleteItem(id, storagePath) {
     .catch(e => showToast('Erreur : ' + e.message, 'error'));
 }
 
-function openUploadForScreen(screenId) {
-  openUploadModal();
-  document.querySelectorAll('.screen-chip input').forEach(cb => {
-    cb.checked = cb.value === screenId;
-    cb.closest('.screen-chip').classList.toggle('checked', cb.checked);
-  });
-}
-
 // ════════════════════════════════════════
 //  URGENCE
 // ════════════════════════════════════════
 
 function toggleUrgence() {
-  if (emergencyActive) {
-    if (confirm('Arrêter la diffusion d\'urgence en cours ?')) stopEmergency();
-    return;
-  }
+  if (emergencyActive) { if (confirm('Arrêter la diffusion d\'urgence en cours ?')) stopEmergency(); return; }
   openEmergency();
 }
-function openEmergency() {
-  document.getElementById('em-backdrop').classList.add('open');
-}
-function closeEmergency() {
-  document.getElementById('em-backdrop').classList.remove('open');
-}
-function closeBackdrop(e) {
-  if (e.target === document.getElementById('em-backdrop')) closeEmergency();
-}
+function openEmergency()  { document.getElementById('em-backdrop').classList.add('open'); }
+function closeEmergency() { document.getElementById('em-backdrop').classList.remove('open'); }
+function closeBackdrop(e) { if (e.target === document.getElementById('em-backdrop')) closeEmergency(); }
 function selectDur(el) {
   document.querySelectorAll('.dur-option').forEach(d => d.classList.remove('selected'));
-  el.classList.add('selected');
-  emDuration = parseInt(el.dataset.min);
+  el.classList.add('selected'); emDuration = parseInt(el.dataset.min);
 }
+
 function triggerEmergency() {
   const message   = document.getElementById('em-message').value.trim();
   const bgColor   = document.getElementById('em-bg-color').value;
   const textColor = document.getElementById('em-text-color').value;
   if (!message) { showToast('Saisissez un message.', 'error'); return; }
-
-  const onlineCount = Object.keys(screensLiveData)
-    .filter(id => getScreenStatus(id).class === 's-live').length;
+  const onlineCount = Object.keys(screensLiveData).filter(id => getScreenStatus(id).class === 's-live').length;
   if (!confirm(`Confirmer la diffusion d'urgence sur ${onlineCount} écran${onlineCount > 1 ? 's' : ''} actif${onlineCount > 1 ? 's' : ''} ?`)) return;
-
-  const expiresAt = emDuration > 0
-    ? firebase.firestore.Timestamp.fromMillis(Date.now() + emDuration * 60000) : null;
-
+  const expiresAt = emDuration > 0 ? firebase.firestore.Timestamp.fromMillis(Date.now() + emDuration * 60000) : null;
   db.collection('config').doc('emergency').set({
     active: true, message, imageUrl: '',
-    backgroundColor: bgColor, textColor,
-    expiresAt,
+    backgroundColor: bgColor, textColor, expiresAt,
     triggeredBy: auth.currentUser?.uid || 'anon',
     triggeredAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => { closeEmergency(); showToast('Diffusion d\'urgence déclenchée !', 'error'); })
     .catch(e => showToast('Erreur : ' + e.message, 'error'));
 }
+
 function stopEmergency() {
   db.collection('config').doc('emergency').set({ active: false }, { merge: true })
     .then(() => showToast('Urgence arrêtée', 'success'))
     .catch(e => showToast('Erreur : ' + e.message, 'error'));
 }
+
 function listenEmergency() {
   db.collection('config').doc('emergency').onSnapshot(doc => {
-    const data = doc.data();
-    emergencyActive = data?.active === true;
-    const btn = document.getElementById('btn-urgence');
-    if (!btn) return;
-    if (emergencyActive) {
-      btn.textContent = '⛔ Arrêter l\'urgence';
-      btn.classList.add('active-emergency');
-    } else {
-      btn.textContent = '⚠ Urgence';
-      btn.classList.remove('active-emergency');
-    }
+    const data = doc.data(); emergencyActive = data?.active === true;
+    const btn = document.getElementById('btn-urgence'); if (!btn) return;
+    if (emergencyActive) { btn.innerHTML = '⛔ Arrêter l\'urgence'; btn.classList.add('active-emergency'); }
+    else { btn.innerHTML = '<i class="ti ti-alert-triangle"></i> Urgence'; btn.classList.remove('active-emergency'); }
   }, () => {});
 }
 
@@ -1730,44 +1776,26 @@ function listenEmergency() {
 let openTransferPopover = null;
 
 function toggleTransferPopover(itemId, fromScreen) {
-  if (openTransferPopover === itemId) {
-    closeTransferPopover();
-    return;
-  }
-  closeTransferPopover();
-  openTransferPopover = itemId;
-
-  const rowId = `row-${itemId}`;
-  const row   = document.getElementById(rowId);
-  if (!row) return;
-
+  if (openTransferPopover === itemId) { closeTransferPopover(); return; }
+  closeTransferPopover(); openTransferPopover = itemId;
+  const row = document.getElementById(`item-${itemId}`); if (!row) return;
   const targets = Object.entries(SCREEN_CONFIG)
     .filter(([id]) => id !== fromScreen && SCREEN_CONFIG[id].installé)
-    .map(([id, cfg]) => `
-      <div class="tp-row">
-        <span class="tp-num">Écran ${id}</span>
-        <span class="tp-zone">${cfg.zone || ''}</span>
-        <button class="tp-btn-move" onclick="transferMedia('${itemId}','${fromScreen}','${id}','move')">Déplacer</button>
-        <button class="tp-btn-copy" onclick="transferMedia('${itemId}','${fromScreen}','${id}','copy')">Copier</button>
-      </div>`).join('');
-
+    .map(([id, cfg]) => `<div class="tp-row"><span class="tp-num">${id}</span><span class="tp-zone">${cfg.label}</span>
+      <button class="tp-btn tp-btn-move" onclick="transferMedia('${itemId}','${fromScreen}','${id}','move')">Déplacer</button>
+      <button class="tp-btn tp-btn-copy" onclick="transferMedia('${itemId}','${fromScreen}','${id}','copy')">Copier</button>
+    </div>`).join('');
   const pop = document.createElement('div');
-  pop.className = 'transfer-popover';
-  pop.id        = `tp-${itemId}`;
-  pop.innerHTML = `
-    <div class="tp-header">
-      <span class="tp-title">Transférer / Copier</span>
-      <button class="tp-close" onclick="closeTransferPopover()">✕</button>
-    </div>
+  pop.className = 'transfer-popover'; pop.id = `tp-${itemId}`;
+  pop.innerHTML = `<div class="tp-header"><span class="tp-title">Transférer / Copier</span><button class="tp-close" onclick="closeTransferPopover()">✕</button></div>
     <div class="tp-subtitle">Vers quel écran ?</div>
-    <div class="tp-list">${targets || '<div style="color:rgba(255,255,255,0.35);font-size:11px">Aucun autre écran disponible</div>'}</div>`;
+    <div class="tp-list">${targets || '<div style="color:var(--text-mute);font-size:11px">Aucun autre écran disponible</div>'}</div>`;
   row.insertAdjacentElement('afterend', pop);
 }
 
 function closeTransferPopover() {
   if (openTransferPopover) {
-    const el = document.getElementById(`tp-${openTransferPopover}`);
-    if (el) el.remove();
+    const el = document.getElementById(`tp-${openTransferPopover}`); if (el) el.remove();
     openTransferPopover = null;
   }
 }
@@ -1775,32 +1803,23 @@ function closeTransferPopover() {
 async function transferMedia(itemId, fromScreen, toScreen, mode) {
   closeTransferPopover();
   try {
-    const docRef  = db.collection('playlist').doc(itemId);
-    const snap    = await docRef.get();
-    if (!snap.exists) { showToast('Média introuvable', 'error'); return; }
-    const data    = snap.data();
+    const docRef = db.collection('playlist').doc(itemId);
+    const snap   = await docRef.get(); if (!snap.exists) { showToast('Média introuvable', 'error'); return; }
+    const data   = snap.data();
     const screens = data.screens || ['1','2','3'];
-
     if (mode === 'move') {
       const newScreens = screens.filter(s => s !== fromScreen);
       if (!newScreens.includes(toScreen)) newScreens.push(toScreen);
-      await docRef.update({ screens: newScreens });
-      showToast(`Déplacé vers Écran ${toScreen}`, 'success');
+      await docRef.update({ screens: newScreens }); showToast(`Déplacé vers Écran ${toScreen}`, 'success');
     } else {
-      if (!screens.includes(toScreen)) {
-        await docRef.update({ screens: [...screens, toScreen] });
-      }
+      if (!screens.includes(toScreen)) await docRef.update({ screens: [...screens, toScreen] });
       showToast(`Copié vers Écran ${toScreen}`, 'success');
     }
-  } catch(e) {
-    showToast('Erreur : ' + e.message, 'error');
-  }
+  } catch(e) { showToast('Erreur : ' + e.message, 'error'); }
 }
 
 document.addEventListener('click', e => {
-  if (openTransferPopover && !e.target.closest('.transfer-popover') && !e.target.closest('.transfer-btn')) {
-    closeTransferPopover();
-  }
+  if (openTransferPopover && !e.target.closest('.transfer-popover') && !e.target.closest('.transfer-btn')) closeTransferPopover();
 });
 
 // ════════════════════════════════════════
@@ -1810,34 +1829,27 @@ document.addEventListener('click', e => {
 let surveillanceMode     = false;
 let surveillanceTimer    = null;
 let surveillanceIndex    = 0;
-const surveillanceInterval = 10; // secondes par écran
+const surveillanceInterval = 10;
 
 function getSurveillanceScreens() {
-  return Object.entries(SCREEN_CONFIG)
-    .filter(([, cfg]) => cfg.installé)
-    .map(([id]) => id);
+  return Object.entries(SCREEN_CONFIG).filter(([, cfg]) => cfg.installé).map(([id]) => id);
 }
 
-function toggleSurveillance() {
-  if (surveillanceMode) { stopSurveillance(); } else { startSurveillance(); }
-}
+function toggleSurveillance() { if (surveillanceMode) stopSurveillance(); else startSurveillance(); }
 
 function startSurveillance() {
   const screens = getSurveillanceScreens();
   if (screens.length === 0) { showToast('Aucun écran installé', 'error'); return; }
-  surveillanceMode  = true;
-  surveillanceIndex = 0;
+  surveillanceMode = true; surveillanceIndex = 0;
   const btn = document.getElementById('btn-surveillance');
-  if (btn) { btn.classList.add('active'); btn.textContent = '👁 Surveillance ON'; }
-  deselectScreen();
-  rotateSurveillance();
+  if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="ti ti-eye"></i> Surveillance ON'; }
+  deselectScreen(); rotateSurveillance();
 }
 
 function stopSurveillance() {
-  surveillanceMode = false;
-  clearTimeout(surveillanceTimer);
-  const btn  = document.getElementById('btn-surveillance');
-  if (btn) { btn.classList.remove('active'); btn.textContent = '👁 Surveillance'; }
+  surveillanceMode = false; clearTimeout(surveillanceTimer);
+  const btn = document.getElementById('btn-surveillance');
+  if (btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="ti ti-eye"></i> Surveillance'; }
   const prog = document.getElementById('surveillance-progress');
   const ind  = document.getElementById('surveillance-indicator');
   if (prog) { prog.style.display = 'none'; prog.style.width = '0%'; }
@@ -1846,42 +1858,28 @@ function stopSurveillance() {
 
 function rotateSurveillance() {
   if (!surveillanceMode) return;
-  const screens = getSurveillanceScreens();
-  if (screens.length === 0) { stopSurveillance(); return; }
+  const screens = getSurveillanceScreens(); if (screens.length === 0) { stopSurveillance(); return; }
   surveillanceIndex = surveillanceIndex % screens.length;
   const screenId = screens[surveillanceIndex];
-  selectScreen(screenId);
-  updateSurveillanceIndicator(screenId, surveillanceIndex + 1, screens.length);
+  selectScreen(screenId); updateSurveillanceIndicator(screenId, surveillanceIndex + 1, screens.length);
   animateSurveillanceBar(surveillanceInterval * 1000);
-  surveillanceTimer = setTimeout(() => {
-    surveillanceIndex = (surveillanceIndex + 1) % screens.length;
-    rotateSurveillance();
-  }, surveillanceInterval * 1000);
+  surveillanceTimer = setTimeout(() => { surveillanceIndex = (surveillanceIndex + 1) % screens.length; rotateSurveillance(); }, surveillanceInterval * 1000);
 }
 
 function animateSurveillanceBar(durationMs) {
-  const prog = document.getElementById('surveillance-progress');
-  if (!prog) return;
-  prog.style.display    = 'block';
-  prog.style.transition = 'none';
-  prog.style.width      = '0%';
-  requestAnimationFrame(() => {
-    prog.style.transition = `width ${durationMs}ms linear`;
-    prog.style.width      = '100%';
-  });
+  const prog = document.getElementById('surveillance-progress'); if (!prog) return;
+  prog.style.display = 'block'; prog.style.transition = 'none'; prog.style.width = '0%';
+  requestAnimationFrame(() => { prog.style.transition = `width ${durationMs}ms linear`; prog.style.width = '100%'; });
 }
 
 function updateSurveillanceIndicator(screenId, current, total) {
-  const ind = document.getElementById('surveillance-indicator');
-  if (!ind) return;
-  const cfg   = SCREEN_CONFIG[screenId] || {};
-  const label = cfg.zone ? `${cfg.zone}` : `Écran ${screenId}`;
-  ind.style.display  = 'flex';
-  ind.innerHTML = `
-    <span style="width:6px;height:6px;border-radius:50%;background:#4ecdc4;animation:badgePulse 1.5s ease-in-out infinite;flex-shrink:0"></span>
-    <span style="color:rgba(255,255,255,0.5)">Surveillance</span>
-    <span style="color:#4ecdc4;font-weight:600">${label}</span>
-    <span style="color:rgba(255,255,255,0.3)">${current}/${total}</span>`;
+  const ind = document.getElementById('surveillance-indicator'); if (!ind) return;
+  const cfg = SCREEN_CONFIG[screenId] || {};
+  ind.style.display = 'flex';
+  ind.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:var(--teal-light);animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0"></span>
+    <span style="color:var(--text-mute)">Surveillance</span>
+    <span style="color:var(--teal-light);font-weight:600">${cfg.label||'Écran '+screenId}</span>
+    <span style="color:var(--text-mute)">${current}/${total}</span>`;
 }
 
 // ════════════════════════════════════════
@@ -1890,55 +1888,30 @@ function updateSurveillanceIndicator(screenId, current, total) {
 
 const activeAlerts       = {};
 const dismissedAlerts    = new Set();
-const OFFLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min
+const OFFLINE_THRESHOLD_MS = 5 * 60 * 1000;
 
 function checkOfflineAlerts(screensData) {
-  const now = Date.now();
-  let changed = false;
-
+  const now = Date.now(); let changed = false;
   Object.entries(screensData).forEach(([id, data]) => {
     if (!SCREEN_CONFIG[id]?.installé) return;
-    const lastSeen = data.lastSeen?.toMillis?.() || 0;
+    const lastSeen  = data.lastSeen?.toMillis?.() || 0;
     const isOffline = (now - lastSeen) > OFFLINE_THRESHOLD_MS;
-
     if (isOffline && !activeAlerts[id] && !dismissedAlerts.has(id)) {
-      activeAlerts[id] = {
-        screenId:    id,
-        label:       SCREEN_CONFIG[id]?.zone || `Écran ${id}`,
-        lastMedia:   data.currentMedia || null,
-        since:       new Date(lastSeen)
-      };
-      triggerBrowserNotification(id, activeAlerts[id].label, activeAlerts[id].lastMedia);
-      changed = true;
-    } else if (!isOffline && activeAlerts[id]) {
-      delete activeAlerts[id];
-      dismissedAlerts.delete(id);
-      changed = true;
-    }
+      activeAlerts[id] = { screenId: id, label: SCREEN_CONFIG[id]?.label || `Écran ${id}`, lastMedia: data.currentMedia || null, since: new Date(lastSeen) };
+      triggerBrowserNotification(id, activeAlerts[id].label, activeAlerts[id].lastMedia); changed = true;
+    } else if (!isOffline && activeAlerts[id]) { delete activeAlerts[id]; dismissedAlerts.delete(id); changed = true; }
   });
-
-  if (changed) {
-    renderAlertsZone();
-    updateScreenCardAlertBadges();
-  }
+  if (changed) { renderAlertsZone(); renderScreenList(); }
 }
 
 function renderAlertsZone() {
-  const zone = document.getElementById('alerts-zone');
-  if (!zone) return;
+  const zone = document.getElementById('alerts-zone'); if (!zone) return;
   const alerts = Object.values(activeAlerts);
-  if (alerts.length === 0) {
-    zone.style.display = 'none';
-    zone.innerHTML = '';
-    return;
-  }
+  if (alerts.length === 0) { zone.style.display = 'none'; zone.innerHTML = ''; return; }
   zone.style.display = 'flex';
   zone.innerHTML = alerts.map(a => {
-    const sinceStr = a.since && a.since.getTime() > 0
-      ? a.since.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      : 'inconnu';
-    return `
-    <div class="alert-item" id="alert-${a.screenId}">
+    const sinceStr = a.since && a.since.getTime() > 0 ? a.since.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : 'inconnu';
+    return `<div class="alert-item" id="alert-${a.screenId}">
       <div class="alert-icon">📡</div>
       <div class="alert-body">
         <div class="alert-title">Écran ${a.screenId} — ${a.label} hors ligne</div>
@@ -1952,55 +1925,26 @@ function renderAlertsZone() {
   }).join('');
 }
 
-function dismissAlert(screenId) {
-  dismissedAlerts.add(screenId);
-  delete activeAlerts[screenId];
-  renderAlertsZone();
-  updateScreenCardAlertBadges();
-}
-
-function updateScreenCardAlertBadges() {
-  document.querySelectorAll('.screen-row').forEach(row => {
-    const id = row.dataset.screenId;
-    const badge = row.querySelector('.alert-badge');
-    if (!id) return;
-    if (activeAlerts[id]) {
-      if (!badge) {
-        const b = document.createElement('div');
-        b.className = 'alert-badge';
-        row.appendChild(b);
-      }
-    } else {
-      if (badge) badge.remove();
-    }
-  });
-}
+function dismissAlert(screenId) { dismissedAlerts.add(screenId); delete activeAlerts[screenId]; renderAlertsZone(); renderScreenList(); }
 
 function triggerBrowserNotification(screenId, label, lastMedia) {
   if (Notification.permission !== 'granted') return;
-  new Notification(`⚠ ${label} hors ligne`, {
-    body: lastMedia ? `Dernier média : ${lastMedia}` : 'Aucun signal reçu depuis 5 min',
-    icon: '/favicon.ico',
-    tag:  `offline-${screenId}`
-  });
+  new Notification(`⚠ ${label} hors ligne`, { body: lastMedia ? `Dernier média : ${lastMedia}` : 'Aucun signal reçu depuis 5 min', tag: `offline-${screenId}` });
 }
-
 function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
 }
 
 // ════════════════════════════════════════
 //  TOAST
 // ════════════════════════════════════════
 
+let toastTimer = null;
 function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className   = `toast ${type} show`;
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => { t.className = 'toast'; }, 3000);
+  const t = document.getElementById('toast'); if (!t) return;
+  clearTimeout(toastTimer);
+  t.textContent = msg; t.className = `toast ${type} show`;
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
 }
 </script>
 </body>
