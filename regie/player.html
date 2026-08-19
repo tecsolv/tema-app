@@ -53,7 +53,7 @@
       display:flex; flex-direction:column; align-items:center;
     }
     .es-logo-img {
-      width:clamp(280px, 38vw, 540px); height:auto;
+      width:clamp(320px, 42vw, 600px); height:auto;
       animation:esLogoPulse 4s ease-in-out infinite;
       filter:drop-shadow(0 0 24px rgba(255,190,40,0.72))
              drop-shadow(0 0 60px rgba(215,148,0,0.44))
@@ -72,24 +72,24 @@
       }
     }
     .es-divider {
-      width:88px; height:1px; margin:20px auto;
+      width:120px; height:1px; margin:24px auto;
       background:linear-gradient(90deg, transparent, rgba(238,182,52,0.68), transparent);
     }
     .es-msg {
-      font-size:12px; font-weight:600; letter-spacing:5.5px; text-transform:uppercase;
-      color:rgba(248,222,158,0.65);
+      font-size:20px; font-weight:700; letter-spacing:7px; text-transform:uppercase;
+      color:rgba(248,222,158,0.75);
       animation:esMsgShimmer 3.5s ease-in-out infinite;
     }
     @keyframes esMsgShimmer {
-      0%,100%{ opacity:.65; letter-spacing:5.5px; }
-      50%{ opacity:.95; letter-spacing:6.2px; }
+      0%,100%{ opacity:.75; letter-spacing:7px; }
+      50%{ opacity:1; letter-spacing:8px; }
     }
     .es-clock {
-      position:absolute; bottom:44px; left:50%; transform:translateX(-50%);
-      font-size:40px; font-weight:200; letter-spacing:8px;
-      color:rgba(228,176,44,0.58); z-index:10;
+      position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
+      font-size:64px; font-weight:200; letter-spacing:10px;
+      color:rgba(228,176,44,0.62); z-index:10;
       font-variant-numeric:tabular-nums;
-      text-shadow:0 0 32px rgba(228,176,44,0.38), 0 0 65px rgba(205,135,0,0.18);
+      text-shadow:0 0 40px rgba(228,176,44,0.42), 0 0 80px rgba(205,135,0,0.20);
     }
     .es-screen-id {
       position:absolute; bottom:22px; right:24px;
@@ -97,15 +97,15 @@
       color:rgba(237,217,178,0.18); z-index:10;
     }
     .es-service-wrap {
-      margin-top:22px; height:38px;
+      margin-top:28px; height:56px;
       display:flex; align-items:center; justify-content:center;
-      position:relative; overflow:hidden; min-width:320px;
+      position:relative; overflow:hidden; min-width:420px;
     }
     .es-service {
       position:absolute;
       display:flex; align-items:center; gap:10px;
-      font-size:12px; letter-spacing:3.5px; text-transform:uppercase;
-      color:rgba(255,210,100,0.72); white-space:nowrap;
+      font-size:22px; font-weight:700; letter-spacing:5px; text-transform:uppercase;
+      color:rgba(255,215,105,0.88); white-space:nowrap;
       opacity:0; transition:opacity 0.9s ease;
     }
     .es-service.active { opacity:1; }
@@ -510,7 +510,7 @@ if (swrap) {
   var srvEls = LABELS.map(function(label, i) {
     var d = document.createElement('div');
     d.className = 'es-service';
-    d.innerHTML = '<span style="font-size:17px;line-height:1">' + ICONS[i] + '</span><span>' + label + '</span>';
+    d.innerHTML = '<span style="font-size:28px;line-height:1">' + ICONS[i] + '</span><span>' + label + '</span>';
     swrap.appendChild(d);
     return d;
   });
