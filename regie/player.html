@@ -234,6 +234,12 @@ function renderItem(slide, item) {
     v.src = item.url; v.autoplay = true; v.muted = true;
     v.playsInline = true; v.loop = true; v.onerror = nextItem;
     slide.appendChild(v);
+  } else if (item.type === 'html') {
+    const f = document.createElement('iframe');
+    f.src = item.url;
+    f.style.cssText = 'width:100%;height:100%;border:none;';
+    f.allow = 'autoplay;fullscreen';
+    slide.appendChild(f);
   } else {
     const img = document.createElement('img');
     img.src = item.url; img.alt = item.name || ''; img.onerror = nextItem;

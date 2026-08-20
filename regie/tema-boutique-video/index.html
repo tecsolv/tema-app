@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TeMa Boutique — Régie 16:9</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .brand-bar,.footer{display:none}
+      #stage{position:absolute;inset:0}
+      .scene.image-scene{inset:0;display:block;overflow:hidden;background:#0d0907}
+      .image-backdrop{position:absolute;inset:-3%;background:var(--scene-image) center/cover no-repeat;filter:blur(24px);opacity:.42;transform:scale(1.12)}
+      .scene-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:saturate(1.05) contrast(1.03)}
+      .scene.image-scene.active .scene-image{animation:cinema-pan 7.2s ease-out both}
+      @keyframes cinema-pan{from{transform:scale(1.01)}to{transform:scale(1.075)}}
+      .contact-correction{position:absolute;z-index:2;left:17%;right:17%;top:42%;bottom:6%;padding:1.5vw 2vw;background:rgba(12,8,6,.92);border-block:1px solid rgba(213,165,64,.75);color:#f6ecd7;font:600 1.22vw/1.65 Arial,sans-serif;letter-spacing:.025em;text-align:center;box-shadow:0 0 30px rgba(0,0,0,.55);display:grid;align-content:center}
+      .contact-correction p{margin:.22em}.contact-correction b{color:#f0cd79;letter-spacing:.08em}
+      /* Chaque classe est associée à une seule scène, pour éviter un défilement uniforme. */
+      .scene.image-scene{transition:opacity .55s ease,transform .55s cubic-bezier(.22,.8,.25,1)}
+      .scene.image-scene.effect-golden{transform:scale(.96);filter:brightness(.55)}.scene.image-scene.effect-golden.active{transform:scale(1);filter:brightness(1)}
+      .scene.image-scene.effect-left{transform:translateX(-7%) scale(1.02)}.scene.image-scene.effect-left.active{transform:translateX(0) scale(1)}
+      .scene.image-scene.effect-diagonal{transform:translate(-5%,5%) scale(1.08)}.scene.image-scene.effect-diagonal.active{transform:none}
+      .scene.image-scene.effect-right{transform:translateX(7%) scale(1.02)}.scene.image-scene.effect-right.active{transform:translateX(0) scale(1)}
+      .scene.image-scene.effect-lift{transform:translateY(7%) scale(1.03)}.scene.image-scene.effect-lift.active{transform:translateY(0) scale(1)}
+      .scene.image-scene.effect-drop{transform:translateY(-7%) scale(1.03)}.scene.image-scene.effect-drop.active{transform:translateY(0) scale(1)}
+      .scene.image-scene.effect-aperture{transform:scale(.82);clip-path:inset(0 42%)}.scene.image-scene.effect-aperture.active{transform:scale(1);clip-path:inset(0 0)}
+      .scene.image-scene.effect-sweep{transform:skewX(-5deg) translateX(-5%) scale(1.05)}.scene.image-scene.effect-sweep.active{transform:skewX(0) translateX(0) scale(1)}
+      .scene.image-scene.effect-focus{transform:scale(1.14);filter:blur(9px)}.scene.image-scene.effect-focus.active{transform:scale(1);filter:blur(0)}
+      .scene.image-scene.effect-contact{transform:scale(.9) rotate(-1.2deg)}.scene.image-scene.effect-contact.active{transform:scale(1) rotate(0)}
+      .scene.image-scene.effect-finale{transform:scale(1.04);opacity:0}.scene.image-scene.effect-finale.active{transform:scale(1);opacity:1}
+      .scene.image-scene.effect-left.active .scene-image{animation:pan-left 5.4s ease-out both}.scene.image-scene.effect-right.active .scene-image{animation:pan-right 5.4s ease-out both}.scene.image-scene.effect-lift.active .scene-image{animation:pan-lift 5.4s ease-out both}.scene.image-scene.effect-drop.active .scene-image{animation:pan-drop 5.4s ease-out both}.scene.image-scene.effect-sweep.active .scene-image{animation:pan-sweep 5.4s ease-out both}
+      @keyframes pan-left{from{transform:scale(1.08) translateX(-2%)}to{transform:scale(1) translateX(1%)}}@keyframes pan-right{from{transform:scale(1.02) translateX(2%)}to{transform:scale(1.08) translateX(-1%)}}@keyframes pan-lift{from{transform:scale(1.08) translateY(2%)}to{transform:scale(1) translateY(-1%)}}@keyframes pan-drop{from{transform:scale(1.02) translateY(-2%)}to{transform:scale(1.08) translateY(1%)}}@keyframes pan-sweep{from{transform:scale(1.08) translateX(-1%)}to{transform:scale(1) translateX(2%)}}
+      /* Couche aléatoire : un effet différent est choisi à chaque passage d’une scène. */
+      .scene.image-scene{transition:opacity .68s ease,transform .68s cubic-bezier(.18,.88,.18,1),filter .5s ease,clip-path .68s ease}
+      .scene.image-scene.fx-zoom-in{transform:scale(.68);filter:brightness(.55)}.scene.image-scene.fx-zoom-in.active{transform:scale(1);filter:brightness(1)}
+      .scene.image-scene.fx-zoom-out{transform:scale(1.22);filter:brightness(.7)}.scene.image-scene.fx-zoom-out.active{transform:scale(1);filter:brightness(1)}
+      .scene.image-scene.fx-flash{transform:scale(1.08);filter:brightness(2.6) saturate(1.8);opacity:0}.scene.image-scene.fx-flash.active{transform:scale(1);filter:brightness(1);opacity:1}
+      .scene.image-scene.fx-shutter{transform:scale(.9);clip-path:inset(42% 0)}.scene.image-scene.fx-shutter.active{transform:scale(1);clip-path:inset(0)}
+      .scene.image-scene.fx-swipe-up{transform:translateY(12%) scale(1.04);clip-path:inset(100% 0 0 0)}.scene.image-scene.fx-swipe-up.active{transform:none;clip-path:inset(0)}
+      .scene.image-scene.fx-tilt{transform:perspective(1000px) rotateX(10deg) rotateZ(-1.4deg) scale(.92);filter:brightness(.7)}.scene.image-scene.fx-tilt.active{transform:perspective(1000px) rotateX(0) rotateZ(0) scale(1);filter:brightness(1)}
+      .scene.image-scene.fx-spin{transform:rotate(-2.4deg) scale(.86);filter:brightness(.65)}.scene.image-scene.fx-spin.active{transform:rotate(0) scale(1);filter:brightness(1)}
+      .scene.image-scene.fx-light-speed{transform:scale(1.16);filter:blur(15px) brightness(1.8) saturate(1.45)}.scene.image-scene.fx-light-speed.active{transform:scale(1);filter:blur(0) brightness(1) saturate(1)}
+      .scene.image-scene.fx-flip{transform:perspective(1200px) rotateY(-16deg) scale(.9);filter:brightness(.65)}.scene.image-scene.fx-flip.active{transform:perspective(1200px) rotateY(0) scale(1);filter:brightness(1)}
+      .scene.image-scene.fx-diagonal{transform:translate(-9%,7%) rotate(-1deg) scale(1.1);clip-path:polygon(0 0,0 0,0 100%,0 100%)}.scene.image-scene.fx-diagonal.active{transform:none;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+      /* Bibliothèque d'effets demandée : le script en choisit un aléatoirement. */
+      .scene.image-scene.fx-fade{opacity:0;transform:scale(1)}.scene.image-scene.fx-fade.active{opacity:1;transform:scale(1)}
+      .scene.image-scene.fx-crossfade{opacity:0;transform:scale(1.015)}.scene.image-scene.fx-crossfade.active{opacity:1;transform:scale(1)}
+      .scene.image-scene.fx-kenburns-in{opacity:0;transform:scale(1)}.scene.image-scene.fx-kenburns-in.active{opacity:1;transform:scale(1)}.scene.image-scene.fx-kenburns-in.active .scene-image{animation:kenburns-in 5.4s ease-out both}
+      .scene.image-scene.fx-kenburns-out{opacity:0;transform:scale(1)}.scene.image-scene.fx-kenburns-out.active{opacity:1;transform:scale(1)}.scene.image-scene.fx-kenburns-out.active .scene-image{animation:kenburns-out 5.4s ease-out both}
+      .scene.image-scene.fx-pan{opacity:0;transform:translateX(-11%) scale(1.08)}.scene.image-scene.fx-pan.active{opacity:1;transform:none}.scene.image-scene.fx-pan.active .scene-image{animation:panorama 5.4s linear both}
+      .scene.image-scene.fx-spin{opacity:0;transform:rotate(-7deg) scale(.88)}.scene.image-scene.fx-spin.active{opacity:1;transform:rotate(0) scale(1)}
+      .scene.image-scene.fx-blinds{opacity:0;transform:scale(1);clip-path:inset(0 48%)}.scene.image-scene.fx-blinds.active{opacity:1;transform:scale(1);clip-path:inset(0 0)}
+      .scene.image-scene.fx-cube{opacity:0;transform:perspective(1300px) rotateY(-28deg) translateX(-10%) scale(.83);transform-origin:left center}.scene.image-scene.fx-cube.active{opacity:1;transform:perspective(1300px) rotateY(0) translateX(0) scale(1)}
+      .scene.image-scene.fx-wipe{opacity:0;transform:scale(1.03);clip-path:inset(0 100% 0 0)}.scene.image-scene.fx-wipe.active{opacity:1;transform:scale(1);clip-path:inset(0)}
+      .scene.image-scene.fx-blur{opacity:0;transform:scale(1.1);filter:blur(22px) brightness(1.35)}.scene.image-scene.fx-blur.active{opacity:1;transform:scale(1);filter:blur(0) brightness(1)}
+      .scene.image-scene.fx-glitch{opacity:0;transform:translateX(-2%) scale(1.04);filter:contrast(1.8) saturate(1.8)}.scene.image-scene.fx-glitch.active{opacity:1;transform:none;filter:contrast(1) saturate(1)}.scene.image-scene.fx-glitch.active .scene-image{animation:glitch-in .68s steps(2,end) both,cinema-pan 5.4s .68s ease-out both}
+      .scene.image-scene.fx-grid{opacity:0;transform:scale(.94);clip-path:polygon(0 0,30% 0,30% 22%,60% 22%,60% 0,100% 0,100% 100%,70% 100%,70% 78%,40% 78%,40% 100%,0 100%)}.scene.image-scene.fx-grid.active{opacity:1;transform:scale(1);clip-path:inset(0)}.scene.image-scene.fx-grid .image-backdrop{background-image:linear-gradient(rgba(213,165,64,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(213,165,64,.18) 1px,transparent 1px),var(--scene-image);background-size:25% 25%,25% 25%,cover;background-position:center}
+      @keyframes kenburns-in{from{transform:scale(1)}to{transform:scale(1.13)}}@keyframes kenburns-out{from{transform:scale(1.14)}to{transform:scale(1)}}@keyframes panorama{from{transform:scale(1.08) translateX(-3%)}to{transform:scale(1.08) translateX(3%)}}@keyframes glitch-in{0%{transform:translateX(-4%) skewX(-8deg);filter:hue-rotate(30deg)}35%{transform:translateX(3%) skewX(5deg);filter:hue-rotate(-25deg)}70%{transform:translateX(-1%);filter:brightness(1.7)}100%{transform:none;filter:none}}
+    </style>
+  </head>
+  <body>
+    <main id="film" aria-label="Publicité TeMa Boutique">
+      <div class="grain"></div><div class="glow glow-a"></div><div class="glow glow-b"></div>
+      <header class="brand-bar">
+        <img class="official-logo" src="assets/tema-logo-officiel.svg" alt="Logo officiel TeMa Boutique" onerror="this.style.display='none'" />
+        <div class="fallback-brand">EMPLACEMENT<br>LOGO OFFICIEL</div>
+        <div class="brand-rule"></div>
+      </header>
+      <section id="stage" aria-live="polite"></section>
+      <footer class="footer"><span>Yamoussoukro · Ebenezer fin goudron</span><span>Pour votre famille, chaque jour.</span></footer>
+    </main>
+    <script src="scenes.js"></script>
+  </body>
+</html>

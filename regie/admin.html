@@ -759,6 +759,9 @@ body {
       <button class="btn-upload-header" onclick="openUploadModal()">
         <i class="ti ti-upload"></i> Uploader un média
       </button>
+      <button class="btn-upload-header" onclick="openUrlModal()" style="background:rgba(0,160,180,0.18);border-color:rgba(0,180,200,0.45);color:#4dd9eb;">
+        <i class="ti ti-world"></i> Page web / URL
+      </button>
       <button class="btn-urgence" id="btn-urgence" onclick="toggleUrgence()">
         <i class="ti ti-alert-triangle"></i> Urgence
       </button>
@@ -850,6 +853,7 @@ body {
           <button class="gallery-filter-btn active" onclick="setGalleryFilter('all',this)">Tous</button>
           <button class="gallery-filter-btn" onclick="setGalleryFilter('video',this)">Vidéos</button>
           <button class="gallery-filter-btn" onclick="setGalleryFilter('image',this)">Images</button>
+          <button class="gallery-filter-btn" onclick="setGalleryFilter('html',this)">Pages web</button>
           <button class="gallery-filter-btn" onclick="setGalleryFilter('sched',this)">Programmés</button>
         </div>
       </div>
@@ -1034,6 +1038,34 @@ body {
     <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;">
       <button class="btn-upload" onclick="openUploadModal();closeAssignModal();" style="flex:1;background:var(--gold-dim);border-color:var(--gold);color:var(--gold);">
         <i class="ti ti-upload"></i> Uploader un nouveau fichier
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ URL MODAL ══════════ -->
+<div id="url-modal" onclick="if(event.target===this)closeUrlModal()" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div class="upload-modal-inner" onclick="event.stopPropagation()" style="width:460px;">
+    <div class="upload-modal-header">
+      <div class="upload-modal-title"><i class="ti ti-world" style="margin-right:6px"></i>Ajouter une page web / URL</div>
+      <button class="btn-close-modal" onclick="closeUrlModal()">×</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute);display:block;margin-bottom:6px;">Nom affiché</label>
+        <input type="text" id="url-modal-name" class="field-input" placeholder="Ex : Film TeMa Boutique" style="width:100%;">
+      </div>
+      <div>
+        <label style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute);display:block;margin-bottom:6px;">URL de la page</label>
+        <input type="url" id="url-modal-url" class="field-input" placeholder="https://..." style="width:100%;">
+      </div>
+      <div>
+        <label style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute);display:block;margin-bottom:6px;">Durée d'affichage (secondes)</label>
+        <input type="number" id="url-modal-duration" class="field-input" value="60" min="5" max="3600" style="width:100%;">
+      </div>
+      <div id="url-modal-hint" style="font-size:11px;color:var(--text-mute);background:rgba(0,160,180,0.08);border:1px solid rgba(0,160,180,0.2);border-radius:8px;padding:10px 12px;line-height:1.6;display:none;"></div>
+      <button class="btn-upload" id="url-modal-btn" onclick="addUrlMedia()" style="background:rgba(0,160,180,0.18);border-color:rgba(0,180,200,0.45);color:#4dd9eb;">
+        <i class="ti ti-world"></i> Ajouter à la galerie
       </button>
     </div>
   </div>
@@ -1327,6 +1359,8 @@ function previewLocalMedia(url, type, name) {
   if (!frame) return;
   if (type === 'video') {
     frame.innerHTML = `<div class="badge-local">▶ APERÇU LOCAL</div><video src="${url}" controls autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;"></video>`;
+  } else if (type === 'html') {
+    frame.innerHTML = `<div class="badge-local">▶ APERÇU LOCAL</div><iframe src="${url}" style="width:100%;height:100%;border:none;" allow="autoplay;fullscreen"></iframe>`;
   } else {
     frame.innerHTML = `<div class="badge-local">▶ APERÇU LOCAL</div><img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
   }
@@ -1357,14 +1391,14 @@ function renderScreenPlaylist(screenId) {
     const isLive  = item.name === liveMediaName;
     const isFirst = idx === 0;
     const isLast  = idx === sorted.length - 1;
-    const typeTag = item.type === 'video' ? `<span class="tag tag-video">🎬 Vidéo</span>` : `<span class="tag tag-image">🖼 Image</span>`;
-    const durTag  = item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration || 8}s</span>` : `<span class="tag tag-auto">Auto</span>`;
+    const typeTag = item.type === 'video' ? `<span class="tag tag-video">🎬 Vidéo</span>` : item.type === 'html' ? `<span class="tag tag-image" style="background:rgba(0,160,180,0.18);color:#4dd9eb;">🌐 Page web</span>` : `<span class="tag tag-image">🖼 Image</span>`;
+    const durTag  = item.type === 'video' ? `<span class="tag tag-auto">Auto</span>` : `<span class="tag tag-dur">⏱ ${item.duration || (item.type === 'html' ? 60 : 8)}s</span>`;
     const safeName = (item.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `<div class="playlist-item ${item.active ? '' : 'inactive'} ${isLive ? 'is-live' : ''}"
       id="item-${item.id}" style="cursor:pointer;"
       onclick="previewLocalMedia('${item.url}', '${item.type}', '${safeName}')">
       <div class="item-thumb">
-        ${item.type === 'video' ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>` : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`}
+        ${item.type === 'video' ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>` : item.type === 'html' ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,160,180,0.1);font-size:28px;">🌐</div>` : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`}
       </div>
       <div class="item-info">
         <div class="item-name">${item.name || 'Sans titre'}</div>
@@ -1408,6 +1442,7 @@ function renderGallery() {
   let items = [...playlistItems];
   if (galleryFilter === 'video') items = items.filter(i => i.type === 'video');
   else if (galleryFilter === 'image') items = items.filter(i => i.type === 'image');
+  else if (galleryFilter === 'html') items = items.filter(i => i.type === 'html');
   else if (galleryFilter === 'sched') items = items.filter(i => i.schedule?.enabled);
   if (items.length === 0) {
     container.innerHTML = `<div class="gallery-empty" style="grid-column:1/-1"><i class="ti ti-photo-off"></i><p>Aucun média${galleryFilter !== 'all' ? ' dans cette catégorie' : ''}.<br>Uploadez du contenu pour commencer.</p></div>`;
@@ -1419,9 +1454,13 @@ function renderGallery() {
     const isLive   = Object.values(screensLiveData).some(s => s.currentMedia === item.name);
     const thumbEl  = item.type === 'video'
       ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`
+      : item.type === 'html'
+      ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,160,180,0.1);font-size:36px;">🌐</div>`
       : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
     const typeBadge = item.type === 'video'
       ? `<span class="gallery-type-badge gallery-type-video">🎬 Vidéo</span>`
+      : item.type === 'html'
+      ? `<span class="gallery-type-badge gallery-type-image" style="background:rgba(0,160,180,0.22);color:#4dd9eb;">🌐 Page web</span>`
       : `<span class="gallery-type-badge gallery-type-image">🖼 Image</span>`;
     return `<div class="gallery-card" onclick="previewLocalMedia('${item.url}','${item.type}','${safeName}')">
       <div class="gallery-thumb">
@@ -1432,7 +1471,7 @@ function renderGallery() {
       <div class="gallery-body">
         <div class="gallery-name">${item.name || 'Sans titre'}</div>
         <div class="gallery-meta">
-          ${item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration||8}s</span>` : `<span class="tag tag-auto">Auto</span>`}
+          ${item.type === 'video' ? `<span class="tag tag-auto">Auto</span>` : `<span class="tag tag-dur">⏱ ${item.duration || (item.type === 'html' ? 60 : 8)}s</span>`}
           ${item.schedule?.enabled ? `<span class="tag tag-sched">⏱ Prog.</span>` : ''}
           ${!item.active ? `<span class="tag" style="background:rgba(255,255,255,0.06);color:var(--text-mute)">Inactif</span>` : ''}
         </div>
@@ -1482,10 +1521,14 @@ function renderAssignList() {
     const already = (item.screens || []).includes(selectedScreen);
     const typeTag = item.type === 'video'
       ? `<span class="tag tag-video">🎬 Vidéo</span>`
+      : item.type === 'html'
+      ? `<span class="tag tag-image" style="background:rgba(0,160,180,0.18);color:#4dd9eb;">🌐 Page web</span>`
       : `<span class="tag tag-image">🖼 Image</span>`;
-    const durTag  = item.type !== 'video' ? `<span class="tag tag-dur">⏱ ${item.duration||8}s</span>` : '';
+    const durTag  = item.type === 'video' ? '' : `<span class="tag tag-dur">⏱ ${item.duration || (item.type === 'html' ? 60 : 8)}s</span>`;
     const thumb   = item.type === 'video'
       ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`
+      : item.type === 'html'
+      ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,160,180,0.1);font-size:22px;">🌐</div>`
       : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
     return `<div class="assign-item ${already ? 'already' : ''}">
       <div class="assign-thumb">${thumb}</div>
@@ -1534,6 +1577,49 @@ function closeUploadModal() {
 }
 function handleModalBackdropClick(e) {
   if (e.target === document.getElementById('upload-modal')) closeUploadModal();
+}
+
+function openUrlModal() {
+  document.getElementById('url-modal-name').value = '';
+  document.getElementById('url-modal-url').value = '';
+  document.getElementById('url-modal-duration').value = '60';
+  document.getElementById('url-modal-hint').style.display = 'none';
+  document.getElementById('url-modal').style.display = 'flex';
+}
+function closeUrlModal() {
+  document.getElementById('url-modal').style.display = 'none';
+}
+function addUrlMedia() {
+  const name = document.getElementById('url-modal-name').value.trim();
+  const url  = document.getElementById('url-modal-url').value.trim();
+  const dur  = parseInt(document.getElementById('url-modal-duration').value, 10) || 60;
+  const hint = document.getElementById('url-modal-hint');
+  const btn  = document.getElementById('url-modal-btn');
+  if (!name) { hint.textContent = 'Veuillez saisir un nom.'; hint.style.display = 'block'; return; }
+  if (!url || !/^https?:\/\/.+/.test(url)) { hint.textContent = 'URL invalide. Elle doit commencer par https://'; hint.style.display = 'block'; return; }
+  hint.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader"></i> Enregistrement…';
+  db.collection('playlist').add({
+    type: 'html',
+    name,
+    url,
+    duration: dur,
+    active: true,
+    screens: [],
+    order: playlistItems.length,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showToast('Page web ajoutée à la galerie', 'success');
+    closeUrlModal();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-world"></i> Ajouter à la galerie';
+  }).catch(e => {
+    hint.textContent = 'Erreur : ' + e.message;
+    hint.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-world"></i> Ajouter à la galerie';
+  });
 }
 function openUploadForCurrentScreen() {
   openUploadModal();
