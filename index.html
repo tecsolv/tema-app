@@ -1135,7 +1135,8 @@
   #screen-guide .gt tbody tr:last-child td { border-bottom:none; }
   #screen-guide .gt tbody tr:nth-child(even) td { background:rgba(0,0,0,.02); }
   #screen-guide .gt tbody tr:hover td { background:var(--ggl); }
-  #screen-guide kbd { display:inline-flex; align-items:center; justify-content:center; background:var(--gsf); border:1px solid var(--gbrd); border-bottom:3px solid var(--gbrd); border-radius:4px; padding:1px 7px; font-size:11px; font-weight:700; font-family:'Sora',monospace; color:var(--gn); white-space:nowrap; }
+  #screen-guide kbd { display:inline-flex; align-items:center; justify-content:center; background:#2e7d32; color:#fff; border:none; border-radius:6px; padding:3px 9px; font-size:12px; font-weight:700; font-family:'Sora',monospace; white-space:nowrap; box-shadow:0 2px 0 #1b5e20; }
+  #screen-guide .mod { color:var(--gg); font-weight:700; font-family:'Sora',sans-serif; font-size:13px; }
   /* ── PRACTICES GRID ── */
   #screen-guide .gprg { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; }
   #screen-guide .prc { background:var(--gbg); border:1px solid var(--gbrd); border-radius:9px; padding:14px; }
@@ -1480,12 +1481,12 @@
     <div class="gtw"><table class="gt">
       <thead><tr><th>Touche</th><th>Action</th><th>Module</th></tr></thead>
       <tbody>
-        <tr><td><kbd>F1</kbd></td><td>Ouvrir l'aide</td><td>Tous</td></tr>
-        <tr><td><kbd>F2</kbd></td><td>Nouvelle vente</td><td>Caisse</td></tr>
-        <tr><td><kbd>F3</kbd></td><td>Rechercher un produit</td><td>Caisse</td></tr>
-        <tr><td><kbd>F5</kbd></td><td>Actualiser la page</td><td>Tous</td></tr>
-        <tr><td><kbd>F10</kbd></td><td>Encaisser (ouvrir paiement)</td><td>Caisse</td></tr>
-        <tr><td><kbd>ESC</kbd></td><td>Annuler / Retour</td><td>Tous</td></tr>
+        <tr><td><kbd>F1</kbd></td><td>Ouvrir l'aide</td><td><span class="mod">Tous</span></td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Nouvelle vente</td><td><span class="mod">Caisse</span></td></tr>
+        <tr><td><kbd>F3</kbd></td><td>Rechercher un produit</td><td><span class="mod">Caisse</span></td></tr>
+        <tr><td><kbd>F5</kbd></td><td>Actualiser la page</td><td><span class="mod">Tous</span></td></tr>
+        <tr><td><kbd>F10</kbd></td><td>Encaisser (ouvrir paiement)</td><td><span class="mod">Caisse</span></td></tr>
+        <tr><td><kbd>ESC</kbd></td><td>Annuler / Retour</td><td><span class="mod">Tous</span></td></tr>
       </tbody>
     </table></div>
   </section>
