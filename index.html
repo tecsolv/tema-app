@@ -1171,9 +1171,11 @@
   /* ── DARK MODE ── */
   @media (prefers-color-scheme: dark) {
     #screen-guide {
-      --gn: #e2e8f0; --gbg: #111827; --gsf: #1F2937; --gbrd: #374151;
+      /* --gn reste SOMBRE pour les fonds (th, kbd, etc.) */
+      --gn: #0d1e38;
+      --gbg: #111827; --gsf: #1F2937; --gbrd: #374151;
       --gtx: #f1f5f9; --gmt: #94a3b8;
-      --ggl: rgba(200,152,26,.18); --ggd: #e8b84e;
+      --ggl: rgba(200,152,26,.15); --ggd: #e8b84e;
       --gwb: #1c1500; --gwt: #f6c44a;
       --gib: #0c1829; --git: #93c5fd;
       --gdb: #1f0a0a; --gdt: #fca5a5;
@@ -1183,10 +1185,30 @@
       --gadb: #1f0c00; --gad: #fca97a;
       --gdib: #061726; --gdic: #7dd3fc;
     }
-    #screen-guide .sn { box-shadow: 0 0 0 4px #1F2937; }
-    #screen-guide .gt tbody tr:hover td { background: rgba(200,152,26,.12); }
-    #screen-guide .prc:hover { border-color: var(--gg); }
-    #screen-guide kbd { background:#1F2937; color:#e2e8f0; border-color:#4b5563; border-bottom-color:#4b5563; }
+    /* Titres : couleur claire explicite (ne passent pas par --gn) */
+    #screen-guide .gst        { color: #e2e8f0 !important; }
+    #screen-guide .gh3        { color: #cbd5e1 !important; }
+    #screen-guide .prc-t      { color: #e2e8f0 !important; }
+    #screen-guide .suc-v      { color: #e2e8f0 !important; }
+    #screen-guide .gco h1     { color: #ffffff; }
+    #screen-guide .grc-n      { color: #ffffff; }
+    /* En-têtes de table : fond navy foncé + texte clair lisible */
+    #screen-guide .gt th      { background: #0d1e38; color: rgba(255,255,255,.85); }
+    #screen-guide .gt td      { color: #d1d5db; }
+    #screen-guide .gt tbody tr:hover td { background: rgba(200,152,26,.1); }
+    /* Kbd et step circles */
+    #screen-guide kbd         { background: #1e2a3b; color: #e2e8f0; border-color: #374151; border-bottom-color: #4b5563; }
+    #screen-guide .sn         { box-shadow: 0 0 0 4px #1F2937; }
+    /* Cards pratiques */
+    #screen-guide .prc        { background: #1a2535; border-color: #374151; }
+    #screen-guide .prc:hover  { border-color: var(--gg); }
+    #screen-guide .prc p      { color: #94a3b8; }
+    /* Support cards */
+    #screen-guide .suc        { background: #1a2535; border-color: #374151; }
+    #screen-guide .suc-l      { color: #6b7a8d; }
+    /* Step body */
+    #screen-guide .sb         { color: #d1d5db; }
+    #screen-guide .sb strong  { color: #e2e8f0; }
   }
 
   /* ── RESPONSIVE ── */
