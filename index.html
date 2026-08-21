@@ -1826,6 +1826,26 @@
 
       <!-- ONGLET 1 : SAISIE ÉCRITURE -->
       <div class="caisse-tab" id="compta-tab-saisie">
+
+        <!-- Modèles d'écritures rapides -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="form-group" style="margin:0;max-width:480px">
+              <label>⚡ Modèle d'écriture rapide (optionnel)</label>
+              <select class="form-control" id="modele-ecriture" onchange="appliquerModele(this.value)">
+                <option value="">— Choisir un modèle —</option>
+                <option value="vente_especes">💵 Vente comptoir — Espèces</option>
+                <option value="vente_mm">📱 Vente comptoir — Mobile Money</option>
+                <option value="achat_fournisseur">🏭 Achat fournisseur (réglé comptant)</option>
+                <option value="paiement_loyer">🏠 Paiement du loyer</option>
+                <option value="salaire">👷 Paiement salaire employé</option>
+                <option value="commission_mm">📲 Commission Mobile Money reçue</option>
+                <option value="depot_caisse">🏦 Dépôt en caisse (fonds ouverture)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-header"><h2>✏️ Nouvelle Écriture Comptable</h2></div>
           <div class="card-body">
@@ -1910,6 +1930,7 @@
             </div>
             <button class="btn btn-outline btn-sm" onclick="document.getElementById('ej-date-debut').value='';document.getElementById('ej-date-fin').value='';document.getElementById('ej-filtre-journal').value='';renderJournalComptable()">✕ Effacer</button>
             <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="exporterJournalComptableCSV()">⬇ Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="imprimerJournalComptablePDF()">🖨️ Imprimer PDF</button>
           </div>
         </div>
         <div class="card">
@@ -1938,13 +1959,14 @@
           </div>
           <div class="card-body table-wrap">
             <table><thead><tr>
-              <th>N°</th><th>Libellé du compte</th><th style="text-align:right">Total Débits</th><th style="text-align:right">Total Crédits</th><th style="text-align:right">Solde</th>
+              <th>N°</th><th>Libellé du compte</th><th style="text-align:right">Total Débits</th><th style="text-align:right">Total Crédits</th><th style="text-align:right">Solde</th><th style="text-align:center">Nature</th>
             </tr></thead><tbody id="tbody-balance-comptes"></tbody>
             <tfoot><tr style="font-weight:800;background:var(--bg-soft,#eef2f6)">
               <td colspan="2" style="text-align:right;padding:10px">TOTAL GÉNÉRAL</td>
               <td style="text-align:right;padding:10px" id="bal-total-debit">0 FCFA</td>
               <td style="text-align:right;padding:10px" id="bal-total-credit">0 FCFA</td>
               <td style="text-align:right;padding:10px" id="bal-total-solde">0 FCFA</td>
+              <td></td>
             </tr></tfoot>
             </table>
           </div>
@@ -1972,7 +1994,7 @@
                 <div class="form-group"><label>Date *</label><input type="date" class="form-control" id="rl-date" required></div>
                 <div class="form-group"><label>Canal *</label>
                   <select class="form-control" id="rl-canal" required>
-                    <option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Espèces</option>
+                    <option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Moov Money</option><option>Espèces</option>
                   </select>
                 </div>
               </div>
@@ -2032,7 +2054,7 @@
           <div class="card-header"><h2>🔍 Comparatif par canal de paiement</h2></div>
           <div class="card-body table-wrap">
             <table><thead><tr>
-              <th>Canal</th><th style="text-align:right">Enregistré dans TeMa</th><th style="text-align:right">Relevé réel</th><th style="text-align:right">Écart</th><th>Statut</th>
+              <th>Canal</th><th style="text-align:right">Enregistré dans TeMa</th><th style="text-align:right">Relevé réel</th><th style="text-align:right">Écart</th><th>Statut</th><th>Justification de l'écart</th>
             </tr></thead><tbody id="tbody-rapprochement"></tbody></table>
           </div>
         </div>
@@ -2043,13 +2065,14 @@
         <div class="card" style="margin-bottom:16px">
           <div class="card-body" style="display:flex;justify-content:flex-end">
             <button class="btn btn-outline btn-sm" onclick="exporterHistoriqueRapprochementsCSV()">⬇ Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="imprimerHistoriqueRapprochementsPDF()">🖨️ Imprimer PDF</button>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h2>🕘 Historique des Rapprochements Validés</h2></div>
           <div class="card-body table-wrap">
             <table><thead><tr>
-              <th>Date validation</th><th>Période</th><th>Canal</th><th style="text-align:right">Montant TeMa</th><th style="text-align:right">Montant Réel</th><th style="text-align:right">Écart</th><th>Statut</th>
+              <th>Date validation</th><th>Période</th><th>Canal</th><th style="text-align:right">Montant TeMa</th><th style="text-align:right">Montant Réel</th><th style="text-align:right">Écart</th><th>Statut</th><th>Justification</th>
             </tr></thead><tbody id="tbody-historique-rapprochements"></tbody></table>
           </div>
         </div>
@@ -2225,6 +2248,8 @@
           <div class="card"><div class="card-header"><h2>📊 CA par Catégorie</h2></div><div class="card-body" id="rent-jour-categories"></div></div>
           <div class="card"><div class="card-header"><h2>💳 CA par Mode de Paiement</h2></div><div class="card-body" id="rent-jour-paiements"></div></div>
         </div>
+        <div class="card"><div class="card-header"><h2>🎯 Objectifs Journaliers</h2></div><div class="card-body" id="rent-jour-objectifs"></div></div>
+        <div class="card"><div class="card-header"><h2>🗂️ CA par Zone du Jour</h2></div><div class="card-body" id="rent-jour-zones"></div></div>
         <div class="card"><div class="card-header"><h2>🧾 Détail des Revenus du Jour</h2></div><div class="card-body table-wrap" id="rent-jour-detail"></div></div>
       </div>
       <!-- ONGLET MENSUEL -->
@@ -2236,6 +2261,7 @@
         </div>
         <div class="kpi-grid" id="rent-kpi-mois"></div>
         <div class="card"><div class="card-header"><h2>📊 CA Mensuel par Catégorie</h2></div><div class="card-body" id="rent-mois-categories"></div></div>
+        <div class="card"><div class="card-header"><h2>🗂️ CA par Zone du Mois</h2></div><div class="card-body" id="rent-mois-zones"></div></div>
         <div class="card"><div class="card-header"><h2>📅 Évolution Journalière du CA</h2></div><div class="card-body" id="rent-mois-evolution"></div></div>
       </div>
       <!-- ONGLET TOP PERFORMANCES -->
@@ -11603,6 +11629,79 @@ ${CARD(`
 
 // Enregistre une nouvelle écriture comptable multi-lignes (Phase 2), avec contrôles Phase 5 :
 // date/journal/libellé obligatoires, comptes existants dans le plan OHADA, Total Débit = Total Crédit
+const MODELES = {
+  vente_especes: {
+    journal: 'VE', libelle: 'Vente comptoir du jour — Espèces',
+    lignes: [
+      { compte: '57100', intitule: 'Caisse espèces',      debit: true  },
+      { compte: '70100', intitule: 'Ventes marchandises', debit: false }
+    ]
+  },
+  vente_mm: {
+    journal: 'VE', libelle: 'Vente comptoir du jour — Mobile Money',
+    lignes: [
+      { compte: '51200', intitule: 'Compte Mobile Money', debit: true  },
+      { compte: '70100', intitule: 'Ventes marchandises', debit: false }
+    ]
+  },
+  achat_fournisseur: {
+    journal: 'AC', libelle: 'Achat marchandises fournisseur',
+    lignes: [
+      { compte: '60100', intitule: 'Achats marchandises', debit: true  },
+      { compte: '57100', intitule: 'Caisse espèces',      debit: false }
+    ]
+  },
+  paiement_loyer: {
+    journal: 'CA', libelle: 'Paiement loyer mensuel boutique',
+    lignes: [
+      { compte: '62200', intitule: 'Loyers et charges loc.', debit: true  },
+      { compte: '57100', intitule: 'Caisse espèces',          debit: false }
+    ]
+  },
+  salaire: {
+    journal: 'OD', libelle: 'Paiement salaire — [Nom employé]',
+    lignes: [
+      { compte: '66100', intitule: 'Rémunérations personnel', debit: true  },
+      { compte: '57100', intitule: 'Caisse espèces',           debit: false }
+    ]
+  },
+  commission_mm: {
+    journal: 'VE', libelle: 'Commissions Mobile Money du jour',
+    lignes: [
+      { compte: '57200', intitule: 'Compte Mobile Money',    debit: true  },
+      { compte: '70600', intitule: 'Produits activités MM',  debit: false }
+    ]
+  },
+  depot_caisse: {
+    journal: 'CA', libelle: 'Dépôt fonds ouverture caisse',
+    lignes: [
+      { compte: '57100', intitule: 'Caisse espèces', debit: true  },
+      { compte: '10100', intitule: 'Capital social',  debit: false }
+    ]
+  }
+};
+
+function appliquerModele(value) {
+  if (!value) return;
+  const modele = MODELES[value];
+  if (!modele) return;
+  const journalEl = document.getElementById('ec-journal');
+  const libelleEl = document.getElementById('ec-libelle');
+  if (journalEl) journalEl.value = modele.journal;
+  if (libelleEl) libelleEl.value = modele.libelle;
+  ecritureLignesEnCours = modele.lignes.map(l => ({
+    compte: l.compte + (l.intitule ? ' ' + l.intitule : ''),
+    debit: '',
+    credit: ''
+  }));
+  renderLignesEcriture();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#tbody-ecriture-lignes input[type="number"]');
+    if (inputs.length) inputs[0].focus();
+  }, 80);
+  document.getElementById('modele-ecriture').value = '';
+}
+
 async function enregistrerEcriture(event) {
   event.preventDefault();
   if (!requireFinanceEcriture("Vous n'avez pas l'autorisation de créer des écritures comptables")) return;
@@ -11658,6 +11757,51 @@ async function enregistrerEcriture(event) {
 }
 
 // Affiche le journal comptable, avec filtre de période et calcul des totaux (toujours égaux)
+function imprimerJournalComptablePDF() {
+  const debut = document.getElementById('ej-date-debut')?.value || '';
+  const fin   = document.getElementById('ej-date-fin')?.value   || '';
+  let liste = [...ecritures];
+  if (debut) liste = liste.filter(e => (e.date||'') >= debut);
+  if (fin)   liste = liste.filter(e => (e.date||'') <= fin);
+  liste.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
+  let rows = '';
+  liste.forEach(e => {
+    const ls = lignesEcriture(e);
+    ls.forEach((l, idx) => {
+      rows += '<tr>';
+      if (idx === 0) {
+        rows += `<td rowspan="${ls.length}" style="font-size:11px">${e.numPiece||'—'}</td>`;
+        rows += `<td rowspan="${ls.length}" style="font-size:11px">${e.date||'—'}</td>`;
+        rows += `<td rowspan="${ls.length}" style="font-size:11px">${e.journal||'—'}</td>`;
+        rows += `<td rowspan="${ls.length}">${e.libelle||''}</td>`;
+      }
+      rows += `<td style="font-size:11px">${l.intitule || libelleCompte(l.compte) || l.compte || '—'}</td>`;
+      rows += `<td style="text-align:right">${l.debit ? FCFA(l.debit) : ''}</td>`;
+      rows += `<td style="text-align:right">${l.credit ? FCFA(l.credit) : ''}</td>`;
+      if (idx === 0) rows += `<td style="font-size:11px" rowspan="${ls.length}">${e.reference||''}</td>`;
+      rows += '</tr>';
+    });
+  });
+  const periode = debut || fin ? `Période : ${debut||'…'} → ${fin||'…'}` : 'Toutes périodes';
+  const win = window.open('', '_blank');
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Journal Comptable</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;color:#111;font-size:12px}
+  h1{font-size:15px;margin:0 0 4px}p{margin:0 0 14px;color:#555;font-size:11px}
+  table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:5px 8px;vertical-align:top}
+  th{background:#f0f0f0;font-weight:700}tfoot td{font-weight:700;background:#f9f9f9}
+  @media print{@page{margin:12mm}}</style></head><body>
+  <h1>TeMa SARL — Journal Comptable — N° RCCM CI-TDI-01-2026-B12-00307</h1>
+  <p>${periode} &nbsp;·&nbsp; Édité le ${new Date().toLocaleDateString('fr-FR')}</p>
+  <table><thead><tr><th>N° Pièce</th><th>Date</th><th>Journal</th><th>Libellé</th><th>Compte</th><th>Débit</th><th>Crédit</th><th>Référence</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot><tr><td colspan="5" style="text-align:right">TOTAUX</td>
+  <td style="text-align:right">${FCFA(liste.reduce((s,e)=>s+totalDebitEcriture(e),0))}</td>
+  <td style="text-align:right">${FCFA(liste.reduce((s,e)=>s+totalCreditEcriture(e),0))}</td><td></td></tr></tfoot>
+  </table></body></html>`);
+  win.document.close(); win.print();
+}
+
 function renderJournalComptable() {
   const debut = document.getElementById('ej-date-debut')?.value || '';
   const fin = document.getElementById('ej-date-fin')?.value || '';
@@ -11732,19 +11876,22 @@ function renderBalanceComptes() {
       return { ...c, totalDebit, totalCredit, solde: totalDebit - totalCredit };
     }).filter(c => c.totalDebit > 0 || c.totalCredit > 0);
     if (!lignesClasse.length) return;
-    html += `<tr style="background:var(--bg-soft,#eef2f6)"><td colspan="5" style="font-weight:700;padding:8px 10px">CLASSE ${classe} — ${CLASSES_OHADA[classe]}</td></tr>`;
+    html += `<tr style="background:var(--bg-soft,#eef2f6)"><td colspan="6" style="font-weight:700;padding:8px 10px">CLASSE ${classe} — ${CLASSES_OHADA[classe]}</td></tr>`;
     lignesClasse.forEach(c => {
       totalDebitGeneral += c.totalDebit; totalCreditGeneral += c.totalCredit;
+      const nature = c.solde >= 0 ? 'D' : 'C';
+      const natureCouleur = c.solde >= 0 ? '#1D4ED8' : '#DC2626';
       html += `<tr>
         <td style="font-size:12px">${c.numero_compte}</td>
         <td>${c.intitule_compte}</td>
         <td style="text-align:right">${FCFA(c.totalDebit)}</td>
         <td style="text-align:right">${FCFA(c.totalCredit)}</td>
-        <td style="text-align:right;font-weight:700;color:${c.solde>=0?'#1E8449':'#C0392B'}">${FCFA(c.solde)}</td>
+        <td style="text-align:right;font-weight:700;color:${c.solde>=0?'#1E8449':'#C0392B'}">${FCFA(Math.abs(c.solde))}</td>
+        <td style="text-align:center;font-weight:800;color:${natureCouleur}">${nature}</td>
       </tr>`;
     });
   });
-  tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture enregistrée pour le moment</td></tr>';
+  tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Aucune écriture enregistrée pour le moment</td></tr>';
   document.getElementById('bal-total-debit').textContent = FCFA(totalDebitGeneral);
   document.getElementById('bal-total-credit').textContent = FCFA(totalCreditGeneral);
   document.getElementById('bal-total-solde').textContent = FCFA(totalDebitGeneral - totalCreditGeneral);
@@ -11863,7 +12010,7 @@ function exporterRelevesCSV() {
   telechargerCSV(lignes, `releves_tresorerie_${today()}.csv`);
 }
 
-const CANAUX_RAPPROCHEMENT = ['Espèces', 'Orange Money', 'MTN MoMo', 'Wave'];
+const CANAUX_RAPPROCHEMENT = ['Espèces', 'Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'];
 
 // Calcule le comparatif Enregistré dans TeMa (ventes) vs Relevé réel (relevés saisis), par canal, pour la période choisie
 function calculerComparatifRapprochement(debut, fin) {
@@ -11895,12 +12042,18 @@ function renderRapprochementComparatif() {
   if (!tbody) return;
   tbody.innerHTML = comparatif.map(c => {
     const s = statutEcart(c.ecart);
+    const justifId = `justif-${c.canal.replace(/\s/g,'_')}`;
+    const justifInput = c.ecart !== 0
+      ? `<input type="text" id="${justifId}" maxlength="150" placeholder="Expliquer l'écart…"
+           style="width:100%;font-size:12px;padding:4px 8px;border:1px solid #ccc;border-radius:6px">`
+      : '<span style="color:var(--text-muted);font-size:12px">—</span>';
     return `<tr style="background:${s.fond}">
       <td><strong>${c.canal}</strong></td>
       <td style="text-align:right">${FCFA(c.montantTeMa)}</td>
       <td style="text-align:right">${FCFA(c.montantReel)}</td>
       <td style="text-align:right;font-weight:700;color:${s.couleur}">${FCFA(c.ecart)}</td>
       <td><span class="stock-tag" style="background:${s.fond};color:${s.couleur}">${s.statut}</span></td>
+      <td>${justifInput}</td>
     </tr>`;
   }).join('');
 }
@@ -11917,10 +12070,12 @@ async function validerRapprochement() {
     const periode = `${debut} → ${fin}`;
     for (const c of comparatif) {
       const s = statutEcart(c.ecart);
+      const justifEl = document.getElementById(`justif-${c.canal.replace(/\s/g,'_')}`);
+      const justification = justifEl ? justifEl.value.trim() : '';
       await db.collection('rapprochements').add({
         dateValidation, periode, debut, fin,
         canal: c.canal, montantTeMa: c.montantTeMa, montantReel: c.montantReel, ecart: c.ecart, statut: s.statut,
-        validePar: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        justification, validePar: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
     consigner('Rapprochement de trésorerie validé', `Période ${periode} — validé par ${currentUser.label}`);
@@ -11942,14 +12097,42 @@ function renderHistoriqueRapprochements() {
       <td style="text-align:right">${FCFA(r.montantReel||0)}</td>
       <td style="text-align:right;font-weight:700;color:${s.couleur}">${FCFA(r.ecart||0)}</td>
       <td><span class="stock-tag" style="background:${s.fond};color:${s.couleur}">${r.statut||s.statut}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.justification||'—'}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Aucun rapprochement validé pour le moment</td></tr>';
+  }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Aucun rapprochement validé pour le moment</td></tr>';
 }
 
 function exporterHistoriqueRapprochementsCSV() {
   const lignes = [['Date validation','Période','Canal','Montant TeMa','Montant Réel','Écart','Statut']];
   rapprochements.forEach(r => lignes.push([r.dateValidation||'', r.periode||'', r.canal||'', r.montantTeMa||0, r.montantReel||0, r.ecart||0, r.statut||'']));
   telechargerCSV(lignes, `historique_rapprochements_${today()}.csv`);
+}
+
+function imprimerHistoriqueRapprochementsPDF() {
+  const liste = [...rapprochements].sort((a,b) => (a.dateValidation||'').localeCompare(b.dateValidation||''));
+  let rows = liste.map(r => {
+    const s = statutEcart(r.ecart||0);
+    return `<tr>
+      <td>${r.dateValidation||'—'}</td><td>${r.periode||'—'}</td><td>${r.canal||''}</td>
+      <td style="text-align:right">${FCFA(r.montantTeMa||0)}</td>
+      <td style="text-align:right">${FCFA(r.montantReel||0)}</td>
+      <td style="text-align:right;color:${s.couleur};font-weight:700">${FCFA(r.ecart||0)}</td>
+      <td>${r.statut||s.statut}</td>
+      <td style="font-size:11px">${r.justification||'—'}</td>
+    </tr>`;
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Historique Rapprochements</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;font-size:12px}h1{font-size:15px;margin:0 0 4px}
+  p{margin:0 0 14px;color:#555;font-size:11px}table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ccc;padding:5px 8px}th{background:#f0f0f0;font-weight:700}
+  @media print{@page{margin:12mm}}</style></head><body>
+  <h1>TeMa SARL — Historique Rapprochements — N° RCCM CI-TDI-01-2026-B12-00307</h1>
+  <p>Édité le ${new Date().toLocaleDateString('fr-FR')}</p>
+  <table><thead><tr><th>Date validation</th><th>Période</th><th>Canal</th>
+  <th>Montant TeMa</th><th>Montant Réel</th><th>Écart</th><th>Statut</th><th>Justification</th></tr></thead>
+  <tbody>${rows}</tbody></table></body></html>`);
+  win.document.close(); win.print();
 }
 
 const OBJECTIF_JOUR = 10000;
@@ -12387,12 +12570,70 @@ function renderRentJour() {
   const svcJ    = ventesServices.filter(v => v.date === date);
   const mmJ     = transactionsMM.filter(v => v.date === date);
 
+  // Marge brute : CA - coût d'achat (croisant ventesCaisse avec produits)
+  const margeJour = ventesJ.reduce((s,v) => {
+    const prod = produits.find(p => p.nom === v.article || p.ref === v.ref);
+    const prixAchat = prod ? (prod.prixAchat || prod.prix_achat || 0) : 0;
+    return s + (v.montant||0) - (prixAchat * (v.quantite||1));
+  }, 0);
+  const tauxMarge = totalCA > 0 ? Math.round(margeJour/totalCA*100) : 0;
+
   const kpiEl = document.getElementById('rent-kpi-jour');
   if (kpiEl) kpiEl.innerHTML = `
     <div class="kpi-card success"><div class="kpi-icon">💰</div><div class="kpi-info"><h3>${FCFA(totalCA)}</h3><p>CA Total du jour</p><div class="trend up">${ventesJ.length} ventes · ${svcJ.length} services · ${mmJ.length} MM</div></div></div>
     <div class="kpi-card accent"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3>${FCFA(ventesJ.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Ventes boutique</p><div class="trend up">${ventesJ.length} transaction(s)</div></div></div>
     <div class="kpi-card"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3>${FCFA(svcJ.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Services numériques</p><div class="trend up">${svcJ.length} service(s)</div></div></div>
-    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmJ.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions Mobile Money</p><div class="trend up">${mmJ.length} transaction(s)</div></div></div>`;
+    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmJ.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions Mobile Money</p><div class="trend up">${mmJ.length} transaction(s)</div></div></div>
+    <div class="kpi-card" style="border-left:4px solid #059669"><div class="kpi-icon">📈</div><div class="kpi-info"><h3>${FCFA(margeJour)}</h3><p>Marge brute du jour</p><div class="trend ${tauxMarge>=30?'up':'down'}">${tauxMarge}% du CA</div></div></div>`;
+
+  // Bloc objectifs journaliers
+  const objEl = document.getElementById('rent-jour-objectifs');
+  if (objEl) {
+    const pctObj = Math.min(Math.round(totalCA/OBJECTIF_JOUR*100),100);
+    const loyerJour = Math.round(LOYER_MOIS/30);
+    const pctLoyer = Math.min(Math.round(totalCA/loyerJour*100),100);
+    objEl.innerHTML = `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span>🎯 Objectif journalier <strong>${FCFA(OBJECTIF_JOUR)}</strong></span>
+          <span style="font-weight:700;color:${pctObj>=100?'var(--success)':'var(--primary)'}">${pctObj}%</span>
+        </div>
+        <div style="height:12px;background:#e3e8ee;border-radius:6px;overflow:hidden">
+          <div style="height:100%;border-radius:6px;background:${pctObj>=100?'var(--success)':'var(--primary)'};width:${pctObj}%"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${FCFA(totalCA)} réalisés · ${FCFA(Math.max(0,OBJECTIF_JOUR-totalCA))} restants</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span>🏠 Couverture loyer du jour <strong>${FCFA(loyerJour)}</strong></span>
+          <span style="font-weight:700;color:${pctLoyer>=100?'var(--success)':'#f59e0b'}">${pctLoyer}%</span>
+        </div>
+        <div style="height:12px;background:#e3e8ee;border-radius:6px;overflow:hidden">
+          <div style="height:100%;border-radius:6px;background:${pctLoyer>=100?'var(--success)':'#f59e0b'};width:${pctLoyer}%"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Loyer mensuel : ${FCFA(LOYER_MOIS)} · Quote-part jour : ${FCFA(loyerJour)}</div>
+      </div>`;
+  }
+
+  // Zones du jour
+  const zonesEl = document.getElementById('rent-jour-zones');
+  if (zonesEl && typeof ZONES_CAISSE !== 'undefined') {
+    const zonesData = Object.entries(ZONES_CAISSE).map(([k,z]) => {
+      const total = ventesJ.filter(v=>v.zone===k).reduce((s,v)=>s+(v.montant||0),0);
+      return { key:k, ...z, total };
+    });
+    const maxZone = Math.max(...zonesData.map(z=>z.total),1);
+    zonesEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">` +
+      zonesData.map(z=>`
+        <div style="background:${z.color}18;border:1px solid ${z.color}44;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">${z.emoji}</div>
+          <div style="font-size:12px;font-weight:600;color:#1a2540;margin-bottom:8px">${z.label}</div>
+          <div style="font-size:14px;font-weight:800;color:${z.color}">${FCFA(z.total)}</div>
+          <div style="height:6px;background:#e3e8ee;border-radius:3px;margin-top:8px;overflow:hidden">
+            <div style="height:100%;background:${z.color};border-radius:3px;width:${Math.round(z.total/maxZone*100)}%"></div>
+          </div>
+        </div>`).join('') + `</div>`;
+  }
 
   const catEl = document.getElementById('rent-jour-categories');
   if (catEl) catEl.innerHTML = barChart(cats);
@@ -12431,15 +12672,44 @@ function renderRentMois() {
   const joursVente = [...new Set(ventesCaisse.filter(v=>(v.date||'').startsWith(mois)).map(v=>v.date))];
   const moyCA = joursVente.length ? Math.round(totalCA/joursVente.length) : 0;
 
+  // Marge brute mensuelle
+  const margeMois = ventesM.reduce((s,v) => {
+    const prod = produits.find(p => p.nom === v.article || p.ref === v.ref);
+    const prixAchat = prod ? (prod.prixAchat || prod.prix_achat || 0) : 0;
+    return s + (v.montant||0) - (prixAchat * (v.quantite||1));
+  }, 0);
+  const tauxMargeMois = totalCA > 0 ? Math.round(margeMois/totalCA*100) : 0;
+
   const kpiEl = document.getElementById('rent-kpi-mois');
   if (kpiEl) kpiEl.innerHTML = `
     <div class="kpi-card success"><div class="kpi-icon">📆</div><div class="kpi-info"><h3>${FCFA(totalCA)}</h3><p>CA Total du mois</p><div class="trend up">Moy. ${FCFA(moyCA)}/jour · ${joursVente.length} jour(s) actif(s)</div></div></div>
     <div class="kpi-card accent"><div class="kpi-icon">🛒</div><div class="kpi-info"><h3>${FCFA(ventesM.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Ventes boutique</p><div class="trend up">${ventesM.length} transaction(s)</div></div></div>
     <div class="kpi-card"><div class="kpi-icon">🖨️</div><div class="kpi-info"><h3>${FCFA(svcM.reduce((s,v)=>s+(v.montant||0),0))}</h3><p>Services numériques</p><div class="trend up">${svcM.length} service(s)</div></div></div>
-    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmM.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions MM</p><div class="trend up">${mmM.length} transaction(s)</div></div></div>`;
+    <div class="kpi-card"><div class="kpi-icon">📱</div><div class="kpi-info"><h3>${FCFA(mmM.reduce((s,t)=>s+(t.commission||0),0))}</h3><p>Commissions MM</p><div class="trend up">${mmM.length} transaction(s)</div></div></div>
+    <div class="kpi-card" style="border-left:4px solid #059669"><div class="kpi-icon">📈</div><div class="kpi-info"><h3>${FCFA(margeMois)}</h3><p>Marge brute du mois</p><div class="trend ${tauxMargeMois>=30?'up':'down'}">${tauxMargeMois}% du CA</div></div></div>`;
 
   const catEl = document.getElementById('rent-mois-categories');
   if (catEl) catEl.innerHTML = barChart(cats);
+
+  // Zones du mois
+  const zonesMoisEl = document.getElementById('rent-mois-zones');
+  if (zonesMoisEl && typeof ZONES_CAISSE !== 'undefined') {
+    const zonesData = Object.entries(ZONES_CAISSE).map(([k,z]) => {
+      const total = ventesM.filter(v=>v.zone===k).reduce((s,v)=>s+(v.montant||0),0);
+      return { key:k, ...z, total };
+    });
+    const maxZone = Math.max(...zonesData.map(z=>z.total),1);
+    zonesMoisEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">` +
+      zonesData.map(z=>`
+        <div style="background:${z.color}18;border:1px solid ${z.color}44;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">${z.emoji}</div>
+          <div style="font-size:12px;font-weight:600;color:#1a2540;margin-bottom:8px">${z.label}</div>
+          <div style="font-size:14px;font-weight:800;color:${z.color}">${FCFA(z.total)}</div>
+          <div style="height:6px;background:#e3e8ee;border-radius:3px;margin-top:8px;overflow:hidden">
+            <div style="height:100%;background:${z.color};border-radius:3px;width:${Math.round(z.total/maxZone*100)}%"></div>
+          </div>
+        </div>`).join('') + `</div>`;
+  }
 
   // Évolution journalière
   const joursUniques = [...new Set([
@@ -12453,7 +12723,7 @@ function renderRentMois() {
     evoEl.innerHTML = `<div style="display:grid;gap:6px">` + joursUniques.map(j => {
       const ca = totalRevenu(j,'jour');
       return `<div style="display:flex;align-items:center;gap:10px;font-size:13px">
-        <span style="min-width:90px;color:var(--text-muted)">${j}</span>
+        <span style="min-width:90px;color:var(--text-muted)">${new Date(j+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span>
         <div style="flex:1;height:16px;background:#e3e8ee;border-radius:4px;overflow:hidden">
           <div style="height:100%;background:var(--primary);border-radius:4px;width:${Math.round(ca/maxJour*100)}%"></div>
         </div>
@@ -12532,22 +12802,28 @@ function renderRentTop() {
       <strong style="color:var(--success)">${FCFA(d.comm)}</strong>
     </div>`).join('') + `</div>` : '<p style="text-align:center;color:var(--text-muted);padding:20px">Aucune transaction Mobile Money</p>';
 
-  // Croissance des 6 derniers mois
+  // Croissance — fenêtre de 6 mois depuis le premier mois avec des données réelles
   const croiEl = document.getElementById('rent-top-croissance');
   if (croiEl) {
+    const tousLesMois = ventesCaisse.map(v=>(v.date||'').slice(0,7)).filter(Boolean).sort();
+    const premierMois = tousLesMois[0] || today().slice(0,7);
+    const [anneeBase, moisBase] = premierMois.split('-').map(Number);
     const moisListe = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(); d.setMonth(d.getMonth() - i);
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(anneeBase, moisBase - 1 + i, 1);
       moisListe.push(d.toISOString().slice(0,7));
     }
-    const donneesMois = moisListe.map(m => ({ mois: m, ca: totalRevenu(m,'mois') }));
+    const donneesMois = moisListe.map(m => {
+      const label = new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      return { mois: m, label, ca: totalRevenu(m,'mois') };
+    });
     const maxCa = Math.max(...donneesMois.map(d=>d.ca)) || 1;
     croiEl.innerHTML = `<div style="display:grid;gap:8px">` + donneesMois.map((d,i) => {
       const prev = i > 0 ? donneesMois[i-1].ca : null;
       const delta = prev !== null && prev > 0 ? Math.round((d.ca - prev)/prev*100) : null;
       const deltaStr = delta !== null ? `<span style="font-size:11px;color:${delta>=0?'var(--success)':'var(--danger)'}">${delta>=0?'▲':'▼'} ${Math.abs(delta)}%</span>` : '';
       return `<div style="display:flex;align-items:center;gap:10px;font-size:13px">
-        <span style="min-width:70px;color:var(--text-muted)">${d.mois}</span>
+        <span style="min-width:110px;color:var(--text-muted);font-size:12px">${d.label}</span>
         <div style="flex:1;height:16px;background:#e3e8ee;border-radius:4px;overflow:hidden"><div style="height:100%;background:var(--primary);border-radius:4px;width:${Math.round(d.ca/maxCa*100)}%"></div></div>
         <strong style="min-width:100px;text-align:right">${FCFA(d.ca)}</strong>
         ${deltaStr}
