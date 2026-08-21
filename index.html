@@ -11993,7 +11993,7 @@ function appliquerModele(value) {
   if (journalEl) journalEl.value = modele.journal;
   if (libelleEl) libelleEl.value = modele.libelle;
   ecritureLignesEnCours = modele.lignes.map(l => ({
-    compte: l.compte + (l.intitule ? ' ' + l.intitule : ''),
+    compte: l.compte,
     debit: '',
     credit: ''
   }));
