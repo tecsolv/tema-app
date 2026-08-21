@@ -1159,6 +1159,36 @@
   #screen-guide .suc-v { font-family:'Sora',sans-serif; font-size:12px; font-weight:700; color:var(--gtx); }
   /* ── FOOTER ── */
   #screen-guide .gft { text-align:center; padding:28px 20px 0; font-size:11px; color:var(--gmt); line-height:2; border-top:1px solid var(--gbrd); margin-top:32px; }
+  /* ── RESET héritage — neutralise tout border/decoration sur les titres ── */
+  #screen-guide h1, #screen-guide h2, #screen-guide h3,
+  #screen-guide h4, #screen-guide h5, #screen-guide h6 {
+    border: none !important;
+    text-decoration: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── DARK MODE ── */
+  @media (prefers-color-scheme: dark) {
+    #screen-guide {
+      --gn: #e2e8f0; --gbg: #111827; --gsf: #1F2937; --gbrd: #374151;
+      --gtx: #f1f5f9; --gmt: #94a3b8;
+      --ggl: rgba(200,152,26,.18); --ggd: #e8b84e;
+      --gwb: #1c1500; --gwt: #f6c44a;
+      --gib: #0c1829; --git: #93c5fd;
+      --gdb: #1f0a0a; --gdt: #fca5a5;
+      --gcab: #0c1829; --gcai: #93c5fd;
+      --ggeb: #061a10; --gger: #6ee7b7;
+      --gcob: #130c2b; --gcoc: #c4b5fd;
+      --gadb: #1f0c00; --gad: #fca97a;
+      --gdib: #061726; --gdic: #7dd3fc;
+    }
+    #screen-guide .sn { box-shadow: 0 0 0 4px #1F2937; }
+    #screen-guide .gt tbody tr:hover td { background: rgba(200,152,26,.12); }
+    #screen-guide .prc:hover { border-color: var(--gg); }
+    #screen-guide kbd { background:#1F2937; color:#e2e8f0; border-color:#4b5563; border-bottom-color:#4b5563; }
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width:680px) {
     #screen-guide .gs { width:100%; min-width:unset; height:auto; max-height:40vh; }
