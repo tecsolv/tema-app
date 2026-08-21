@@ -1487,14 +1487,57 @@
   </div><!-- gw -->
   <script>
   (function(){
-    var cnt = document.getElementById('g-content');
-    var lks = Array.from(document.querySelectorAll('#g-nav a'));
-    if(!cnt||!lks.length) return;
-    function gScroll(id,e){ if(e) e.preventDefault(); var el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+    var gc = document.getElementById('g-content');
+    var nav = document.getElementById('g-nav');
+    if(!gc || !nav) return;
+    var links = Array.from(nav.querySelectorAll('a'));
+
+    function getSections(){
+      return Array.from(document.querySelectorAll('#g-content [id^="guide-"]'));
+    }
+
+    function setActive(id){
+      links.forEach(function(a){
+        var h = (a.getAttribute('href')||'').replace('#','');
+        a.classList.toggle('active', h === id);
+      });
+    }
+
+    function updateActive(){
+      var sections = getSections();
+      if(!sections.length) return;
+      var ctop = gc.getBoundingClientRect().top;
+      var active = sections[0].id;
+      for(var i = 0; i < sections.length; i++){
+        var top = sections[i].getBoundingClientRect().top - ctop;
+        if(top <= 72) active = sections[i].id;
+        else break;
+      }
+      setActive(active);
+    }
+
+    gc.addEventListener('scroll', updateActive, {passive:true});
+
+    function gScroll(id, e){
+      if(e) e.preventDefault();
+      var el = document.getElementById(id);
+      if(!el) return;
+      var ctop = gc.getBoundingClientRect().top;
+      var etop = el.getBoundingClientRect().top - ctop;
+      gc.scrollBy({top: etop - 16, behavior:'smooth'});
+    }
     window.gScroll = gScroll;
-    function setAct(id){ lks.forEach(function(a){ var h=a.getAttribute('href').replace('#',''); a.classList.toggle('active',h===id); }); }
-    var obs = new IntersectionObserver(function(entries){ var vis=entries.filter(function(e){return e.isIntersecting;}); if(vis.length) setAct(vis[0].target.id); },{root:cnt,rootMargin:'-5% 0px -80% 0px',threshold:0});
-    document.querySelectorAll('[id^="guide-"]').forEach(function(el){obs.observe(el);});
+
+    /* Déclenche le scrollspy à chaque ouverture du guide */
+    var guideScreen = document.getElementById('screen-guide');
+    if(guideScreen){
+      new MutationObserver(function(){
+        if(guideScreen.classList.contains('active')){
+          gc.scrollTop = 0;
+          setTimeout(updateActive, 80);
+        }
+      }).observe(guideScreen, {attributes:true, attributeFilter:['class','style']});
+    }
   })();
   </script>
 
