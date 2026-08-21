@@ -1092,8 +1092,9 @@
   #screen-guide .gco-sb { font-size:13px; color:rgba(255,255,255,.6); margin-bottom:24px; }
   #screen-guide .gco-mt { display:flex; flex-wrap:wrap; gap:4px 16px; font-size:10px; color:rgba(255,255,255,.4); margin-bottom:22px; }
   #screen-guide .grg { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
-  #screen-guide .grc { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:9px; padding:12px; }
-  #screen-guide .grc:hover { background:rgba(255,255,255,.13); }
+  #screen-guide .grc { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:9px; padding:12px; cursor:pointer; transition:background .18s, border-color .18s, transform .15s; }
+  #screen-guide .grc:hover { background:rgba(255,255,255,.18); border-color:var(--gg); transform:translateY(-2px); }
+  #screen-guide .grc:active { transform:translateY(0); }
   #screen-guide .grc-i { font-size:20px; margin-bottom:5px; }
   #screen-guide .grc-n { font-family:'Sora',sans-serif; font-size:12px; font-weight:700; color:#fff; }
   #screen-guide .grc-d { font-size:11px; color:rgba(255,255,255,.5); margin-top:1px; }
@@ -1266,10 +1267,10 @@
     <div class="gco-sb">Application de Gestion Multiservices — Yamoussoukro, Côte d'Ivoire</div>
     <div class="gco-mt"><span>🏢 TeMa SARL</span><span>N° RCCM CI-TDI-01-2026-B12-00307</span><span>📅 Mis à jour août 2026</span></div>
     <div class="grg">
-      <div class="grc"><div class="grc-i">🖥️</div><div class="grc-n">Caissier(ère)</div><div class="grc-d">Ventes, encaissements, services</div></div>
-      <div class="grc"><div class="grc-i">🧑‍💼</div><div class="grc-n">Gérant(e)</div><div class="grc-d">Supervision, stock, validation</div></div>
-      <div class="grc"><div class="grc-i">🧮</div><div class="grc-n">Comptable</div><div class="grc-d">OHADA, trésorerie, rapports</div></div>
-      <div class="grc"><div class="grc-i">🔐</div><div class="grc-n">Administrateur</div><div class="grc-d">Comptes, paramètres, système</div></div>
+      <div class="grc" onclick="gScroll('guide-caisse',event)"><div class="grc-i">🖥️</div><div class="grc-n">Caissier(ère)</div><div class="grc-d">Ventes, encaissements, services</div></div>
+      <div class="grc" onclick="gScroll('guide-gerant',event)"><div class="grc-i">🧑‍💼</div><div class="grc-n">Gérant(e)</div><div class="grc-d">Supervision, stock, validation</div></div>
+      <div class="grc" onclick="gScroll('guide-compta',event)"><div class="grc-i">🧮</div><div class="grc-n">Comptable</div><div class="grc-d">OHADA, trésorerie, rapports</div></div>
+      <div class="grc" onclick="gScroll('guide-admin',event)"><div class="grc-i">🔐</div><div class="grc-n">Administrateur</div><div class="grc-d">Comptes, paramètres, système</div></div>
     </div>
     <div class="gco-ib">Ce guide vous accompagne pas à pas dans l'utilisation quotidienne de TeMa Boutique Multiservices. Chaque section est dédiée à un rôle précis — lisez la section correspondant à votre poste, ou parcourez l'ensemble pour comprendre le fonctionnement global de la boutique.</div>
   </div>
