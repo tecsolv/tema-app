@@ -1041,264 +1041,923 @@
     <button class="guide-print" onclick="imprimerGuide()">🖨️ Imprimer / PDF</button>
     <h3>Sommaire</h3>
     <a href="#guide-intro">📘 Introduction</a>
+    <a href="#guide-connexion">🔑 Connexion</a>
     <a href="#guide-caisse">🖥️ Module Caisse</a>
     <a href="#guide-gerant">🧑‍💼 Module Gérant</a>
     <a href="#guide-compta">🧮 Module Comptabilité</a>
     <a href="#guide-admin">📁 Module Admin</a>
+    <a href="#guide-digital">💻 TeMa Digital</a>
     <a href="#guide-raccourcis">⌨️ Raccourcis clavier</a>
-    <a href="#guide-faq">❓ FAQ</a>
     <a href="#guide-pratiques">✅ Bonnes pratiques</a>
+    <a href="#guide-faq">❓ FAQ</a>
     <a href="#guide-support">📞 Support</a>
   </nav>
 
-  <div class="guide-content">
+<div class="guide-content">
 
-    <section id="guide-intro">
-      <h1>📘 Guide Utilisateur TeMa</h1>
-      <p class="guide-subtitle">Tout ce qu'il faut savoir pour utiliser TeMa Boutique Multiservices au quotidien.</p>
+  <!-- ══ PAGE DE GARDE ══ -->
+  <div class="guide-cover" id="guide-intro">
+    <div class="guide-logo">🏪</div>
+    <h1 class="guide-title">Guide Utilisateur</h1>
+    <div class="guide-subtitle">TeMa Boutique Multiservices — Application de Gestion v2.0</div>
+    <div class="guide-meta">
+      Yamoussoukro, Côte d'Ivoire &nbsp;·&nbsp;
+      N° RCCM CI-TDI-01-2026-B12-00307 &nbsp;·&nbsp;
+      Mis à jour : Août 2026
+    </div>
 
-      <div class="guide-card">
-        <h3>Présentation</h3>
-        <p>TeMa Boutique Multiservices est une application de gestion intégrée regroupant la caisse (POS), la gestion de stock, la comptabilité OHADA et l'administration des utilisateurs dans un seul espace simple et chaleureux.</p>
+    <div class="guide-roles-grid">
+      <div class="guide-role-card role-caisse">
+        <div class="role-icon">🖥️</div>
+        <div class="role-name">Caissier(ère)</div>
+        <div class="role-desc">Ventes, encaissements, services</div>
       </div>
-
-      <div class="guide-card">
-        <h3>Objectif de ce guide</h3>
-        <p>Ce guide a pour objectif d'aider chaque membre de l'équipe à prendre en main rapidement son module, à connaître les bonnes pratiques d'utilisation et à trouver une réponse aux questions fréquentes.</p>
+      <div class="guide-role-card role-gerant">
+        <div class="role-icon">🧑‍💼</div>
+        <div class="role-name">Gérant(e)</div>
+        <div class="role-desc">Supervision, stock, validation</div>
       </div>
-
-      <div class="guide-card">
-        <h3>Rôles des employés</h3>
-        <ul>
-          <li><b>Caissier(ère)</b> — enregistre les ventes, encaisse les clients et imprime les reçus.</li>
-          <li><b>Gérant(e)</b> — supervise les ventes, contrôle l'activité des employés et valide certaines opérations.</li>
-          <li><b>Comptable</b> — gère les dépenses, les recettes et produit les rapports financiers.</li>
-          <li><b>Administrateur(trice)</b> — crée les comptes utilisateurs, gère les rôles et les paramètres du système.</li>
-        </ul>
+      <div class="guide-role-card role-compta">
+        <div class="role-icon">🧮</div>
+        <div class="role-name">Comptable</div>
+        <div class="role-desc">OHADA, trésorerie, rapports</div>
       </div>
-    </section>
+      <div class="guide-role-card role-admin">
+        <div class="role-icon">🔐</div>
+        <div class="role-name">Administrateur</div>
+        <div class="role-desc">Comptes, paramètres, système</div>
+      </div>
+    </div>
 
-    <section id="guide-caisse">
-      <h2>🖥️ Module Caisse</h2>
+    <div class="guide-intro-text">
+      Ce guide vous accompagne pas à pas dans l'utilisation quotidienne de
+      TeMa Boutique Multiservices. Chaque section est dédiée à un rôle
+      précis. Lisez uniquement la section correspondant à votre poste —
+      ou parcourez l'ensemble pour mieux comprendre le fonctionnement
+      global de la boutique.
+    </div>
+  </div>
 
-      <details open>
-        <summary>Création d'une vente</summary>
-        <div class="details-body">
-          <p>Depuis l'écran de caisse, démarrez une nouvelle vente en sélectionnant un client (ou « client de passage ») puis ajoutez les articles vendus.</p>
-          <div class="guide-shot">📷 Capture d'écran : démarrage d'une nouvelle vente</div>
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 1 — CONNEXION ══ -->
+  <section id="guide-connexion">
+    <h2 class="guide-section-title">🔑 1. Connexion à l'application</h2>
+
+    <p>TeMa Boutique est accessible depuis n'importe quel navigateur web
+    (Chrome recommandé) sur ordinateur, tablette ou smartphone.</p>
+
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Ouvrir l'application</strong><br>
+          Saisissez l'adresse dans votre navigateur ou cliquez sur le
+          raccourci présent sur le bureau. L'écran d'accueil affiche
+          l'heure en direct et un bouton de connexion.
         </div>
-      </details>
-
-      <details>
-        <summary>Ajout d'articles</summary>
-        <div class="details-body">
-          <p>Recherchez un article par nom ou code, puis cliquez dessus pour l'ajouter au panier. La quantité par défaut est 1.</p>
-          <div class="guide-shot">📷 Capture d'écran : ajout d'un article au panier</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Entrer vos identifiants</strong><br>
+          Saisissez votre <em>identifiant</em> et votre
+          <em>mot de passe</em> fournis par l'administrateur.
+          Ces identifiants sont personnels — ne les communiquez
+          à personne.
         </div>
-      </details>
-
-      <details>
-        <summary>Recherche d'un produit</summary>
-        <div class="details-body">
-          <p>Utilisez la barre de recherche en haut de l'écran de caisse pour retrouver rapidement un produit par son nom, sa catégorie ou son code-barres.</p>
-          <div class="guide-shot">📷 Capture d'écran : recherche d'un produit</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Accéder à votre espace</strong><br>
+          Après connexion, l'application vous redirige automatiquement
+          vers les modules accessibles selon votre rôle. Si vous
+          appartenez à la Zone A (Informatique & Services), vous
+          arrivez sur l'interface dédiée TeMa Digital.
         </div>
-      </details>
-
-      <details>
-        <summary>Modification de la quantité</summary>
-        <div class="details-body">
-          <p>Dans le panier, utilisez les boutons + / − à côté de chaque article pour ajuster la quantité, ou saisissez directement la valeur souhaitée.</p>
-          <div class="guide-shot">📷 Capture d'écran : modification de la quantité d'un article</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Mot de passe oublié</strong><br>
+          Contactez immédiatement l'administrateur. Il seul peut
+          réinitialiser votre accès depuis le module Administration.
+          Ne tentez pas de deviner votre mot de passe — votre compte
+          peut être bloqué après plusieurs tentatives.
         </div>
-      </details>
+      </div>
+    </div>
 
-      <details>
-        <summary>Application d'une remise</summary>
-        <div class="details-body">
-          <p>Une remise peut être appliquée sur un article ou sur le total de la vente, en pourcentage ou en montant fixe, selon les droits accordés.</p>
-          <div class="guide-shot">📷 Capture d'écran : application d'une remise</div>
+    <div class="guide-warning">
+      ⚠️ <strong>Important :</strong> Fermez toujours votre session en
+      fin de service en cliquant sur « Se déconnecter » dans le menu
+      latéral. Ne laissez jamais l'application ouverte et sans
+      surveillance.
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 2 — MODULE CAISSE ══ -->
+  <section id="guide-caisse">
+    <div class="guide-role-banner banner-caisse">
+      🖥️ MODULE CAISSIER(ÈRE)
+    </div>
+
+    <p>Le module Caisse est le cœur opérationnel de TeMa Boutique.
+    Il vous permet d'enregistrer toutes les ventes, d'encaisser les
+    clients, de gérer les services numériques et le Mobile Money.</p>
+
+    <h3 class="guide-h3">2.1 — Ouvrir votre caisse en début de journée</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Depuis l'écran principal, cliquez sur <strong>« Caisse POS »</strong>
+          dans le menu latéral.
         </div>
-      </details>
-
-      <details>
-        <summary>Encaissement</summary>
-        <div class="details-body">
-          <p>Sélectionnez le mode de paiement (espèces, mobile money, etc.), saisissez le montant reçu puis validez l'encaissement pour finaliser la vente.</p>
-          <div class="guide-shot">📷 Capture d'écran : écran d'encaissement</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Sélectionnez votre caisse (Caisse 1, 2, 3 ou 4).
+          Si une caisse est déjà occupée par un collègue, choisissez-en
+          une autre. Ne forcez jamais la fermeture d'une caisse active
+          sans l'accord du gérant.
         </div>
-      </details>
-
-      <details>
-        <summary>Impression du reçu</summary>
-        <div class="details-body">
-          <p>Une fois la vente encaissée, le reçu peut être imprimé automatiquement ou à la demande via le bouton d'impression.</p>
-          <div class="guide-shot">📷 Capture d'écran : impression du reçu</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Saisissez le <strong>fonds de caisse initial</strong> (montant
+          en espèces disponible dans la caisse au démarrage). Ce montant
+          vous est remis par le gérant chaque matin.
         </div>
-      </details>
-    </section>
-
-    <section id="guide-gerant">
-      <h2>🧑‍💼 Module Gérant</h2>
-
-      <details open>
-        <summary>Consultation des ventes</summary>
-        <div class="details-body">
-          <p>Le gérant peut consulter l'historique des ventes par jour, par employé ou par période, avec le détail de chaque transaction.</p>
-          <div class="guide-shot">📷 Capture d'écran : tableau de bord des ventes</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          Cliquez sur <strong>« Démarrer ma session »</strong>. La caisse
+          est maintenant active et prête pour les ventes.
         </div>
-      </details>
+      </div>
+    </div>
 
-      <details>
-        <summary>Contrôle des employés</summary>
-        <div class="details-body">
-          <p>Suivi de l'activité de chaque employé : ouvertures de session, ventes réalisées, opérations en attente de validation.</p>
-          <div class="guide-shot">📷 Capture d'écran : suivi des employés</div>
+    <h3 class="guide-h3">2.2 — Enregistrer une vente</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Identifier le client (optionnel)</strong><br>
+          Cliquez sur l'icône client en haut du ticket. Recherchez le
+          client par son nom ou téléphone. S'il est nouveau, créez sa
+          fiche en 30 secondes. S'il est client de passage, laissez
+          ce champ vide.
         </div>
-      </details>
-
-      <details>
-        <summary>Validation des opérations</summary>
-        <div class="details-body">
-          <p>Certaines opérations sensibles (annulation de vente, remise importante, retour produit) nécessitent la validation du gérant.</p>
-          <div class="guide-shot">📷 Capture d'écran : validation d'une opération</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Ajouter les articles au panier</strong><br>
+          Recherchez un article par son nom dans la barre de recherche,
+          ou scannez son code-barres avec la caméra (icône 📷). Cliquez
+          sur l'article pour l'ajouter. Ajustez la quantité avec les
+          boutons <strong>+</strong> et <strong>−</strong> ou saisissez
+          directement la valeur souhaitée.
         </div>
-      </details>
-
-      <details>
-        <summary>Consultation du stock</summary>
-        <div class="details-body">
-          <p>Visualisation des niveaux de stock en temps réel, avec alertes pour les articles en quantité faible.</p>
-          <div class="guide-shot">📷 Capture d'écran : état du stock</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Club TeMa Family</strong><br>
+          Si le client est membre du Club TeMa Family, demandez son
+          numéro de téléphone et saisissez-le dans le champ dédié
+          (bouton ⭐ en bas du ticket). Le système affiche son solde
+          d'étoiles et applique automatiquement ses avantages membres.
+          Si le client n'est pas encore inscrit, proposez-lui de
+          rejoindre le Club gratuitement.
         </div>
-      </details>
-    </section>
-
-    <section id="guide-compta">
-      <h2>🧮 Module Comptabilité</h2>
-
-      <details open>
-        <summary>Gestion des dépenses et recettes</summary>
-        <div class="details-body">
-          <p>Enregistrez toutes les dépenses et recettes de la boutique, classées par catégorie, pour un suivi précis de la trésorerie.</p>
-          <div class="guide-shot">📷 Capture d'écran : journal des dépenses et recettes</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Appliquer une remise (si autorisé)</strong><br>
+          Le gérant peut vous autoriser à accorder une remise. Saisissez
+          le montant ou le pourcentage dans le champ Remise. Toute remise
+          est enregistrée et visible par le gérant.
         </div>
-      </details>
-
-      <details>
-        <summary>Rapports financiers</summary>
-        <div class="details-body">
-          <p>Génération de rapports financiers (chiffre d'affaires, charges, résultat) sur une période donnée, conformes aux normes OHADA.</p>
-          <div class="guide-shot">📷 Capture d'écran : rapport financier</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Encaisser</strong><br>
+          Cliquez sur <strong>« 💳 RÉGLER »</strong>. Choisissez le mode
+          de paiement : Espèces, Orange Money, MTN MoMo, Wave, Moov Money
+          ou Carte. Pour les espèces, saisissez le montant remis par le
+          client — la monnaie à rendre est calculée automatiquement.
+          Validez la vente.
         </div>
-      </details>
-
-      <details>
-        <summary>Export Excel</summary>
-        <div class="details-body">
-          <p>Tous les rapports et journaux peuvent être exportés au format Excel pour archivage ou analyse complémentaire.</p>
-          <div class="guide-shot">📷 Capture d'écran : export Excel</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <strong>Imprimer le reçu</strong><br>
+          Le reçu s'affiche à l'écran après chaque vente. Imprimez-le
+          si le client en fait la demande. Vous pouvez toujours retrouver
+          un reçu dans l'Historique Tickets.
         </div>
-      </details>
-    </section>
+      </div>
+    </div>
 
-    <section id="guide-admin">
-      <h2>📁 Module Admin</h2>
+    <h3 class="guide-h3">2.3 — Vente en attente</h3>
+    <p>Si un client doit attendre (pour chercher sa monnaie, vérifier
+    une information, etc.), cliquez sur <strong>« ⏸ En attente »</strong>.
+    Le ticket est mis en pause. Vous pouvez servir un autre client, puis
+    revenir sur la vente en attente pour la finaliser.</p>
 
-      <details open>
-        <summary>Création des utilisateurs</summary>
-        <div class="details-body">
-          <p>L'administrateur crée les comptes des employés, leur attribue un identifiant et définit leur module d'accès.</p>
-          <div class="guide-shot">📷 Capture d'écran : création d'un utilisateur</div>
-        </div>
-      </details>
+    <h3 class="guide-h3">2.4 — Services numériques (Zone A)</h3>
+    <p>Pour enregistrer un service (impression, photocopie, scan, reliure,
+    création de CV, inscription en ligne), cliquez sur
+    <strong>« 🖨️ Ajouter un Service »</strong> dans la barre du ticket.
+    Sélectionnez le type de service, la quantité, et ajoutez-le au ticket.
+    Le service est facturé comme un article ordinaire.</p>
 
-      <details>
-        <summary>Gestion des rôles</summary>
-        <div class="details-body">
-          <p>Chaque utilisateur se voit attribuer un rôle (Caisse, Gérant, Comptabilité, Admin) qui détermine les écrans et actions accessibles.</p>
-          <div class="guide-shot">📷 Capture d'écran : gestion des rôles</div>
-        </div>
-      </details>
-
-      <details>
-        <summary>Sauvegarde des données</summary>
-        <div class="details-body">
-          <p>Les données sont synchronisées en temps réel ; des sauvegardes peuvent être lancées manuellement depuis l'espace administrateur.</p>
-          <div class="guide-shot">📷 Capture d'écran : sauvegarde des données</div>
-        </div>
-      </details>
-
-      <details>
-        <summary>Paramétrage du système</summary>
-        <div class="details-body">
-          <p>Configuration générale de l'application : informations de la boutique, devises, taxes et préférences d'affichage.</p>
-          <div class="guide-shot">📷 Capture d'écran : paramètres du système</div>
-        </div>
-      </details>
-    </section>
-
-    <section id="guide-raccourcis">
-      <h2>⌨️ Raccourcis clavier</h2>
-      <table class="guide-kbd-table">
-        <thead><tr><th>Touche</th><th>Action</th></tr></thead>
+    <div class="guide-table-wrap">
+      <table class="guide-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Tarif de base</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td><kbd>F1</kbd></td><td>Aide</td></tr>
-          <tr><td><kbd>F2</kbd></td><td>Nouvelle vente</td></tr>
-          <tr><td><kbd>F3</kbd></td><td>Recherche produit</td></tr>
-          <tr><td><kbd>F5</kbd></td><td>Actualiser</td></tr>
-          <tr><td><kbd>F10</kbd></td><td>Encaisser</td></tr>
-          <tr><td><kbd>ESC</kbd></td><td>Retour</td></tr>
+          <tr><td>Photocopie N&B</td><td>50 FCFA / page</td></tr>
+          <tr><td>Impression N&B</td><td>75 FCFA / page</td></tr>
+          <tr><td>Impression Couleur</td><td>150 FCFA / page</td></tr>
+          <tr><td>Scan</td><td>100 FCFA / page</td></tr>
+          <tr><td>Reliure</td><td>500 FCFA / document</td></tr>
+          <tr><td>Création de CV</td><td>2 000 FCFA</td></tr>
+          <tr><td>Saisie de document</td><td>200 FCFA / page</td></tr>
+          <tr><td>Inscription en ligne</td><td>1 000 FCFA</td></tr>
         </tbody>
       </table>
-    </section>
+    </div>
 
-    <section id="guide-faq">
-      <h2>❓ FAQ</h2>
-
-      <details open>
-        <summary>J'ai oublié mon mot de passe, que faire ?</summary>
-        <div class="details-body"><p>Contactez votre administrateur(trice) qui pourra réinitialiser votre accès depuis le module Admin.</p></div>
-      </details>
-      <details>
-        <summary>Que faire si une vente a été enregistrée par erreur ?</summary>
-        <div class="details-body"><p>Signalez l'erreur au gérant : l'annulation d'une vente nécessite sa validation.</p></div>
-      </details>
-      <details>
-        <summary>L'application fonctionne-t-elle sans connexion internet ?</summary>
-        <div class="details-body"><p>Certaines opérations restent possibles hors ligne, mais la synchronisation avec la base de données nécessite une connexion internet.</p></div>
-      </details>
-      <details>
-        <summary>Comment imprimer à nouveau un reçu ?</summary>
-        <div class="details-body"><p>Retrouvez la vente dans l'historique et utilisez le bouton d'impression du reçu correspondant.</p></div>
-      </details>
-    </section>
-
-    <section id="guide-pratiques">
-      <h2>✅ Bonnes pratiques</h2>
-      <div class="guide-card">
-        <ul>
-          <li>Vérifiez toujours le montant rendu avant de remettre la monnaie au client.</li>
-          <li>Fermez votre session à la fin de votre service pour protéger votre compte.</li>
-          <li>Signalez immédiatement toute erreur de saisie au gérant.</li>
-          <li>Vérifiez régulièrement le niveau de stock des produits les plus vendus.</li>
-          <li>Conservez les reçus imprimés pour faciliter le suivi en cas de litige.</li>
-        </ul>
+    <h3 class="guide-h3">2.5 — Transactions Mobile Money</h3>
+    <p>Pour enregistrer un dépôt ou un retrait Mobile Money :</p>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Cliquez sur <strong>« 💸 Mobile Money »</strong> dans la
+          barre du ticket ou depuis le menu Mobile Money.
+        </div>
       </div>
-    </section>
-
-    <section id="guide-support">
-      <h2>📞 Support</h2>
-      <div class="guide-card">
-        <div class="guide-support-row">📧 <b>Email :</b> support@tema-boutique.com</div>
-        <div class="guide-support-row">📞 <b>Téléphone :</b> +225 00 00 00 00</div>
-        <div class="guide-support-row">📍 <b>Adresse :</b> Yamoussoukro, Côte d'Ivoire</div>
-        <div class="guide-support-row">🕐 <b>Horaires :</b> Lundi - Samedi, 08h00 - 18h00</div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Sélectionnez le réseau (Orange Money, MTN MoMo, Wave,
+          Moov Money), le type d'opération (Dépôt ou Retrait) et
+          saisissez le montant. La commission est calculée automatiquement.
+        </div>
       </div>
-    </section>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Enregistrez la transaction. Elle est automatiquement liée
+          à votre caisse et visible dans les rapports Mobile Money.
+        </div>
+      </div>
+    </div>
 
+    <div class="guide-warning">
+      ⚠️ <strong>Règle absolue :</strong> Aucun crédit client n'est
+      autorisé. Toute vente doit être réglée intégralement au moment
+      de l'encaissement. En cas de demande de crédit, signalez-la
+      au gérant.
+    </div>
+
+    <h3 class="guide-h3">2.6 — Clôturer la caisse en fin de journée</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Assurez-vous que toutes les ventes de la journée sont
+          enregistrées. Aucune vente ne peut être ajoutée après
+          clôture.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Cliquez sur <strong>« 🔒 Clôturer »</strong>. Le Rapport Z
+          s'affiche automatiquement : total des ventes, espèces,
+          Mobile Money, fonds théorique. Vérifiez que les chiffres
+          correspondent à votre caisse physique.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Signalez tout écart au gérant avant de quitter votre poste.
+          Un écart non signalé engage votre responsabilité.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 3 — MODULE GÉRANT ══ -->
+  <section id="guide-gerant">
+    <div class="guide-role-banner banner-gerant">
+      🧑‍💼 MODULE GÉRANT(E)
+    </div>
+
+    <p>Le gérant supervise l'ensemble des opérations de la boutique.
+    Il valide les opérations sensibles, contrôle le stock, suit
+    l'activité des employés et s'assure que les objectifs journaliers
+    sont atteints.</p>
+
+    <h3 class="guide-h3">3.1 — Tableau de bord</h3>
+    <p>Le tableau de bord affiche en temps réel :</p>
+    <ul class="guide-list">
+      <li>Le chiffre d'affaires du jour et la progression vers
+          l'objectif de <strong>10 000 FCFA/jour</strong></li>
+      <li>Les ventes par zone (A, B, C, D) et par mode de paiement</li>
+      <li>Le stock total valorisé et les articles en alerte</li>
+      <li>Les commissions Mobile Money du mois</li>
+      <li>Les commandes fournisseurs en cours</li>
+    </ul>
+
+    <h3 class="guide-h3">3.2 — Superviser les ventes et les employés</h3>
+    <p>Depuis <strong>Analyse & Reporting → Journal</strong>, consultez
+    toutes les ventes enregistrées avec les filtres suivants :
+    période, employé, zone, mode de paiement. Chaque ticket est
+    traçable jusqu'au nom du caissier qui l'a enregistré.</p>
+    <p>Depuis <strong>Administration → Présences (Caisses)</strong>,
+    suivez en temps réel l'activité de chaque caisse : heure d'ouverture,
+    employé en session, nombre de tickets, chiffre d'affaires
+    par employé.</p>
+
+    <h3 class="guide-h3">3.3 — Valider les opérations sensibles</h3>
+    <p>Certaines opérations déclenchent une demande de validation
+    gérant :</p>
+    <ul class="guide-list">
+      <li><strong>Annulation d'une vente</strong> — une vente annulée
+          reste visible dans l'historique avec le statut « Annulé »</li>
+      <li><strong>Remise exceptionnelle</strong> — toute remise
+          supérieure au seuil configuré doit être approuvée</li>
+      <li><strong>Retour produit</strong> — enregistrez le retour
+          depuis l'historique des tickets</li>
+    </ul>
+
+    <h3 class="guide-h3">3.4 — Gérer le stock</h3>
+    <p>Depuis <strong>Approvisionnement → Inventaire</strong>,
+    consultez les niveaux de stock par article et par zone.
+    Les alertes automatiques signalent :</p>
+    <ul class="guide-list">
+      <li>⚠️ <strong>Stock faible</strong> — quantité en dessous
+          du seuil minimum défini</li>
+      <li>🔴 <strong>Rupture</strong> — stock à zéro, vente
+          impossible</li>
+    </ul>
+    <p>Pour ajuster un stock manuellement (après inventaire physique
+    ou réception de marchandise), utilisez le bouton
+    <strong>« Ajuster le stock »</strong> sur la fiche article.
+    Chaque ajustement est tracé avec le nom de l'opérateur.</p>
+
+    <h3 class="guide-h3">3.5 — Passer une commande fournisseur</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Allez dans <strong>Approvisionnement → Commandes</strong>
+          et cliquez sur <strong>« + Nouvelle Commande »</strong>.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Sélectionnez le fournisseur, la date, les articles et
+          les quantités commandées. Le montant total est calculé
+          automatiquement.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Validez la commande. Un bon de commande est généré —
+          vous pouvez l'imprimer ou le partager avec le fournisseur.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          À réception des marchandises, marquez la commande
+          comme « Reçue ». Les quantités sont automatiquement
+          ajoutées au stock.
+        </div>
+      </div>
+    </div>
+
+    <h3 class="guide-h3">3.6 — Analyser les performances</h3>
+    <p>Depuis <strong>Analyse & Reporting → Rapports</strong>,
+    générez des rapports personnalisés par période :</p>
+    <ul class="guide-list">
+      <li>Chiffre d'affaires par jour, semaine, mois</li>
+      <li>Top 10 articles les plus vendus</li>
+      <li>Performance par zone et par caissier</li>
+      <li>Répartition des modes de paiement</li>
+      <li>Évolution du chiffre d'affaires sur 6 mois</li>
+    </ul>
+    <p>Tous les rapports sont exportables en CSV (Excel) ou en PDF.</p>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 4 — MODULE COMPTABILITÉ ══ -->
+  <section id="guide-compta">
+    <div class="guide-role-banner banner-compta">
+      🧮 MODULE COMPTABILITÉ
+    </div>
+
+    <p>Le module Comptabilité de TeMa Boutique est conforme aux
+    normes <strong>OHADA</strong> (Organisation pour l'Harmonisation
+    en Afrique du Droit des Affaires). Il permet de tenir une
+    comptabilité en partie double, de suivre la trésorerie et
+    de produire des états financiers.</p>
+
+    <h3 class="guide-h3">4.1 — Saisir une écriture comptable</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Allez dans <strong>Finance → Comptabilité → Saisie Écriture</strong>.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Renseignez la <strong>date</strong>, le <strong>journal</strong>
+          (Ventes, Achats, Banque, Caisse, Opérations Diverses)
+          et le <strong>libellé</strong> décrivant l'opération.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Ajoutez les lignes comptables : pour chaque ligne,
+          sélectionnez le compte (selon le plan comptable OHADA),
+          saisissez le montant au Débit ou au Crédit.
+          <strong>Le Total Débit doit toujours être égal
+          au Total Crédit</strong> pour valider l'écriture.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          Cliquez sur <strong>« Enregistrer l'écriture »</strong>.
+          Elle apparaît immédiatement dans le Journal Comptable
+          et met à jour la Balance des Comptes.
+        </div>
+      </div>
+    </div>
+
+    <h3 class="guide-h3">4.2 — Journaux disponibles</h3>
+    <div class="guide-table-wrap">
+      <table class="guide-table">
+        <thead>
+          <tr><th>Journal</th><th>Usage</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>VE — Ventes</strong></td>
+            <td>Enregistrement des recettes de vente</td>
+          </tr>
+          <tr>
+            <td><strong>AC — Achats</strong></td>
+            <td>Factures fournisseurs, achats de marchandises</td>
+          </tr>
+          <tr>
+            <td><strong>BQ — Banque</strong></td>
+            <td>Opérations bancaires (virements, chèques)</td>
+          </tr>
+          <tr>
+            <td><strong>CA — Caisse</strong></td>
+            <td>Mouvements d'espèces (entrées, sorties manuelles)</td>
+          </tr>
+          <tr>
+            <td><strong>OD — Op. Diverses</strong></td>
+            <td>Écritures de régularisation, provisions</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="guide-h3">4.3 — Trésorerie et rapprochement</h3>
+    <p>Depuis <strong>Finance → Trésorerie</strong>, effectuez
+    le rapprochement mensuel entre les ventes enregistrées dans
+    TeMa et les relevés réels de vos comptes Mobile Money
+    et espèces :</p>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Saisissez les relevés reçus de chaque opérateur Mobile Money
+          (Orange Money, MTN, Wave, Moov) avec les montants et
+          références des transactions.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Lancez le rapprochement pour la période souhaitée.
+          Le système compare automatiquement les montants enregistrés
+          dans TeMa avec vos relevés réels et affiche les écarts
+          par canal.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Validez le rapprochement une fois tous les écarts justifiés.
+          L'historique des rapprochements validés est conservé.
+        </div>
+      </div>
+    </div>
+
+    <h3 class="guide-h3">4.4 — Exports comptables</h3>
+    <p>Tous les journaux et états financiers sont exportables :</p>
+    <ul class="guide-list">
+      <li><strong>Export CSV</strong> — pour traitement dans Excel
+          ou transmission à un expert-comptable</li>
+      <li><strong>Impression PDF</strong> — pour archivage physique
+          ou présentation officielle</li>
+    </ul>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 5 — MODULE ADMINISTRATEUR ══ -->
+  <section id="guide-admin">
+    <div class="guide-role-banner banner-admin">
+      🔐 MODULE ADMINISTRATEUR — Accès restreint
+    </div>
+
+    <div class="guide-warning admin-warning">
+      🔒 Cette section est réservée à l'Administrateur de la boutique.
+      Les fonctions décrites ici sont sensibles et irréversibles pour
+      certaines d'entre elles. Elles sont exclusivement accessibles
+      avec un compte de niveau Administrateur.
+    </div>
+
+    <h3 class="guide-h3">5.1 — Gestion des comptes utilisateurs</h3>
+    <p>Depuis <strong>Administration → Gestion de Comptes</strong> :</p>
+    <ul class="guide-list">
+      <li><strong>Créer un compte</strong> — définissez l'identifiant,
+          le rôle (Caissier, Gérant, Comptable, Digital Zone A)
+          et les modules accessibles. Transmettez le mot de passe
+          initial en privé à l'employé.</li>
+      <li><strong>Modifier un compte</strong> — changez le mot de passe,
+          le rôle ou les accès à tout moment.</li>
+      <li><strong>Bloquer un compte</strong> — désactivez l'accès d'un
+          employé sans supprimer son historique. Utilisez cette option
+          en cas d'absence prolongée ou de fin de contrat.</li>
+    </ul>
+
+    <div class="guide-info">
+      💡 <strong>Bonne pratique :</strong> Créez un compte distinct
+      pour chaque employé. N'attribuez jamais deux employés sous le
+      même identifiant — la traçabilité des ventes en dépend.
+    </div>
+
+    <h3 class="guide-h3">5.2 — Suivi de caisse (Admin)</h3>
+    <p>Depuis <strong>Administration → Suivi de Caisse</strong>,
+    consultez :</p>
+    <ul class="guide-list">
+      <li>L'état en temps réel de chaque caisse (ouverte/fermée,
+          employé en session)</li>
+      <li>Le journal d'audit des caisses : ouvertures, fermetures,
+          transferts et actions sensibles</li>
+      <li>La performance individuelle de chaque employé (tickets,
+          CA, panier moyen)</li>
+    </ul>
+
+    <h3 class="guide-h3">5.3 — Journal d'activité</h3>
+    <p>Depuis <strong>Administration → Journal d'Activité</strong>,
+    toutes les actions effectuées dans l'application sont tracées :
+    connexions, modifications de stock, commandes passées,
+    créations de comptes. Ce journal est horodaté et ne peut
+    pas être modifié.</p>
+
+    <h3 class="guide-h3">5.4 — Support employés</h3>
+    <p>Depuis <strong>Administration → Support</strong>, recevez
+    et répondez aux messages envoyés par les employés depuis leur
+    interface. Chaque message peut inclure une capture d'écran
+    pour faciliter la résolution du problème.</p>
+
+    <h3 class="guide-h3">5.5 — Réinitialisation avant ouverture</h3>
+    <div class="guide-warning">
+      ⛔ <strong>Action irréversible.</strong> Cette fonction efface
+      définitivement les données de test. Elle ne doit être utilisée
+      qu'une seule fois, avant le premier jour d'ouverture réel
+      de la boutique. Pour confirmer, vous devez taper le mot
+      <strong>REINITIALISER</strong> manuellement.
+    </div>
+    <p>Les éléments suivants sont <strong>toujours conservés</strong>,
+    quelle que soit l'option choisie : comptes utilisateurs,
+    configuration boutique, caisses, fiches employés RH,
+    contrats et paramètres de paie.</p>
+
+    <h3 class="guide-h3">5.6 — Club TeMa Family (Administration)</h3>
+    <p>Depuis <strong>Club TeMa Family</strong>, l'administrateur
+    peut :</p>
+    <ul class="guide-list">
+      <li>Consulter la liste de tous les membres et leur niveau
+          (Club, Argent, Or, Platine, Diamant)</li>
+      <li>Ajuster manuellement le solde d'étoiles d'un membre
+          (en cas d'erreur de saisie) — un motif obligatoire
+          est enregistré à chaque ajustement</li>
+      <li>Consulter l'historique complet des transactions
+          fidélité de chaque membre</li>
+      <li>Définir les prix membres sur certains articles
+          (promotions exclusives Club TeMa)</li>
+    </ul>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 6 — ZONE DIGITAL ══ -->
+  <section id="guide-digital">
+    <div class="guide-role-banner banner-digital">
+      🖥️ INTERFACE ZONE DIGITAL — Zone A
+    </div>
+
+    <p>Les employés affectés à la Zone A (Informatique & Services
+    Numériques) disposent d'une interface dédiée : <strong>TeMa
+    Digital</strong>. Cette interface est optimisée pour les
+    opérations spécifiques à la Zone A.</p>
+
+    <h3 class="guide-h3">6.1 — Fonctions disponibles</h3>
+    <ul class="guide-list">
+      <li>Enregistrer les services numériques (impression,
+          photocopie, scan, reliure, CV, inscription en ligne)</li>
+      <li>Gérer les transactions Mobile Money (dépôts, retraits,
+          transferts — tous réseaux)</li>
+      <li>Consulter le stock de la Zone A</li>
+      <li>Consulter son historique d'activité</li>
+      <li>Accéder aux statistiques de ses propres ventes</li>
+    </ul>
+
+    <h3 class="guide-h3">6.2 — Enregistrer un service</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Depuis le tableau de bord Digital, cliquez sur
+          <strong>« 🖨️ Services Numériques »</strong>.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          Sélectionnez le service dans la liste déroulante,
+          saisissez la quantité et le prix. Le total est
+          calculé automatiquement.
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Enregistrez. La vente est liée à votre session et
+          visible dans les rapports du gérant.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 7 — RACCOURCIS ══ -->
+  <section id="guide-raccourcis">
+    <h2 class="guide-section-title">⌨️ 7. Raccourcis clavier</h2>
+    <div class="guide-table-wrap">
+      <table class="guide-table">
+        <thead>
+          <tr><th>Touche</th><th>Action</th><th>Module</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><kbd>F1</kbd></td><td>Ouvrir l'aide</td><td>Tous</td></tr>
+          <tr><td><kbd>F2</kbd></td><td>Nouvelle vente</td><td>Caisse</td></tr>
+          <tr><td><kbd>F3</kbd></td><td>Rechercher un produit</td><td>Caisse</td></tr>
+          <tr><td><kbd>F5</kbd></td><td>Actualiser la page</td><td>Tous</td></tr>
+          <tr><td><kbd>F10</kbd></td><td>Encaisser (ouvrir paiement)</td><td>Caisse</td></tr>
+          <tr><td><kbd>ESC</kbd></td><td>Annuler / Retour</td><td>Tous</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 8 — BONNES PRATIQUES ══ -->
+  <section id="guide-pratiques">
+    <h2 class="guide-section-title">✅ 8. Bonnes pratiques</h2>
+
+    <div class="guide-practices-grid">
+      <div class="practice-card">
+        <div class="practice-icon">💰</div>
+        <div class="practice-title">Monnaie et encaissement</div>
+        <p>Vérifiez toujours le montant rendu au client avant
+        de fermer le ticket. En cas d'erreur, signalez-la
+        immédiatement au gérant — ne tentez jamais de corriger
+        vous-même une vente déjà validée.</p>
+      </div>
+      <div class="practice-card">
+        <div class="practice-icon">🔐</div>
+        <div class="practice-title">Sécurité du compte</div>
+        <p>Ne communiquez jamais votre identifiant ou mot de passe
+        à un collègue. Fermez votre session à chaque fin de service
+        ou pause prolongée. Votre compte est votre responsabilité.</p>
+      </div>
+      <div class="practice-card">
+        <div class="practice-icon">📦</div>
+        <div class="practice-title">Gestion du stock</div>
+        <p>Signalez immédiatement au gérant tout article en rupture
+        ou dont le stock devient insuffisant. Un client qui ne
+        trouve pas ce qu'il cherche chez TeMa ira chez le concurrent.
+        Vérifiez les alertes chaque matin.</p>
+      </div>
+      <div class="practice-card">
+        <div class="practice-icon">🧾</div>
+        <div class="practice-title">Enregistrement des ventes</div>
+        <p>Chaque vente doit être enregistrée dans l'application
+        le jour même, avant la clôture de caisse. Une vente
+        non enregistrée est une vente perdue pour le suivi
+        financier et le stock.</p>
+      </div>
+      <div class="practice-card">
+        <div class="practice-icon">🤝</div>
+        <div class="practice-title">Relation client</div>
+        <p>Proposez systématiquement le Club TeMa Family aux
+        nouveaux clients. Un client inscrit revient plus souvent.
+        Accueillez chaque client par son prénom si vous le
+        connaissez — l'application affiche son nom dès que
+        vous saisissez son numéro.</p>
+      </div>
+      <div class="practice-card">
+        <div class="practice-icon">📱</div>
+        <div class="practice-title">Mobile Money</div>
+        <p>Notez toujours la référence de transaction (numéro SMS)
+        lors de chaque dépôt ou retrait Mobile Money. En cas
+        de litige, cette référence est la seule preuve
+        de la transaction.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 9 — FAQ ══ -->
+  <section id="guide-faq">
+    <h2 class="guide-section-title">❓ 9. Questions fréquentes</h2>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">
+          J'ai oublié mon mot de passe. Que faire ?
+        </div>
+        <div class="faq-answer">
+          Contactez l'administrateur (José Ettien) via WhatsApp
+          au +225 07 69 859 206 ou par email. Il seul peut
+          réinitialiser votre accès. Ne tentez pas de deviner
+          votre mot de passe.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Une vente a été enregistrée par erreur. Comment l'annuler ?
+        </div>
+        <div class="faq-answer">
+          Signalez immédiatement l'erreur au gérant. Lui seul
+          peut annuler une vente validée depuis l'Historique Tickets.
+          La vente annulée reste visible dans l'historique avec
+          le statut « Annulé » pour des raisons de traçabilité.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          L'application est lente ou ne se charge pas. Que faire ?
+        </div>
+        <div class="faq-answer">
+          Vérifiez d'abord la connexion internet. Si elle est
+          active, actualisez la page avec la touche F5. Si le
+          problème persiste, fermez et rouvrez le navigateur.
+          En dernier recours, contactez le support.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Un client me demande un article que je ne trouve pas
+          dans l'application. Que faire ?
+        </div>
+        <div class="faq-answer">
+          L'article n'est peut-être pas encore dans le catalogue.
+          Signalez-le au gérant pour qu'il l'ajoute. Ne créez
+          jamais un article vous-même sans autorisation.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          L'application fonctionne-t-elle sans connexion internet ?
+        </div>
+        <div class="faq-answer">
+          Certaines consultations restent possibles hors ligne grâce
+          au cache. En revanche, l'enregistrement des ventes,
+          la synchronisation du stock et le Club TeMa Family
+          nécessitent une connexion active. En cas de coupure,
+          notez les ventes sur papier et enregistrez-les dès
+          le retour de la connexion.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Comment imprimer à nouveau un reçu déjà émis ?
+        </div>
+        <div class="faq-answer">
+          Allez dans <strong>Ventes → Historique Tickets</strong>,
+          recherchez la vente par son numéro ou la date, et
+          cliquez sur l'icône d'impression 🖨️ à droite de
+          la ligne.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Un client veut être remboursé. Quelle procédure ?
+        </div>
+        <div class="faq-answer">
+          Aucun remboursement ne peut être effectué sans
+          l'accord du gérant. Signalez la demande au gérant
+          qui traitera le retour depuis l'historique.
+          Ne rendez jamais d'argent de votre propre initiative.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="guide-divider"></div>
+
+  <!-- ══ SECTION 10 — SUPPORT ══ -->
+  <section id="guide-support">
+    <h2 class="guide-section-title">📞 10. Contact et support</h2>
+
+    <p>Pour toute question technique, anomalie ou demande d'assistance,
+    utilisez en priorité le <strong>bouton Support 💬</strong> dans
+    l'application (menu latéral) — il permet d'envoyer un message
+    avec capture d'écran directement à l'administrateur.</p>
+
+    <div class="guide-support-grid">
+      <div class="support-card">
+        <div class="support-icon">💬</div>
+        <div class="support-label">WhatsApp (prioritaire)</div>
+        <div class="support-value">+225 07 69 859 206</div>
+      </div>
+      <div class="support-card">
+        <div class="support-icon">📧</div>
+        <div class="support-label">Email</div>
+        <div class="support-value">tbsupport@gmail.com</div>
+      </div>
+      <div class="support-card">
+        <div class="support-icon">📍</div>
+        <div class="support-label">Adresse</div>
+        <div class="support-value">Yamoussoukro, quartier Ebenezer fin goudron, Côte d'Ivoire</div>
+      </div>
+      <div class="support-card">
+        <div class="support-icon">🕐</div>
+        <div class="support-label">Disponibilité</div>
+        <div class="support-value">Lundi – Dimanche · 06h00 – 20h00</div>
+      </div>
+    </div>
+
+    <div class="guide-info">
+      💡 Pour les urgences en dehors des horaires (caisse bloquée,
+      problème critique), contactez directement par WhatsApp.
+      Un message via l'application génère une notification —
+      pour une urgence, l'appel direct est plus rapide.
+    </div>
+
+    <div class="guide-footer">
+      <strong>TeMa Boutique Multiservices</strong><br>
+      TeMa SARL · N° RCCM CI-TDI-01-2026-B12-00307<br>
+      Yamoussoukro, Côte d'Ivoire · Application v2.0<br>
+      © 2026 · Tous droits réservés
+    </div>
+  </section>
+
+</div><!-- end guide-content -->
   </div>
-</div>
 
 <!-- Fenêtre de connexion flottante -->
 <div class="login-modal-overlay" id="login-modal-overlay" onclick="if(event.target===this) fermerConnexion()">
