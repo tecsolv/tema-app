@@ -418,8 +418,9 @@
   @media print { #receipt-print-area { display: block !important; } }
 
   @media print {
+    @page { size: A5; margin: 12mm; }
     body > *:not(#receipt-print-area) { display: none !important; }
-    #receipt-print-area { display: block !important; font-family: 'Courier New', monospace; }
+    #receipt-print-area { display: block !important; font-family: Arial, system-ui, sans-serif; }
     .main { margin-left: 0; }
     .content { padding: 0; }
   }
@@ -8095,10 +8096,18 @@ async function confirmerDemarrageSession() {
       dateHeureDebutSession: now, dateHeureDebutSessionTS: nowTS,
       fondsCaisse: fonds, totalVentes: 0, nbTickets: 0, totaux: {}, statut: 'ouverte', pauses: [], pauseEnCours: null
     };
-    closePosModal('modal-demarrer-session');
     consigner('Ouverture de session', `${currentUser.label} a démarré une session sur ${c.nom}`);
     showToast('Session démarrée sur '+c.nom+' ✓');
-    ouvrirEcranPOS();
+    const _modalBody = document.querySelector('#modal-demarrer-session .pos-modal');
+    if (_modalBody) {
+      _modalBody.innerHTML = `<div style="text-align:center;padding:8px 0 16px">
+        <div style="font-size:40px;margin-bottom:10px">✅</div>
+        <h3 style="margin:0 0 4px;color:#10B981">Session démarrée</h3>
+        <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted)">${c.nom}&nbsp;·&nbsp;Fonds&nbsp;: <strong>${posF(fonds)}</strong></p>
+        <button onclick="imprimerFicheOuverture()" style="width:100%;padding:12px;background:#1a2537;color:#fff;border:1px solid #334155;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px">🖨 Imprimer la fiche d'ouverture</button>
+        <button onclick="closePosModal('modal-demarrer-session');ouvrirEcranPOS();" style="width:100%;padding:12px;background:#10B981;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Continuer vers la caisse →</button>
+      </div>`;
+    } else { closePosModal('modal-demarrer-session'); ouvrirEcranPOS(); }
   } catch(err) {
     if (err.message === 'OCCUPEE') {
       showToast('Cette caisse vient d\'être prise par un autre utilisateur.','error');
@@ -8559,7 +8568,8 @@ function renderPOSJournal() {
       <div class="session-info-item"><div class="session-info-val" style="color:var(--success)">${posF((posSessionActive.fondsCaisse||0)+(posSessionActive.totalVentes||0))}</div><div class="session-info-label">Fond théorique</div></div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn-session btn-z-report" onclick="genererRapportZ()">📄 Rapport Z</button>
+      <button class="btn-session btn-z-report" onclick="genererRapportZ()">🖨 Ticket Z</button>
+      <button class="btn-session btn-z-report" onclick="imprimerFicheOuverture()" style="background:#1a2537">🖨 Fiche ouverture</button>
       <button class="btn-session btn-close-session" onclick="fermerSessionCaisse()">🔴 Clôturer la caisse</button>
     </div>`:`<p style="color:var(--text-muted);margin-bottom:16px">Aucune session ouverte.</p>
     <button class="btn-session btn-open-session" onclick="document.getElementById('modal-open-session').classList.add('open')">✅ Ouvrir la Caisse</button>`;
@@ -8583,24 +8593,106 @@ function renderPOSJournal() {
 
 function genererRapportZ() {
   if (!posSessionActive) return;
-  const ventesSession=ventesCaisse.filter(v=>v.sessionId===posSessionActive.id);
-  const totalSession=ventesSession.reduce((s,v)=>s+(v.montant||0),0);
-  const modesTotaux={}; ventesSession.forEach(v=>{const m=v.modePaiement||'Espèces';modesTotaux[m]=(modesTotaux[m]||0)+(v.montant||0);});
-  const html=`<div style="font-family:'Courier New',monospace;font-size:12px;padding:20px;max-width:320px;margin:auto">
-    <div style="text-align:center;border-bottom:1px dashed #000;padding-bottom:10px;margin-bottom:10px"><strong style="font-size:16px">RAPPORT Z — CLÔTURE</strong><br>TeMa Smart Caisse<br>${posDateHeure()}<br>Opérateur : ${currentUser?.label||'—'}</div>
-    <div>Ouverture : ${posSessionActive.dateOuverture||'—'}</div>
-    <div>Tickets : ${posSessionActive.nbTickets||0}</div>
-    <div style="margin-top:8px;border-top:1px dashed #000;padding-top:8px"><strong>PAR MODE</strong>
-      ${Object.entries(modesTotaux).map(([m,t])=>`<div style="display:flex;justify-content:space-between"><span>${m}</span><span>${posF0(t)} F</span></div>`).join('')}
+  const s = posSessionActive;
+  const ventesSession = ventesCaisse.filter(v => v.sessionId === s.id);
+  const totalVentes = ventesSession.reduce((sum, v) => sum + (v.montant || 0), 0);
+  const modesTotaux = {};
+  ventesSession.forEach(v => { const m = v.modePaiement || 'Espèces'; modesTotaux[m] = (modesTotaux[m] || 0) + (v.montant || 0); });
+  const fondsInitial = s.fondsCaisse || 0;
+  const canaux = ['Espèces', 'Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'];
+  const html = `<div style="font-family:Arial,system-ui,sans-serif;font-size:11px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto;padding:0">
+    <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
+      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa SARL</div>
+      <div style="font-size:12px;font-weight:700;margin-top:2px">TICKET Z — CLÔTURE DE CAISSE</div>
+      <div style="font-size:10px;color:#333;margin-top:2px">${posDateHeure()}</div>
+      <div style="font-size:10px;color:#333">Caisse : ${s.caisseNom||'—'} &nbsp;·&nbsp; Caissier : ${s.utilisateurNom||'—'}</div>
     </div>
-    <div style="margin-top:8px;border-top:1px dashed #000;padding-top:8px">
-      <div style="display:flex;justify-content:space-between"><span>Total ventes</span><strong>${posF0(totalSession)} FCFA</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Fonds initial</span><span>${posF0(posSessionActive.fondsCaisse||0)} F</span></div>
-      <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:4px"><span>Total théorique</span><span>${posF0((posSessionActive.fondsCaisse||0)+totalSession)} F</span></div>
+    <div style="font-weight:700;font-size:11px;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:8px">RÉSUMÉ DE SESSION</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+      <tr><td style="padding:4px 6px;border:1px solid #ccc;font-weight:600;width:55%">Ouverture session</td><td style="padding:4px 6px;border:1px solid #ccc">${s.dateHeureDebutSession||'—'}</td></tr>
+      <tr><td style="padding:4px 6px;border:1px solid #ccc;font-weight:600">Nb tickets</td><td style="padding:4px 6px;border:1px solid #ccc">${s.nbTickets||0}</td></tr>
+      <tr><td style="padding:4px 6px;border:1px solid #ccc;font-weight:600">Fonds d'ouverture</td><td style="padding:4px 6px;border:1px solid #ccc">${posF0(fondsInitial)} FCFA</td></tr>
+      <tr><td style="padding:4px 6px;border:1px solid #ccc;font-weight:600">Total ventes</td><td style="padding:4px 6px;border:1px solid #ccc;font-weight:700">${posF0(totalVentes)} FCFA</td></tr>
+      <tr><td style="padding:4px 6px;border:1px solid #ccc;font-weight:600">Entrées / Sorties manuelles</td><td style="padding:4px 6px;border:1px solid #ccc">—</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:5px 6px;border:1px solid #999;font-weight:700">Fonds théorique</td><td style="padding:5px 6px;border:1px solid #999;font-weight:700">${posF0(fondsInitial + totalVentes)} FCFA</td></tr>
+    </table>
+    <div style="font-weight:700;font-size:11px;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:8px">DÉTAIL PAR MODE DE PAIEMENT</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+      ${canaux.map(c => `<tr><td style="padding:4px 6px;border:1px solid #ccc;width:55%">${c}</td><td style="padding:4px 6px;border:1px solid #ccc;text-align:right">${posF0(modesTotaux[c]||0)} FCFA</td></tr>`).join('')}
+    </table>
+    <div style="font-weight:700;font-size:11px;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:8px">COMPTAGE PHYSIQUE</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600;width:55%">Fonds réel compté (FCFA)</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Écart (FCFA)</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Motif de l'écart</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
+    </table>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+      <tr>
+        <td style="width:50%;padding:8px 6px;border:1px solid #ccc;text-align:center">
+          <div style="font-weight:600;margin-bottom:30px">Signature Caissier</div>
+          <div style="font-size:10px;color:#666">${s.utilisateurNom||'—'}</div>
+        </td>
+        <td style="width:50%;padding:8px 6px;border:1px solid #ccc;text-align:center">
+          <div style="font-weight:600;margin-bottom:30px">Signature Gérant / Responsable</div>
+          <div style="font-size:10px;color:#666">&nbsp;</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:center;margin-top:14px;font-size:9px;color:#555;border-top:1px solid #ccc;padding-top:8px">
+      TeMa SARL — N° RCCM CI-TDI-01-2026-B12-00307<br>Yamoussoukro, quartier Ebenezer fin goudron
     </div>
-    <div style="text-align:center;margin-top:12px;font-size:10px">* * * FIN DE RAPPORT Z * * *</div>
   </div>`;
-  document.getElementById('receipt-print-area').innerHTML=html; window.print();
+  document.getElementById('receipt-print-area').innerHTML = html;
+  window.print();
+}
+
+function imprimerFicheOuverture() {
+  if (!posSessionActive) return;
+  const s = posSessionActive;
+  const parts = (s.dateHeureDebutSession || '').split(' ');
+  const dateOuv = parts[0] || today();
+  const heureOuv = parts.slice(1).join(' ') || '';
+  const html = `<div style="font-family:Arial,system-ui,sans-serif;font-size:11px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto;padding:0">
+    <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
+      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa SARL</div>
+      <div style="font-size:12px;font-weight:700;margin-top:2px">FICHE DE FOND DE CAISSE</div>
+      <div style="font-size:10px;color:#333;margin-top:2px">Ouverture de Session</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+      <tr><td style="padding:5px 6px;border:1px solid #ccc;font-weight:600;width:45%">Date</td><td style="padding:5px 6px;border:1px solid #ccc">${dateOuv}</td></tr>
+      <tr><td style="padding:5px 6px;border:1px solid #ccc;font-weight:600">Heure d'ouverture</td><td style="padding:5px 6px;border:1px solid #ccc">${heureOuv}</td></tr>
+      <tr><td style="padding:5px 6px;border:1px solid #ccc;font-weight:600">N° Caisse</td><td style="padding:5px 6px;border:1px solid #ccc">${s.caisseNom||'—'}</td></tr>
+      <tr><td style="padding:5px 6px;border:1px solid #ccc;font-weight:600">Nom du caissier</td><td style="padding:5px 6px;border:1px solid #ccc">${s.utilisateurNom||'—'}</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:5px 6px;border:1px solid #999;font-weight:700">Fonds initial</td><td style="padding:5px 6px;border:1px solid #999;font-weight:700">${posF(s.fondsCaisse||0)}</td></tr>
+    </table>
+    <div style="font-weight:700;font-size:11px;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:8px">BILLETAGE DÉTAILLÉ</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">
+      <tr style="background:#f0f0f0">
+        <th style="padding:4px 6px;border:1px solid #ccc;text-align:left;font-weight:600">Coupure</th>
+        <th style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-weight:600">Nombre</th>
+        <th style="padding:4px 6px;border:1px solid #ccc;text-align:right;font-weight:600">Montant</th>
+      </tr>
+      ${['10 000','5 000','2 000','1 000','500','200','100','50','25','10','5'].map(c=>`<tr><td style="padding:5px 6px;border:1px solid #ccc">${c} FCFA</td><td style="padding:5px 6px;border:1px solid #ccc;text-align:center">&nbsp;</td><td style="padding:5px 6px;border:1px solid #ccc;text-align:right">&nbsp;</td></tr>`).join('')}
+      <tr style="background:#f5f5f5"><td style="padding:5px 6px;border:1px solid #999;font-weight:700">TOTAL</td><td style="padding:5px 6px;border:1px solid #999"></td><td style="padding:5px 6px;border:1px solid #999;text-align:right;font-weight:700">${posF(s.fondsCaisse||0)}</td></tr>
+    </table>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+      <tr>
+        <td style="width:50%;padding:8px 6px;border:1px solid #ccc;text-align:center">
+          <div style="font-weight:600;margin-bottom:30px">Signature Caissier</div>
+          <div style="font-size:10px;color:#666">${s.utilisateurNom||'—'}</div>
+        </td>
+        <td style="width:50%;padding:8px 6px;border:1px solid #ccc;text-align:center">
+          <div style="font-weight:600;margin-bottom:30px">Signature Gérant / Responsable</div>
+          <div style="font-size:10px;color:#666">&nbsp;</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:center;margin-top:14px;font-size:9px;color:#555;border-top:1px solid #ccc;padding-top:8px">
+      TeMa SARL — N° RCCM CI-TDI-01-2026-B12-00307<br>Yamoussoukro, quartier Ebenezer fin goudron
+    </div>
+  </div>`;
+  document.getElementById('receipt-print-area').innerHTML = html;
+  window.print();
 }
 
 // ===== DONNÉES INITIALES FIREBASE =====
