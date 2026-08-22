@@ -1022,7 +1022,7 @@
     <div class="about-row"><span>Version</span><b>v2.0</b></div>
     <div class="about-row"><span>Lieu</span><b>Yamoussoukro, Côte d'Ivoire</b></div>
     <div class="about-row"><span>Synchronisation</span><b>Temps réel (Firebase)</b></div>
-    <div class="about-row"><span>© Droits réservés</span><b>2026 · TeMa Multi-Services</b></div>
+    <div class="about-row"><span>© Droits réservés</span><b>2026 · TeMa SARL — N° RCCM CI-TDI-01-2026-B12-00307</b></div>
     <button class="wlogin-btn" style="margin-top:18px" onclick="fermerAPropos()">Fermer</button>
   </div>
 </div>
@@ -4523,7 +4523,7 @@
       <span style="animation:pulse 2s infinite;display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:5px"></span>
       Sync temps réel<br>
       <span id="dig-clock" style="color:#94a3b8">--:--</span>
-      · TeMa Digital v1.0
+      · TeMa Boutique v2.0
     </div>
   </nav>
 
@@ -8602,8 +8602,8 @@ function genererRapportZ() {
   const canaux = ['Espèces', 'Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'];
   const html = `<div style="font-family:Arial,system-ui,sans-serif;font-size:11px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto;padding:0">
     <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
-      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa SARL</div>
-      <div style="font-size:12px;font-weight:700;margin-top:2px">TICKET Z — CLÔTURE DE CAISSE</div>
+      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
+      <div style="font-size:12px;font-weight:700;margin-top:2px">Clôture de Caisse — Ticket Z</div>
       <div style="font-size:10px;color:#333;margin-top:2px">${posDateHeure()}</div>
       <div style="font-size:10px;color:#333">Caisse : ${s.caisseNom||'—'} &nbsp;·&nbsp; Caissier : ${s.utilisateurNom||'—'}</div>
     </div>
@@ -8622,9 +8622,9 @@ function genererRapportZ() {
     </table>
     <div style="font-weight:700;font-size:11px;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:8px">COMPTAGE PHYSIQUE</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">
-      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600;width:55%">Fonds réel compté (FCFA)</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
-      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Écart (FCFA)</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
-      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Motif de l'écart</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600;width:55%">Fonds réel compté (FCFA)</td><td style="padding:6px;border:1px solid #ccc;min-width:80px">&nbsp;</td></tr>
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Écart (+ ou −) (FCFA)</td><td style="padding:6px;border:1px solid #ccc">&nbsp;</td></tr>
+      <tr><td style="padding:6px;border:1px solid #ccc;font-weight:600">Motif de l'écart</td><td style="padding:6px;border:1px solid #ccc;height:32px">&nbsp;</td></tr>
     </table>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
       <tr>
@@ -8654,9 +8654,9 @@ function imprimerFicheOuverture() {
   const heureOuv = parts.slice(1).join(' ') || '';
   const html = `<div style="font-family:Arial,system-ui,sans-serif;font-size:11px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto;padding:0">
     <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
-      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa SARL</div>
-      <div style="font-size:12px;font-weight:700;margin-top:2px">FICHE DE FOND DE CAISSE</div>
-      <div style="font-size:10px;color:#333;margin-top:2px">Ouverture de Session</div>
+      <div style="font-size:16px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
+      <div style="font-size:12px;font-weight:700;margin-top:2px">Fiche de Fond de Caisse</div>
+      <div style="font-size:10px;color:#333;margin-top:2px">N° RCCM CI-TDI-01-2026-B12-00307</div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
       <tr><td style="padding:5px 6px;border:1px solid #ccc;font-weight:600;width:45%">Date</td><td style="padding:5px 6px;border:1px solid #ccc">${dateOuv}</td></tr>
@@ -8672,7 +8672,7 @@ function imprimerFicheOuverture() {
         <th style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-weight:600">Nombre</th>
         <th style="padding:4px 6px;border:1px solid #ccc;text-align:right;font-weight:600">Montant</th>
       </tr>
-      ${['10 000','5 000','2 000','1 000','500','200','100','50','25','10','5'].map(c=>`<tr><td style="padding:5px 6px;border:1px solid #ccc">${c} FCFA</td><td style="padding:5px 6px;border:1px solid #ccc;text-align:center">&nbsp;</td><td style="padding:5px 6px;border:1px solid #ccc;text-align:right">&nbsp;</td></tr>`).join('')}
+      ${['10 000 FCFA','5 000 FCFA','2 000 FCFA','1 000 FCFA','Pièces'].map(c=>`<tr><td style="padding:6px 6px;border:1px solid #ccc">${c}</td><td style="padding:6px 6px;border:1px solid #ccc;text-align:center">&nbsp;</td><td style="padding:6px 6px;border:1px solid #ccc;text-align:right">&nbsp;</td></tr>`).join('')}
       <tr style="background:#f5f5f5"><td style="padding:5px 6px;border:1px solid #999;font-weight:700">TOTAL</td><td style="padding:5px 6px;border:1px solid #999"></td><td style="padding:5px 6px;border:1px solid #999;text-align:right;font-weight:700">${posF(s.fondsCaisse||0)}</td></tr>
     </table>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
