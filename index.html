@@ -2324,7 +2324,7 @@
           <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
             <div class="form-group" style="margin:0"><label>Canal</label>
               <select class="form-control" id="rlf-canal" onchange="renderReleves()">
-                <option value="">Tous les canaux</option><option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Espèces</option>
+                <option value="">Tous les canaux</option><option>Orange Money</option><option>MTN MoMo</option><option>Wave</option><option>Moov Money</option><option>Espèces</option>
               </select>
             </div>
             <div class="form-group" style="margin:0"><label>Du</label><input type="date" class="form-control" id="rlf-debut" onchange="renderReleves()"></div>
@@ -11194,8 +11194,9 @@ const CLASSES_OHADA = {
 
 const PLAN_COMPTABLE_OHADA = [
   // CLASSE 1 — Capitaux et ressources durables
-  { numero_compte: '101', intitule_compte: 'Capital social', classe: '1', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '102', intitule_compte: 'Capital personnel', classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '101',   intitule_compte: 'Capital social',    classe: '1', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '10100', intitule_compte: 'Capital social',    classe: '1', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '102',   intitule_compte: 'Capital personnel', classe: '1', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '1301', intitule_compte: 'Bénéfice', classe: '1', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '1309', intitule_compte: 'Perte', classe: '1', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '162', intitule_compte: 'Emprunts établissements de crédit', classe: '1', actif: true, date_creation: '2026-06-14' },
@@ -11240,11 +11241,16 @@ const PLAN_COMPTABLE_OHADA = [
   { numero_compte: '5314', intitule_compte: 'Moov Money', classe: '5', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '5315', intitule_compte: 'Djamo', classe: '5', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '5316', intitule_compte: 'Wave Business', classe: '5', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '571', intitule_compte: 'Caisse Générale', classe: '5', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '585', intitule_compte: 'Virements internes', classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '571',   intitule_compte: 'Caisse Générale',          classe: '5', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '57100', intitule_compte: 'Caisse espèces',           classe: '5', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '57200', intitule_compte: 'Caisse Mobile Money',      classe: '5', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '51200', intitule_compte: 'Compte Mobile Money',      classe: '5', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '585',   intitule_compte: 'Virements internes',       classe: '5', actif: true, date_creation: '2026-06-14' },
   // CLASSE 6 — Charges
-  { numero_compte: '601', intitule_compte: 'Achats marchandises', classe: '6', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '622', intitule_compte: 'Loyers', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '601',   intitule_compte: 'Achats marchandises',      classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '60100', intitule_compte: 'Achats marchandises',      classe: '6', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '622',   intitule_compte: 'Loyers',                   classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '62200', intitule_compte: 'Loyers et charges loc.',   classe: '6', actif: true, date_creation: '2026-08-22' },
   { numero_compte: '624', intitule_compte: 'Entretien', classe: '6', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '625', intitule_compte: 'Assurances', classe: '6', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '631', intitule_compte: 'Eau', classe: '6', actif: true, date_creation: '2026-06-14' },
@@ -11253,12 +11259,15 @@ const PLAN_COMPTABLE_OHADA = [
   { numero_compte: '634', intitule_compte: 'Carburant', classe: '6', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '635', intitule_compte: 'Frais bancaires', classe: '6', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '641', intitule_compte: 'Impôts et taxes', classe: '6', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '661', intitule_compte: 'Salaires', classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '661',   intitule_compte: 'Salaires',                      classe: '6', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '66100', intitule_compte: 'Rémunérations du personnel',    classe: '6', actif: true, date_creation: '2026-08-22' },
   { numero_compte: '664', intitule_compte: 'Charges CNPS', classe: '6', actif: true, date_creation: '2026-06-14' },
   { numero_compte: '68', intitule_compte: 'Dotations aux amortissements', classe: '6', actif: true, date_creation: '2026-06-14' },
   // CLASSE 7 — Produits
-  { numero_compte: '701', intitule_compte: 'Ventes marchandises', classe: '7', actif: true, date_creation: '2026-06-14' },
-  { numero_compte: '707', intitule_compte: 'Produits accessoires', classe: '7', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '701',   intitule_compte: 'Ventes marchandises',             classe: '7', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '70100', intitule_compte: 'Ventes marchandises',             classe: '7', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '707',   intitule_compte: 'Produits accessoires',            classe: '7', actif: true, date_creation: '2026-06-14' },
+  { numero_compte: '70600', intitule_compte: 'Produits activités Mobile Money', classe: '7', actif: true, date_creation: '2026-08-22' },
   { numero_compte: '77', intitule_compte: 'Produits financiers', classe: '7', actif: true, date_creation: '2026-06-14' }
 ];
 
@@ -11654,7 +11663,7 @@ function renderMMComptaChart() {
   let cursorMM = new Date(DEBUT_MM);
   while (cursorMM <= finMMRef) {
     moisKeys.push(cursorMM.getFullYear() + '-' + String(cursorMM.getMonth()+1).padStart(2,'0'));
-    moisLbls.push(cursorMM.toLocaleDateString('fr',{month:'short'}) + ' ' + String(cursorMM.getFullYear()).slice(2));
+    moisLbls.push(cursorMM.toLocaleDateString('fr-FR',{month:'short'}) + ' ' + String(cursorMM.getFullYear()).slice(2));
     cursorMM.setMonth(cursorMM.getMonth() + 1);
   }
   const data = MM_OP.map(op => ({
@@ -11734,7 +11743,7 @@ function renderTableauBordCompta() {
   let cursorGraph = new Date(DEBUT_GRAPH);
   while (cursorGraph <= finGraphRef) {
     const key = cursorGraph.getFullYear() + '-' + String(cursorGraph.getMonth()+1).padStart(2,'0');
-    const lbl = cursorGraph.toLocaleDateString('fr',{month:'short'}) + ' ' + String(cursorGraph.getFullYear()).slice(2);
+    const lbl = cursorGraph.toLocaleDateString('fr-FR',{month:'short'}) + ' ' + String(cursorGraph.getFullYear()).slice(2);
     const m = ecritures.filter(e => (e.date||'').startsWith(key));
     const p = _comptaCalcClasse(m,'7'); const c = _comptaCalcClasse(m,'6');
     moisData.push({ lbl, produits: p.credit - p.debit, charges: c.debit - c.credit });
@@ -11936,50 +11945,50 @@ const MODELES = {
   vente_especes: {
     journal: 'VE', libelle: 'Vente comptoir du jour — Espèces',
     lignes: [
-      { compte: '571',  debit: true  },
-      { compte: '701',  debit: false }
+      { compte: '57100', debit: true  },
+      { compte: '70100', debit: false }
     ]
   },
   vente_mm: {
     journal: 'VE', libelle: 'Vente comptoir du jour — Mobile Money',
     lignes: [
-      { compte: '5311', debit: true  },
-      { compte: '701',  debit: false }
+      { compte: '51200', debit: true  },
+      { compte: '70100', debit: false }
     ]
   },
   achat_fournisseur: {
     journal: 'AC', libelle: 'Achat marchandises fournisseur',
     lignes: [
-      { compte: '601',  debit: true  },
-      { compte: '571',  debit: false }
+      { compte: '60100', debit: true  },
+      { compte: '57100', debit: false }
     ]
   },
   paiement_loyer: {
     journal: 'CA', libelle: 'Paiement loyer mensuel boutique',
     lignes: [
-      { compte: '622',  debit: true  },
-      { compte: '571',  debit: false }
+      { compte: '62200', debit: true  },
+      { compte: '57100', debit: false }
     ]
   },
   salaire: {
     journal: 'OD', libelle: 'Paiement salaire — [Nom employé]',
     lignes: [
-      { compte: '661',  debit: true  },
-      { compte: '571',  debit: false }
+      { compte: '66100', debit: true  },
+      { compte: '57100', debit: false }
     ]
   },
   commission_mm: {
     journal: 'VE', libelle: 'Commissions Mobile Money du jour',
     lignes: [
-      { compte: '5311', debit: true  },
-      { compte: '707',  debit: false }
+      { compte: '57200', debit: true  },
+      { compte: '70600', debit: false }
     ]
   },
   depot_caisse: {
     journal: 'CA', libelle: 'Dépôt fonds ouverture caisse',
     lignes: [
-      { compte: '571',  debit: true  },
-      { compte: '101',  debit: false }
+      { compte: '57100', debit: true  },
+      { compte: '10100', debit: false }
     ]
   }
 };
