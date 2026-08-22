@@ -179,6 +179,7 @@ let current        = 0;
 let activeSlide    = 'A';
 let imgTimer       = null;
 let emergencyMode  = false;
+let emergencyTimer = null;
 let isPaused       = false;
 
 // ═══ HEARTBEAT — statut live des écrans ═══
@@ -351,6 +352,7 @@ setInterval(() => {
 function showEmergency(data) {
   emergencyMode = true;
   clearTimeout(imgTimer);
+  clearTimeout(emergencyTimer);
   const overlay = document.getElementById('emergency-overlay');
   overlay.style.display    = 'flex';
   overlay.style.background = data.backgroundColor || '#DC2626';
@@ -359,10 +361,16 @@ function showEmergency(data) {
   } else {
     overlay.innerHTML = `<div style="color:${data.textColor||'#fff'};font-size:clamp(24px,5vw,72px);font-weight:700;text-align:center;padding:40px;line-height:1.3">${data.message}</div>`;
   }
+  if (data.expiresAt) {
+    const ms = data.expiresAt.toDate().getTime() - Date.now();
+    if (ms > 0) emergencyTimer = setTimeout(hideEmergency, ms);
+  }
 }
 
 function hideEmergency() {
   emergencyMode = false;
+  clearTimeout(emergencyTimer);
+  emergencyTimer = null;
   document.getElementById('emergency-overlay').style.display = 'none';
   if (playlist.length > 0) showItem(current);
 }
