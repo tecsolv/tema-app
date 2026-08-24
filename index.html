@@ -421,6 +421,8 @@
   @media print {
     body > *:not(#receipt-print-area) { display: none !important; }
     #receipt-print-area { display: block !important; }
+    #receipt-print-area * { color: inherit; }
+    #receipt-print-area .barcode-label { color: #000 !important; }
     .main { margin-left: 0; }
     .content { padding: 0; }
   }
@@ -7900,8 +7902,8 @@ function afficherTicketPOS(data) {
     </div>
     <div style="text-align:center;margin-top:6px">
       <svg class="receipt-barcode" style="max-width:100%"></svg>
-      <div style="font-size:10px;margin-top:4px;letter-spacing:.5px">${data.ticketNum}</div>
-      <div style="font-size:9px;color:#666;margin-top:2px">TeMa Smart Caisse v2.0</div>
+      <div style="font-size:11px;margin-top:4px;letter-spacing:.5px;color:#000 !important;font-family:'Courier New',monospace">${data.ticketNum}</div>
+      <div style="font-size:9px;color:#555;margin-top:2px;font-family:'Courier New',monospace">TeMa Smart Caisse v2.0</div>
     </div>
   </div>`;
 
@@ -7913,7 +7915,7 @@ function afficherTicketPOS(data) {
   requestAnimationFrame(() => {
     if (typeof JsBarcode !== 'undefined') {
       document.querySelectorAll('.receipt-barcode').forEach(el => {
-        try { JsBarcode(el, data.barcodeValue || data.ticketNum, {format:'CODE128', width:1.8, height:60, displayValue:false, margin:6}); } catch(e) { console.warn('Barcode:', e); }
+        try { JsBarcode(el, data.barcodeValue || data.ticketNum, {format:'CODE128', width:1.4, height:60, displayValue:false, margin:6}); } catch(e) { console.warn('Barcode:', e); }
       });
     }
   });
