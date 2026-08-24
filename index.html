@@ -7116,6 +7116,7 @@ async function confirmerVente() {
   const montantRemis=parseFloat(document.getElementById('montant-remis').value)||total;
   const monnaie=posModePayActuel==='Espèces'?montantRemis-total:0;
   const ticketNum=document.getElementById('ticket-num').textContent;
+  const barcodeValue=generateBarcodeValue(ticketNum);
   const heure=posNow(); const dateDuJour=today();
   const btn=document.getElementById('btn-confirm-pay');
   btn.disabled=true; btn.textContent='⏳ Enregistrement...';
@@ -7129,7 +7130,7 @@ async function confirmerVente() {
         prixUnitaire:item.prix, montant:item.total, modePaiement:posModePayActuel,
         client:posClientActuel?.nom||'', clientId:posClientActuel?.id||'',
         note:`Ticket ${ticketNum}${remiseFCFA?` — Remise: ${posF(remiseFCFA)}`:''}`,
-        source:item.serviceType?'service_pos':'pos', ticketNum,
+        source:item.serviceType?'service_pos':'pos', ticketNum, barcodeValue,
         sessionId:posSessionActive?.id||'',
         montantRemis:posModePayActuel==='Espèces'?montantRemis:total,
         monnaie:Math.max(0,monnaie), remise:remiseFCFA,
@@ -7178,7 +7179,7 @@ async function confirmerVente() {
       genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
     });
     closePosModal('modal-payment');
-    afficherTicketPOS({ticketNum, items:[...posPanier], sous, remiseFCFA, total, monnaie, montantRemis, modePaiement:posModePayActuel, client:posClientActuel, heure, date:dateDuJour, loyalty:loyaltyReceipt});
+    afficherTicketPOS({ticketNum, barcodeValue, items:[...posPanier], sous, remiseFCFA, total, monnaie, montantRemis, modePaiement:posModePayActuel, client:posClientActuel, heure, date:dateDuJour, loyalty:loyaltyReceipt});
     showToast('✅ Vente enregistrée — ' + posF(total));
   } catch(err) { showToast('Erreur : '+err.message,'error'); btn.disabled=false; btn.textContent='✅ Valider la vente'; }
 }
@@ -7819,6 +7820,22 @@ async function saveStoreConfig() {
 
 // ─────────────────────────────────────────────────────────────
 
+function generateBarcodeValue(ticketNum) {
+  const now = new Date();
+  const dateStr = now.getFullYear().toString()
+    + String(now.getMonth()+1).padStart(2,'0')
+    + String(now.getDate()).padStart(2,'0');
+  const seqNum = ticketNum.split('-').pop().padStart(4,'0');
+  const raw = ticketNum + dateStr + 'TEMAYMK0307';
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  const shortHash = Math.abs(hash).toString(16).toUpperCase().padStart(8,'0').substring(0,8);
+  return `TMA-${dateStr}-${seqNum}-${shortHash}`;
+}
+
 function afficherTicketPOS(data) {
   // Bug 2 : sanitiser les deux-points dans les noms d'articles
   const lignes = data.items.map(i => {
@@ -7883,6 +7900,8 @@ function afficherTicketPOS(data) {
     </div>
     <div style="text-align:center;margin-top:6px">
       <svg class="receipt-barcode" style="max-width:100%"></svg>
+      <div style="font-size:10px;margin-top:4px;letter-spacing:.5px">${data.ticketNum}</div>
+      <div style="font-size:9px;color:#666;margin-top:2px">TeMa Smart Caisse v2.0</div>
     </div>
   </div>`;
 
@@ -7894,7 +7913,7 @@ function afficherTicketPOS(data) {
   requestAnimationFrame(() => {
     if (typeof JsBarcode !== 'undefined') {
       document.querySelectorAll('.receipt-barcode').forEach(el => {
-        try { JsBarcode(el, data.ticketNum, {format:'CODE128', width:1.5, height:50, displayValue:false, margin:4}); } catch(e) { console.warn('Barcode:', e); }
+        try { JsBarcode(el, data.barcodeValue || data.ticketNum, {format:'CODE128', width:1.8, height:60, displayValue:false, margin:6}); } catch(e) { console.warn('Barcode:', e); }
       });
     }
   });
