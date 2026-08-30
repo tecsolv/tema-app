@@ -8686,8 +8686,7 @@ function genererRapportZ() {
   const pad = n => String(n).padStart(2,'0');
   const dateFerm = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
   const heureFerm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const html = `<style>@page{size:A5 portrait;margin:7mm}body{margin:0}</style>
-<div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
+  const html = `<div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
   <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:3px">
     <img src="assets/logo_tema_sidebar_v2.png" style="height:22px;filter:grayscale(1);margin-bottom:1px" onerror="this.style.display='none'">
     <div style="font-size:12px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
@@ -8762,6 +8761,9 @@ function genererRapportZ() {
   </table>
   <div style="text-align:center;margin-top:3px;font-size:8px;color:#555;border-top:1px solid #ccc;padding-top:3px">TeMa SARL — Yamoussoukro, quartier Ebenezer fin goudron</div>
 </div>`;
+  let _ps = document.getElementById('_tema_page_sz');
+  if (!_ps) { _ps = document.createElement('style'); _ps.id = '_tema_page_sz'; document.head.appendChild(_ps); }
+  _ps.textContent = '@page{size:A5 portrait;margin:7mm}';
   document.getElementById('receipt-print-area').innerHTML = html;
   window.print();
 }
@@ -8777,8 +8779,7 @@ function imprimerFicheOuverture() {
   const rowB = v => `<tr><td style="padding:4px 5px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:4px 5px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
   const emptyRow = `<tr><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td></tr>`;
   const thBil = `<tr style="background:#ddd"><th style="padding:3px 5px;border:1px solid #000;text-align:left">Coupure</th><th style="padding:3px 5px;border:1px solid #000;text-align:center;width:22%">Q'té</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:28%">Total</th></tr>`;
-  const html = `<style>@page{size:A5 portrait;margin:8mm}body{margin:0}</style>
-<div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
+  const html = `<div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
   <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:5px;margin-bottom:5px">
     <img src="assets/logo_tema_sidebar_v2.png" style="height:26px;filter:grayscale(1);margin-bottom:2px" onerror="this.style.display='none'">
     <div style="font-size:13px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
@@ -8830,6 +8831,9 @@ function imprimerFicheOuverture() {
   </table>
   <div style="text-align:center;margin-top:5px;font-size:8px;color:#555;border-top:1px solid #ccc;padding-top:4px">TeMa SARL — Yamoussoukro, quartier Ebenezer fin goudron</div>
 </div>`;
+  let _ps = document.getElementById('_tema_page_sz');
+  if (!_ps) { _ps = document.createElement('style'); _ps.id = '_tema_page_sz'; document.head.appendChild(_ps); }
+  _ps.textContent = '@page{size:A5 portrait;margin:7mm}';
   document.getElementById('receipt-print-area').innerHTML = html;
   window.print();
 }
