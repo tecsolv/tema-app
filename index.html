@@ -8679,75 +8679,88 @@ function genererRapportZ() {
     .filter(v => v.sessionId === s.id && v.modePaiement === 'Espèces')
     .reduce((sum, v) => sum + (v.montant || 0), 0);
   const totalTheorique = fondsOuverture + ventesEspeces;
-  const coupuresBillets = [10000, 5000, 2000, 1000, 500];
-  const coupuresPieces = [500, 200, 100, 50, 25, 10, 5];
-  const rowB = v => `<tr><td style="padding:4px 5px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:4px 5px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">${v.toLocaleString('fr-FR')}</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
+  const rowB = v => `<tr><td style="padding:2px 4px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:2px 4px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
+  const emptyRow = `<tr><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td></tr>`;
+  const thBil = `<tr style="background:#ddd"><th style="padding:2px 4px;border:1px solid #000;text-align:left">Coupure</th><th style="padding:2px 4px;border:1px solid #000;text-align:center;width:22%">Q'té</th><th style="padding:2px 4px;border:1px solid #000;text-align:right;width:28%">Total</th></tr>`;
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
   const dateFerm = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
   const heureFerm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const html = `<style>@page{size:A5 portrait;margin:8mm}body{margin:0}</style>
+  const html = `<style>@page{size:A5 portrait;margin:7mm}body{margin:0}</style>
 <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
-  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:5px;margin-bottom:5px">
-    <img src="assets/logo_tema_sidebar_v2.png" style="height:26px;filter:grayscale(1);margin-bottom:2px" onerror="this.style.display='none'">
-    <div style="font-size:13px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
-    <div style="font-size:11px;font-weight:700;margin-top:2px">FICHE DE FERMETURE DE CAISSE</div>
-    <div style="font-size:9px;margin-top:1px">N° RCCM CI-TDI-01-2026-B12-00307</div>
+  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:3px">
+    <img src="assets/logo_tema_sidebar_v2.png" style="height:22px;filter:grayscale(1);margin-bottom:1px" onerror="this.style.display='none'">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px">TeMa Boutique</div>
+    <div style="font-size:10px;font-weight:700;margin-top:1px">FICHE DE FERMETURE DE CAISSE</div>
+    <div style="font-size:8px;margin-top:1px">N° RCCM CI-TDI-01-2026-B12-00307</div>
   </div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
+  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:3px">
     <tr>
-      <td style="padding:3px 5px;border:1px solid #000;font-weight:600;width:30%">Date</td>
-      <td style="padding:3px 5px;border:1px solid #000;width:20%">${dateFerm}</td>
-      <td style="padding:3px 5px;border:1px solid #000;font-weight:600;width:22%">Heure</td>
-      <td style="padding:3px 5px;border:1px solid #000;width:28%">${heureFerm}</td>
+      <td style="padding:2px 4px;border:1px solid #000;font-weight:600;width:30%">Date</td>
+      <td style="padding:2px 4px;border:1px solid #000;width:20%">${dateFerm}</td>
+      <td style="padding:2px 4px;border:1px solid #000;font-weight:600;width:22%">Heure</td>
+      <td style="padding:2px 4px;border:1px solid #000;width:28%">${heureFerm}</td>
     </tr>
     <tr>
-      <td style="padding:3px 5px;border:1px solid #000;font-weight:600">Caisse N°</td>
-      <td style="padding:3px 5px;border:1px solid #000">${s.caisseNom||'—'}</td>
-      <td style="padding:3px 5px;border:1px solid #000;font-weight:600">Caissier(ère)</td>
-      <td style="padding:3px 5px;border:1px solid #000">${caissierNom}</td>
+      <td style="padding:2px 4px;border:1px solid #000;font-weight:600">Caisse N°</td>
+      <td style="padding:2px 4px;border:1px solid #000">${s.caisseNom||'—'}</td>
+      <td style="padding:2px 4px;border:1px solid #000;font-weight:600">Caissier(ère)</td>
+      <td style="padding:2px 4px;border:1px solid #000">${caissierNom}</td>
     </tr>
   </table>
-  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[A] BILLETAGE — COMPTAGE PHYSIQUE À LA FERMETURE</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
-    <tr style="background:#ddd"><th style="padding:3px 5px;border:1px solid #000;text-align:left;width:35%">Coupure</th><th style="padding:3px 5px;border:1px solid #000;text-align:center;width:18%">Quantité</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:22%">Val. unit.</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:25%">Total</th></tr>
-    <tr><td colspan="4" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— BILLETS —</td></tr>
-    ${coupuresBillets.map(v => rowB(v)).join('')}
-    <tr><td colspan="4" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— PIÈCES —</td></tr>
-    ${coupuresPieces.map(v => rowB(v)).join('')}
+  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:2px 4px;margin-bottom:0">[A] BILLETAGE — COMPTAGE PHYSIQUE À LA FERMETURE</div>
+  <div style="display:flex;margin-bottom:3px">
+    <table style="width:50%;border-collapse:collapse;font-size:10px">
+      ${thBil}
+      <tr><td colspan="3" style="padding:2px 4px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— BILLETS —</td></tr>
+      ${[10000,5000,2000,1000,500].map(rowB).join('')}
+      ${emptyRow}${emptyRow}
+    </table>
+    <table style="width:50%;border-collapse:collapse;font-size:10px;margin-left:-1px">
+      ${thBil}
+      <tr><td colspan="3" style="padding:2px 4px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— PIÈCES —</td></tr>
+      ${[500,200,100,50,25,10,5].map(rowB).join('')}
+    </table>
+  </div>
+  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:2px 4px;margin-bottom:0">[B] TOTAL PHYSIQUE</div>
+  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:3px">
+    <tr><td style="padding:3px 4px;border:1px solid #000;font-weight:700;width:60%">TOTAL PHYSIQUE COMPTÉ (FCFA)</td><td style="padding:3px 4px;border:1px solid #000;min-width:60px">&nbsp;</td></tr>
   </table>
-  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[B] TOTAL PHYSIQUE</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
-    <tr><td style="padding:5px 5px;border:1px solid #000;font-weight:700;width:60%">TOTAL PHYSIQUE COMPTÉ (FCFA)</td><td style="padding:5px 5px;border:1px solid #000;min-width:60px">&nbsp;</td></tr>
+  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:2px 4px;margin-bottom:0">[C] DÉCAISSEMENTS / SORTIES</div>
+  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:3px">
+    <tr style="background:#ddd"><th style="padding:2px 4px;border:1px solid #000;text-align:left;width:55%">Motif</th><th style="padding:2px 4px;border:1px solid #000;text-align:right;width:25%">Montant (FCFA)</th><th style="padding:2px 4px;border:1px solid #000;text-align:center;width:20%">Visa</th></tr>
+    <tr><td style="padding:3px 4px;border:1px solid #000;height:10px">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td></tr>
+    <tr><td style="padding:3px 4px;border:1px solid #000;height:10px">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td></tr>
+    <tr><td style="padding:3px 4px;border:1px solid #000;height:10px">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td><td style="padding:3px 4px;border:1px solid #000">&nbsp;</td></tr>
+    <tr style="background:#e8e8e8"><td colspan="2" style="padding:2px 4px;border:1px solid #000;font-weight:700;text-align:right">TOTAL DÉCAISSEMENTS</td><td style="padding:2px 4px;border:1px solid #000;font-weight:700;text-align:right">&nbsp;</td></tr>
   </table>
-  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[C] DÉCAISSEMENTS / SORTIES</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
-    <tr style="background:#ddd"><th style="padding:3px 5px;border:1px solid #000;text-align:left;width:55%">Motif</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:25%">Montant (FCFA)</th><th style="padding:3px 5px;border:1px solid #000;text-align:center;width:20%">Visa</th></tr>
-    <tr><td style="padding:5px;border:1px solid #000;height:14px">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td></tr>
-    <tr><td style="padding:5px;border:1px solid #000;height:14px">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td></tr>
-    <tr><td style="padding:5px;border:1px solid #000;height:14px">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td><td style="padding:5px;border:1px solid #000">&nbsp;</td></tr>
-    <tr style="background:#e8e8e8"><td colspan="2" style="padding:4px 5px;border:1px solid #000;font-weight:700;text-align:right">TOTAL DÉCAISSEMENTS</td><td style="padding:4px 5px;border:1px solid #000;font-weight:700;text-align:right">&nbsp;</td></tr>
-  </table>
-  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[D] RÉCONCILIATION</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
-    <tr><td style="padding:4px 5px;border:1px solid #000;width:60%">Fond d'ouverture</td><td style="padding:4px 5px;border:1px solid #000;text-align:right;font-weight:600">${fondsOuverture.toLocaleString('fr-FR')} FCFA</td></tr>
-    <tr><td style="padding:4px 5px;border:1px solid #000">+ Ventes espèces</td><td style="padding:4px 5px;border:1px solid #000;text-align:right;font-weight:600">${ventesEspeces.toLocaleString('fr-FR')} FCFA</td></tr>
-    <tr><td style="padding:4px 5px;border:1px solid #000">− Décaissements</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">&nbsp;</td></tr>
-    <tr style="background:#e8e8e8"><td style="padding:4px 5px;border:1px solid #000;font-weight:700">= TOTAL THÉORIQUE</td><td style="padding:4px 5px;border:1px solid #000;text-align:right;font-weight:700">${totalTheorique.toLocaleString('fr-FR')} FCFA</td></tr>
-  </table>
-  <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[E] ÉCART CONSTATÉ</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px">
-    <tr><td style="padding:4px 5px;border:1px solid #000;width:50%">Écart (physique − théorique)</td><td style="padding:4px 5px;border:1px solid #000;min-width:60px">&nbsp;</td></tr>
-    <tr><td style="padding:4px 5px;border:1px solid #000">Situation</td><td style="padding:4px 5px;border:1px solid #000">☐ Juste &nbsp;&nbsp; ☐ Surplus &nbsp;&nbsp; ☐ Manquant</td></tr>
-    <tr><td style="padding:4px 5px;border:1px solid #000">Motif</td><td style="padding:4px 5px;border:1px solid #000;height:20px">&nbsp;</td></tr>
-  </table>
+  <div style="display:flex;margin-bottom:4px">
+    <div style="width:50%">
+      <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:2px 4px">[D] RÉCONCILIATION</div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <tr><td style="padding:2px 4px;border:1px solid #000">Fond d'ouverture</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:600">${fondsOuverture.toLocaleString('fr-FR')} FCFA</td></tr>
+        <tr><td style="padding:2px 4px;border:1px solid #000">+ Ventes espèces</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:600">${ventesEspeces.toLocaleString('fr-FR')} FCFA</td></tr>
+        <tr><td style="padding:2px 4px;border:1px solid #000">− Décaissements</td><td style="padding:2px 4px;border:1px solid #000;text-align:right">&nbsp;</td></tr>
+        <tr style="background:#e8e8e8"><td style="padding:2px 4px;border:1px solid #000;font-weight:700">= TOTAL THÉORIQUE</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:700">${totalTheorique.toLocaleString('fr-FR')} FCFA</td></tr>
+      </table>
+    </div>
+    <div style="width:50%;margin-left:-1px">
+      <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:2px 4px">[E] ÉCART CONSTATÉ</div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <tr><td style="padding:2px 4px;border:1px solid #000;width:50%">Écart (physique − théorique)</td><td style="padding:2px 4px;border:1px solid #000;min-width:50px">&nbsp;</td></tr>
+        <tr><td style="padding:2px 4px;border:1px solid #000">Situation</td><td style="padding:2px 4px;border:1px solid #000;font-size:9px">☐ Juste &nbsp; ☐ Surplus &nbsp; ☐ Manquant</td></tr>
+        <tr><td style="padding:2px 4px;border:1px solid #000">Motif</td><td style="padding:2px 4px;border:1px solid #000;height:14px">&nbsp;</td></tr>
+        <tr><td style="padding:2px 4px;border:1px solid #000" colspan="2">&nbsp;</td></tr>
+      </table>
+    </div>
+  </div>
   <table style="width:100%;border-collapse:collapse;font-size:10px">
     <tr>
-      <td style="width:50%;padding:5px;border:1px solid #000;text-align:center"><div style="font-weight:700;margin-bottom:26px">Signature Caissier(ère)</div><div style="font-size:9px">${caissierNom}</div></td>
-      <td style="width:50%;padding:5px;border:1px solid #000;text-align:center"><div style="font-weight:700;margin-bottom:26px">Signature Gérant / Responsable</div><div style="font-size:9px">&nbsp;</div></td>
+      <td style="width:50%;padding:3px;border:1px solid #000;text-align:center"><div style="font-weight:700;margin-bottom:16px">Signature Caissier(ère)</div><div style="font-size:9px">${caissierNom}</div></td>
+      <td style="width:50%;padding:3px;border:1px solid #000;text-align:center"><div style="font-weight:700;margin-bottom:16px">Signature Gérant / Responsable</div><div style="font-size:9px">&nbsp;</div></td>
     </tr>
   </table>
-  <div style="text-align:center;margin-top:5px;font-size:8px;color:#555;border-top:1px solid #ccc;padding-top:4px">TeMa SARL — Yamoussoukro, quartier Ebenezer fin goudron</div>
+  <div style="text-align:center;margin-top:3px;font-size:8px;color:#555;border-top:1px solid #ccc;padding-top:3px">TeMa SARL — Yamoussoukro, quartier Ebenezer fin goudron</div>
 </div>`;
   document.getElementById('receipt-print-area').innerHTML = html;
   window.print();
@@ -8761,9 +8774,9 @@ function imprimerFicheOuverture() {
   const heureOuv = parts.slice(1).join(' ') || '';
   const caissierNom = s.utilisateurNom || currentUser?.label || '—';
   const fondsSysteme = s.fondsCaisse || 0;
-  const coupuresBillets = [10000, 5000, 2000, 1000, 500];
-  const coupuresPieces = [500, 200, 100, 50, 25, 10, 5];
-  const rowB = v => `<tr><td style="padding:4px 5px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:4px 5px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">${v.toLocaleString('fr-FR')}</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
+  const rowB = v => `<tr><td style="padding:4px 5px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:4px 5px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
+  const emptyRow = `<tr><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td><td style="padding:4px 5px;border:1px solid #000">&nbsp;</td></tr>`;
+  const thBil = `<tr style="background:#ddd"><th style="padding:3px 5px;border:1px solid #000;text-align:left">Coupure</th><th style="padding:3px 5px;border:1px solid #000;text-align:center;width:22%">Q'té</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:28%">Total</th></tr>`;
   const html = `<style>@page{size:A5 portrait;margin:8mm}body{margin:0}</style>
 <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#000;background:#fff;width:148mm;max-width:148mm;margin:auto">
   <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:5px;margin-bottom:5px">
@@ -8791,13 +8804,19 @@ function imprimerFicheOuverture() {
     </tr>
   </table>
   <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[A] BILLETAGE — COMPTAGE PHYSIQUE À L'OUVERTURE</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px">
-    <tr style="background:#ddd"><th style="padding:3px 5px;border:1px solid #000;text-align:left;width:35%">Coupure</th><th style="padding:3px 5px;border:1px solid #000;text-align:center;width:18%">Quantité</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:22%">Val. unit.</th><th style="padding:3px 5px;border:1px solid #000;text-align:right;width:25%">Total</th></tr>
-    <tr><td colspan="4" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— BILLETS —</td></tr>
-    ${coupuresBillets.map(v => rowB(v)).join('')}
-    <tr><td colspan="4" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— PIÈCES —</td></tr>
-    ${coupuresPieces.map(v => rowB(v)).join('')}
-  </table>
+  <div style="display:flex;margin-bottom:5px">
+    <table style="width:50%;border-collapse:collapse;font-size:10px">
+      ${thBil}
+      <tr><td colspan="3" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— BILLETS —</td></tr>
+      ${[10000,5000,2000,1000,500].map(rowB).join('')}
+      ${emptyRow}${emptyRow}
+    </table>
+    <table style="width:50%;border-collapse:collapse;font-size:10px;margin-left:-1px">
+      ${thBil}
+      <tr><td colspan="3" style="padding:2px 5px;border:1px solid #000;background:#f0f0f0;font-size:9px;font-weight:600">— PIÈCES —</td></tr>
+      ${[500,200,100,50,25,10,5].map(rowB).join('')}
+    </table>
+  </div>
   <div style="background:#000;color:#fff;font-weight:700;font-size:10px;padding:3px 5px;margin-bottom:0">[B] RÉCAPITULATIF</div>
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px">
     <tr><td style="padding:5px 5px;border:1px solid #000;font-weight:700;width:60%">TOTAL FOND DE CAISSE (compté)</td><td style="padding:5px 5px;border:1px solid #000;min-width:60px">&nbsp;</td></tr>
