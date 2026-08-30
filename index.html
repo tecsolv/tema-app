@@ -2288,6 +2288,7 @@
         <button class="btn btn-sm caisse-tab-btn active" id="rappro-tab-btn-releves" onclick="rapprochementNavigate('releves')" style="flex:1;min-width:130px">📲 Relevés Mobile Money</button>
         <button class="btn btn-sm caisse-tab-btn" id="rappro-tab-btn-rapprochement" onclick="rapprochementNavigate('rapprochement')" style="flex:1;min-width:130px">🔍 Rapprochement</button>
         <button class="btn btn-sm caisse-tab-btn" id="rappro-tab-btn-historique" onclick="rapprochementNavigate('historique')" style="flex:1;min-width:130px">🕘 Historique</button>
+        <button class="btn btn-sm caisse-tab-btn" id="rappro-tab-btn-versements" onclick="rapprochementNavigate('versements')" style="flex:1;min-width:130px">🏦 Versements banque</button>
       </div>
 
       <!-- ONGLET 1 : RELEVÉS MOBILE MONEY -->
@@ -2380,6 +2381,42 @@
             <table><thead><tr>
               <th>Date validation</th><th>Période</th><th>Canal</th><th style="text-align:right">Montant TeMa</th><th style="text-align:right">Montant Réel</th><th style="text-align:right">Écart</th><th>Statut</th><th>Justification</th>
             </tr></thead><tbody id="tbody-historique-rapprochements"></tbody></table>
+          </div>
+        </div>
+      </div>
+      <!-- ONGLET 4 : VERSEMENTS BANQUE -->
+      <div class="caisse-tab" id="rappro-tab-versements">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-body" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="form-group" style="margin:0;flex:1;min-width:120px">
+              <label style="font-size:11px;font-weight:600;color:var(--text-muted)">Du</label>
+              <input type="date" class="form-control" id="vb-filter-debut" onchange="renderVersementsBanque()">
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:120px">
+              <label style="font-size:11px;font-weight:600;color:var(--text-muted)">Au</label>
+              <input type="date" class="form-control" id="vb-filter-fin" onchange="renderVersementsBanque()">
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:120px">
+              <label style="font-size:11px;font-weight:600;color:var(--text-muted)">Banque</label>
+              <select class="form-control" id="vb-filter-banque" onchange="renderVersementsBanque()">
+                <option value="">Toutes</option>
+                <option value="BICICI">BICICI</option>
+                <option value="Ecobank">Ecobank</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>🏦 Versements en banque</h2></div>
+          <div class="card-body table-wrap">
+            <table><thead><tr>
+              <th>Date</th><th>Caisse</th><th>Banque</th><th>N° Bordereau</th><th>Autorisé par</th><th>Opérateur</th><th style="text-align:right">Montant (FCFA)</th><th>Statut</th>
+            </tr></thead><tbody id="tbody-versements-banque"></tbody></table>
+          </div>
+          <div class="card-body" style="border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <span style="font-size:12px;color:var(--text-muted)" id="vb-count-label"></span>
+            <span style="font-size:15px;font-weight:700;color:var(--primary)" id="vb-total-label"></span>
           </div>
         </div>
       </div>
@@ -4352,6 +4389,39 @@
       </div>
       <button type="submit" style="width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">💾 Enregistrer</button>
     </form>
+  </div>
+</div>
+
+<!-- POS MODAL: Versement en banque -->
+<div class="pos-modal-overlay" id="modal-versement-banque">
+  <div class="pos-modal-box" style="max-width:440px">
+    <button class="pos-modal-close" onclick="closePosModal('modal-versement-banque')">×</button>
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:#1a5e3a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">💵 Caisse Journalière</div>
+      <h2 style="font-size:18px;margin:0;color:#1a1e2e">🏦 Versement en banque</h2>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Montant *</label>
+      <input type="number" id="vb-montant" class="form-control" placeholder="0" min="1" style="font-size:18px;font-weight:700;text-align:right">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Banque *</label>
+      <select id="vb-banque" class="form-control">
+        <option value="">— Choisir —</option>
+        <option value="BICICI">BICICI</option>
+        <option value="Ecobank">Ecobank</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">N° Bordereau <span style="font-weight:400;font-style:italic">(optionnel)</span></label>
+      <input type="text" id="vb-bordereau" class="form-control" placeholder="Ex : BV-2026-001">
+    </div>
+    <div style="margin-bottom:18px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Autorisé par *</label>
+      <input type="text" id="vb-autorise" class="form-control" placeholder="Nom du responsable">
+    </div>
+    <button onclick="confirmerVersementBanque()" style="width:100%;padding:14px;background:#1a5e3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🏦 Valider le versement</button>
   </div>
 </div>
 
@@ -8649,6 +8719,7 @@ function renderPOSJournal() {
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn-session btn-z-report" onclick="genererRapportZ()">🖨 Fiche fermeture</button>
       <button class="btn-session btn-z-report" onclick="imprimerFicheOuverture()" style="background:#1a2537">🖨 Fiche ouverture</button>
+      <button class="btn-session" onclick="ouvrirModalVersementBanque()" style="background:#1a5e3a">🏦 Versement en banque</button>
       <button class="btn-session btn-close-session" onclick="fermerSessionCaisse()">🔴 Clôturer la caisse</button>
     </div>`:`<p style="color:var(--text-muted);margin-bottom:16px">Aucune session ouverte.</p>
     <button class="btn-session btn-open-session" onclick="document.getElementById('modal-open-session').classList.add('open')">✅ Ouvrir la Caisse</button>`;
@@ -8670,7 +8741,7 @@ function renderPOSJournal() {
     </div>`;
 }
 
-function genererRapportZ() {
+async function genererRapportZ() {
   if (!posSessionActive) return;
   const s = posSessionActive;
   const caissierNom = s.utilisateurNom || currentUser?.label || '—';
@@ -8678,7 +8749,10 @@ function genererRapportZ() {
   const ventesEspeces = ventesCaisse
     .filter(v => v.sessionId === s.id && v.modePaiement === 'Espèces')
     .reduce((sum, v) => sum + (v.montant || 0), 0);
-  const totalTheorique = fondsOuverture + ventesEspeces;
+  const depSnap = await db.collection('bank_deposits').where('sessionId', '==', s.id).get();
+  const depositsList = depSnap.docs.map(d => d.data());
+  const totalVersementsBanque = depositsList.reduce((sum, d) => sum + (d.montant || 0), 0);
+  const totalTheorique = fondsOuverture + ventesEspeces - totalVersementsBanque;
   const rowB = v => `<tr><td style="padding:2px 4px;border:1px solid #000">${v.toLocaleString('fr-FR')} FCFA</td><td style="padding:2px 4px;border:1px solid #000;text-align:center">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000;text-align:right">&nbsp;</td></tr>`;
   const emptyRow = `<tr><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td><td style="padding:2px 4px;border:1px solid #000">&nbsp;</td></tr>`;
   const thBil = `<tr style="background:#ddd"><th style="padding:2px 4px;border:1px solid #000;text-align:left">Coupure</th><th style="padding:2px 4px;border:1px solid #000;text-align:center;width:22%">Q'té</th><th style="padding:2px 4px;border:1px solid #000;text-align:right;width:28%">Total</th></tr>`;
@@ -8739,6 +8813,7 @@ function genererRapportZ() {
       <table style="width:100%;border-collapse:collapse;font-size:10px">
         <tr><td style="padding:2px 4px;border:1px solid #000">Fond d'ouverture</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:600">${fondsOuverture.toLocaleString('fr-FR')} FCFA</td></tr>
         <tr><td style="padding:2px 4px;border:1px solid #000">+ Ventes espèces</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:600">${ventesEspeces.toLocaleString('fr-FR')} FCFA</td></tr>
+        ${totalVersementsBanque > 0 ? `<tr><td style="padding:2px 4px;border:1px solid #000">− Vers. banque</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:600;color:#b91c1c">${totalVersementsBanque.toLocaleString('fr-FR')} FCFA</td></tr>` : ''}
         <tr><td style="padding:2px 4px;border:1px solid #000">− Décaissements</td><td style="padding:2px 4px;border:1px solid #000;text-align:right">&nbsp;</td></tr>
         <tr style="background:#e8e8e8"><td style="padding:2px 4px;border:1px solid #000;font-weight:700">= TOTAL THÉORIQUE</td><td style="padding:2px 4px;border:1px solid #000;text-align:right;font-weight:700">${totalTheorique.toLocaleString('fr-FR')} FCFA</td></tr>
       </table>
@@ -11480,6 +11555,8 @@ const PLAN_COMPTABLE_OHADA = [
   { numero_compte: '57100', intitule_compte: 'Caisse espèces',           classe: '5', actif: true, date_creation: '2026-08-22' },
   { numero_compte: '57200', intitule_compte: 'Caisse Mobile Money',      classe: '5', actif: true, date_creation: '2026-08-22' },
   { numero_compte: '51200', intitule_compte: 'Compte Mobile Money',      classe: '5', actif: true, date_creation: '2026-08-22' },
+  { numero_compte: '5216', intitule_compte: 'Banque BICICI',            classe: '5', actif: true, date_creation: '2026-08-30' },
+  { numero_compte: '521',  intitule_compte: 'Banques — Comptes courants', classe: '5', actif: true, date_creation: '2026-08-30' },
   { numero_compte: '585',   intitule_compte: 'Virements internes',       classe: '5', actif: true, date_creation: '2026-06-14' },
   // CLASSE 6 — Charges
   { numero_compte: '601',   intitule_compte: 'Achats marchandises',      classe: '6', actif: true, date_creation: '2026-06-14' },
@@ -11687,6 +11764,65 @@ async function genererEcritureAchat(article, montant, fournisseurNom, numPieceOv
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch (err) { console.error('Erreur génération écriture achat:', err); }
+}
+
+function ouvrirModalVersementBanque() {
+  if (!posSessionActive) return showToast('Aucune session active.', 'error');
+  document.getElementById('vb-montant').value = '';
+  document.getElementById('vb-banque').value = '';
+  document.getElementById('vb-bordereau').value = '';
+  document.getElementById('vb-autorise').value = '';
+  document.getElementById('modal-versement-banque').classList.add('open');
+}
+
+async function confirmerVersementBanque() {
+  const montant = parseFloat(document.getElementById('vb-montant').value) || 0;
+  const banque = document.getElementById('vb-banque').value;
+  const bordereau = document.getElementById('vb-bordereau').value.trim();
+  const autorisePar = document.getElementById('vb-autorise').value.trim();
+  if (!montant || montant <= 0) return showToast('Montant invalide.', 'error');
+  if (!banque) return showToast('Veuillez choisir une banque.', 'error');
+  if (!autorisePar) return showToast('Veuillez indiquer le responsable.', 'error');
+  const s = posSessionActive;
+  const ref = bordereau ? ` (Réf. ${bordereau})` : '';
+  if (!confirm(`Confirmer le versement de ${montant.toLocaleString('fr-FR')} FCFA à ${banque}${ref} ?`)) return;
+  if (!confirm(`CONFIRMATION FINALE\n\nMontant : ${montant.toLocaleString('fr-FR')} FCFA\nBanque : ${banque}\nAutorisé par : ${autorisePar}\n\nUne écriture comptable sera générée automatiquement.\nProcéder ?`)) return;
+  try {
+    await db.collection('bank_deposits').add({
+      sessionId: s.id,
+      caisseId: s.caisseId,
+      montant, banque,
+      bordereau: bordereau || null,
+      autorisePar,
+      operateur: currentUser?.label || '—',
+      date: today(),
+      type: 'versement_banque',
+      statut: 'validé',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const COMPTE_BANQUE_MAP = { 'BICICI': '5216', 'Ecobank': '5214', 'Autre': '521' };
+    const compteBanque = COMPTE_BANQUE_MAP[banque] || '521';
+    const libelle = `Versement caisse → ${banque}${bordereau ? ' — Réf. ' + bordereau : ''}`;
+    const lignes = [
+      { compte: compteBanque, intitule: libelleCompte(compteBanque), debit: montant, credit: 0 },
+      { compte: '571', intitule: libelleCompte('571'), debit: 0, credit: montant }
+    ];
+    await db.collection('ecritures_comptables').add({
+      numPiece: genererNumPiece(),
+      date: today(), journal: 'BQ',
+      libelle, lignes,
+      totalDebit: montant, totalCredit: montant,
+      reference: bordereau || '',
+      auto: true, source: 'versement_banque',
+      createdBy: 'Système (écriture automatique)',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closePosModal('modal-versement-banque');
+    showToast(`✅ Versement de ${montant.toLocaleString('fr-FR')} FCFA enregistré (${banque})`, 'success');
+  } catch (err) {
+    console.error('Erreur versement banque:', err);
+    showToast('Erreur lors du versement. Réessayez.', 'error');
+  }
 }
 
 let comptaOnglet = 'tableau';
@@ -12481,6 +12617,7 @@ function renderRapprochement() {
   if (rapprochementOnglet === 'releves') renderReleves();
   else if (rapprochementOnglet === 'rapprochement') renderRapprochementComparatif();
   else if (rapprochementOnglet === 'historique') renderHistoriqueRapprochements();
+  else if (rapprochementOnglet === 'versements') renderVersementsBanque();
 }
 
 // Enregistre un relevé Mobile Money / Espèces saisi manuellement
@@ -12513,6 +12650,45 @@ async function enregistrerReleve(event) {
     document.getElementById('rl-date').value = today();
     toggleSaisieReleve();
   } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+async function renderVersementsBanque() {
+  const tbody = document.getElementById('tbody-versements-banque');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Chargement…</td></tr>';
+  try {
+    const debut = document.getElementById('vb-filter-debut')?.value || '';
+    const fin = document.getElementById('vb-filter-fin')?.value || '';
+    const banqueFilter = document.getElementById('vb-filter-banque')?.value || '';
+    let q = db.collection('bank_deposits').orderBy('createdAt', 'desc');
+    const snap = await q.get();
+    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const toISO = s => { const p = (s||'').split('/'); return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : s; };
+    if (debut) docs = docs.filter(d => toISO(d.date) >= debut);
+    if (fin)   docs = docs.filter(d => toISO(d.date) <= fin);
+    if (banqueFilter) docs = docs.filter(d => d.banque === banqueFilter);
+    if (!docs.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Aucun versement pour cette période</td></tr>';
+      document.getElementById('vb-count-label').textContent = '';
+      document.getElementById('vb-total-label').textContent = '';
+      return;
+    }
+    const total = docs.reduce((s, d) => s + (d.montant || 0), 0);
+    tbody.innerHTML = docs.map(d => `<tr>
+      <td>${d.date || '—'}</td>
+      <td>${d.caisseId || '—'}</td>
+      <td><strong>${d.banque || '—'}</strong></td>
+      <td>${d.bordereau || '—'}</td>
+      <td>${d.autorisePar || '—'}</td>
+      <td>${d.operateur || '—'}</td>
+      <td style="text-align:right;font-weight:700">${(d.montant||0).toLocaleString('fr-FR')}</td>
+      <td><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${d.statut || 'validé'}</span></td>
+    </tr>`).join('');
+    document.getElementById('vb-count-label').textContent = `${docs.length} versement${docs.length > 1 ? 's' : ''}`;
+    document.getElementById('vb-total-label').textContent = `Total : ${total.toLocaleString('fr-FR')} FCFA`;
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#c00;padding:16px">Erreur : ${err.message}</td></tr>`;
+  }
 }
 
 function renderReleves() {
