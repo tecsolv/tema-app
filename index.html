@@ -940,6 +940,38 @@
   .numpad-btn.del { background: #fdecea; border-color: #f5c6cb; color: var(--danger); }
   .numpad-btn.del:hover { background: var(--danger); color: #fff; }
   #receipt-print-area { display: none; }
+
+  /* ── Brief T : Bibliothèque d'images produits ── */
+  .lib-modal-inner { display:flex;flex-direction:column;gap:0;height:70vh;min-height:400px }
+  .lib-toolbar { display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 20px 10px;border-bottom:1px solid var(--border);flex-shrink:0 }
+  .lib-tab-btn { padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:.15s }
+  .lib-tab-btn.active { border-color:var(--primary);background:var(--primary);color:#fff }
+  .lib-cat-select { padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text) }
+  .lib-search-input { flex:1;min-width:140px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text) }
+  .lib-body { flex:1;overflow-y:auto;padding:12px 16px }
+  .lib-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px }
+  .lib-item { display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s }
+  .lib-item:hover { border-color:#C8981A;background:rgba(200,152,26,.08) }
+  .lib-item.selected { border-color:#1A7A6E;background:rgba(26,122,110,.12) }
+  .lib-icon-wrap { width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--bg-secondary,#f8fafc);overflow:hidden }
+  .lib-icon-wrap img { width:48px;height:48px;object-fit:contain }
+  .lib-label { font-size:10px;color:var(--text-muted);text-align:center;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+  .lib-section-title { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px;grid-column:1/-1 }
+  .lib-upload-zone { border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:.2s;color:var(--text-muted) }
+  .lib-upload-zone:hover { border-color:var(--primary);color:var(--primary) }
+  .lib-upload-zone input[type=file] { display:none }
+  .lib-custom-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:16px }
+  .lib-custom-item { position:relative;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;aspect-ratio:1 }
+  .lib-custom-item:hover { border-color:#C8981A }
+  .lib-custom-item.selected { border-color:#1A7A6E }
+  .lib-custom-item img { width:100%;height:100%;object-fit:contain }
+  .lib-custom-del { position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(220,38,38,.85);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center }
+  /* Vignette produit dans les tables/listes */
+  .prod-thumb { width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;overflow:hidden;background:var(--bg-secondary,#f1f5f9);flex-shrink:0 }
+  .prod-thumb img { width:32px;height:32px;object-fit:contain }
+  .prod-thumb-empty { font-size:20px;line-height:1 }
+  /* Dans le POS */
+  .product-card .prod-img { width:52px;height:52px;object-fit:contain;border-radius:6px;margin-bottom:4px }
 </style>
 </head>
 <body>
@@ -3303,6 +3335,19 @@
         <div class="form-group"><label>Prix de vente (FCFA) *</label><input class="form-control" id="p-pvente" type="number" min="0" required placeholder="0"></div>
       </div>
       <div class="form-group"><label>Description</label><textarea class="form-control" id="p-desc" rows="2" placeholder="Description optionnelle..."></textarea></div>
+      <!-- Image produit -->
+      <div class="form-group">
+        <label>Image / Icône</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="prod-thumb" id="p-image-preview" style="width:52px;height:52px;border:2px dashed var(--border)">
+            <span class="prod-thumb-empty" id="p-image-empty">📦</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="ouvrirBibliothequeImages()" style="font-size:12px">🖼 Choisir une image</button>
+            <button type="button" id="btn-effacer-image" class="btn btn-sm" style="font-size:11px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:none" onclick="effacerImageProduit()">✕ Retirer l'image</button>
+          </div>
+        </div>
+      </div>
       <input type="hidden" id="p-edit-id" value="">
       <div class="modal-footer">
         <button type="button" class="btn btn-danger" id="btn-delete-produit" style="display:none;margin-right:auto" onclick="supprimerProduitDepuisModal()">🗑 Supprimer</button>
@@ -3310,6 +3355,50 @@
         <button type="submit" class="btn btn-primary" id="btn-save-produit">Enregistrer</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL: Bibliothèque d'images produits (Brief T) -->
+<div class="modal-overlay" id="modal-image-library">
+  <div class="modal" style="max-width:680px;width:96%;padding:0;overflow:hidden;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <h3>🖼 Bibliothèque d'images</h3>
+      <button class="modal-close" onclick="closeModal('modal-image-library')">×</button>
+    </div>
+    <div class="lib-modal-inner">
+      <!-- Toolbar -->
+      <div class="lib-toolbar">
+        <button class="lib-tab-btn active" id="lib-tab-builtin" onclick="libSwitchTab('builtin')">📚 Bibliothèque</button>
+        <button class="lib-tab-btn" id="lib-tab-custom" onclick="libSwitchTab('custom')">📤 Mes images</button>
+        <select class="lib-cat-select" id="lib-cat-filter" onchange="libFilterChanged()" style="display:none">
+          <option value="all">Toutes catégories</option>
+        </select>
+        <input class="lib-search-input" id="lib-search" placeholder="🔍 Rechercher..." oninput="libFilterChanged()" style="display:none">
+      </div>
+      <!-- Onglet Bibliothèque intégrée -->
+      <div class="lib-body" id="lib-panel-builtin">
+        <div class="lib-grid" id="lib-grid">
+          <div style="text-align:center;color:var(--text-muted);padding:40px;grid-column:1/-1">Chargement des icônes…</div>
+        </div>
+      </div>
+      <!-- Onglet Images personnalisées -->
+      <div class="lib-body" id="lib-panel-custom" style="display:none">
+        <label class="lib-upload-zone" onclick="document.getElementById('lib-upload-input').click()">
+          <input type="file" id="lib-upload-input" accept="image/jpeg,image/png,image/gif" onchange="libUploadImage(this)">
+          <div style="font-size:32px;margin-bottom:8px">📤</div>
+          <div style="font-size:14px;font-weight:600">Cliquer pour uploader une image</div>
+          <div style="font-size:11px;margin-top:4px">JPEG, PNG, GIF — max 2 Mo — redimensionnée à 600 px</div>
+        </label>
+        <div class="lib-custom-grid" id="lib-custom-grid">
+          <div style="text-align:center;color:var(--text-muted);padding:20px;grid-column:1/-1;font-size:12px">Aucune image personnalisée</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-shrink:0;justify-content:flex-end;gap:8px">
+      <span id="lib-selected-label" style="font-size:12px;color:var(--text-muted);margin-right:auto"></span>
+      <button class="btn btn-outline" onclick="closeModal('modal-image-library')">Annuler</button>
+      <button class="btn btn-primary" onclick="libConfirmerSelection()">✅ Confirmer</button>
+    </div>
   </div>
 </div>
 
@@ -6733,10 +6822,14 @@ function renderGrilleProduits() {
     const sTxt   = stock<=0?'🚫 Rupture':stock<=seuil?`⚠️ ${stock} restant`:`✅ ${stock} en stock`;
     const emoji  = CAT_EMOJI[p.cat] || '📦';
     const prixAff = p.pvente||p.prix||0;
+    const imgEl = p.imageData?.value
+      ? `<img class="prod-img" src="${p.imageData.value}" alt="${p.nom}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
+        + `<span style="display:none;font-size:36px">${emoji}</span>`
+      : `<div class="product-emoji">${emoji}</div>`;
     return `<div class="product-card${outOfStock?' out-of-stock':''}"
       onclick="${outOfStock?`showToast('🚫 Rupture de stock — article non disponible','error')`:`ajouterAuPanier('${p.id}')`}"
       title="${p.nom} — Stock: ${stock} | Prix achat: ${posF0(p.pachat||0)} F | Prix vente: ${posF0(prixAff)} F">
-      <div class="product-emoji">${emoji}</div>
+      ${imgEl}
       <div class="product-name">${p.nom||'—'}</div>
       <div class="product-price">${posF0(prixAff)} FCFA</div>
       <div class="product-stock ${sClass}">${sTxt}</div>
@@ -9336,7 +9429,12 @@ function renderInventaire() {
   tbody.innerHTML = filtered.map(p => `
     <tr>
       <td style="color:var(--text-muted);font-size:11px">${p.ref||'—'}</td>
-      <td><strong>${p.nom}</strong>${p.desc?`<br><span style="font-size:11px;color:var(--text-muted)">${p.desc}</span>`:''}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${prodThumbHtml(p)}
+          <div><strong>${p.nom}</strong>${p.desc?`<br><span style="font-size:11px;color:var(--text-muted)">${p.desc}</span>`:''}</div>
+        </div>
+      </td>
       <td>${catTag(p.cat)}</td>
       <td style="font-size:12px">${fournNom(p.fournId)}</td>
       <td>${stockTag(p)} <span style="font-size:11px;color:var(--text-muted)">${p.unite||'pcs'}</span></td>
@@ -9356,6 +9454,8 @@ function nouveauProduit() {
   document.querySelector('#modal-produit form').reset();
   document.getElementById('p-edit-id').value = '';
   document.getElementById('btn-delete-produit').style.display = 'none';
+  _prodImageData = null;
+  majAperçuImageProduit();
   populateFournSelects();
   openModal('modal-produit');
 }
@@ -9373,6 +9473,8 @@ function editProduit(id) {
   document.getElementById('p-pvente').value = p.pvente||0;
   document.getElementById('p-desc').value = p.desc||'';
   document.getElementById('p-edit-id').value = id;
+  _prodImageData = p.imageData || null;
+  majAperçuImageProduit();
   populateFournSelects();
   document.getElementById('p-fourn').value = p.fournId||'';
   document.getElementById('btn-delete-produit').style.display = '';
@@ -9393,6 +9495,7 @@ async function saveProduit(e) {
     pachat: parseFloat(document.getElementById('p-pachat').value)||0,
     pvente: parseFloat(document.getElementById('p-pvente').value)||0,
     desc: document.getElementById('p-desc').value.trim(),
+    imageData: _prodImageData || null,
     updatedBy: currentUser.label,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -9429,6 +9532,198 @@ async function supprimerProduitDepuisModal() {
     showToast('Article supprimé', 'warning');
     closeModal('modal-produit');
   } catch(err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+// ── Brief T : Bibliothèque d'images produits ─────────────────────────────
+let _prodImageData = null;        // imageData en cours d'édition dans modal-produit
+let _libSelection  = null;        // sélection temporaire dans la bibliothèque
+let _libData       = null;        // cache index.json
+let _libTab        = 'builtin';   // onglet actif
+let _customImages  = [];          // images uploadées dans Storage
+
+// Vignette HTML utilisée dans l'inventaire et les listes
+function prodThumbHtml(p) {
+  const img = p?.imageData;
+  if (img?.value) {
+    const fallbackEmoji = CAT_EMOJI?.[p.cat] || '📦';
+    return `<div class="prod-thumb"><img src="${img.value}" alt="${p.nom||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="prod-thumb-empty" style="display:none">${fallbackEmoji}</span></div>`;
+  }
+  return `<div class="prod-thumb"><span class="prod-thumb-empty">${CAT_EMOJI?.[p?.cat]||'📦'}</span></div>`;
+}
+
+// Met à jour l'aperçu dans modal-produit
+function majAperçuImageProduit() {
+  const preview = document.getElementById('p-image-preview');
+  const empty   = document.getElementById('p-image-empty');
+  const btnEff  = document.getElementById('btn-effacer-image');
+  if (!preview) return;
+  if (_prodImageData?.value) {
+    preview.innerHTML = `<img src="${_prodImageData.value}" alt="" style="width:48px;height:48px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`;
+    if (btnEff) btnEff.style.display = '';
+  } else {
+    preview.innerHTML = '<span class="prod-thumb-empty" style="font-size:24px">📦</span>';
+    if (btnEff) btnEff.style.display = 'none';
+  }
+}
+
+function effacerImageProduit() {
+  _prodImageData = null;
+  majAperçuImageProduit();
+}
+
+// Ouvre la bibliothèque
+async function ouvrirBibliothequeImages() {
+  _libSelection = _prodImageData ? { ..._prodImageData } : null;
+  document.getElementById('lib-selected-label').textContent = _libSelection ? `Sélection : ${_libSelection.label||''}` : '';
+  libSwitchTab('builtin');
+  openModal('modal-image-library');
+  if (!_libData) await libChargerIndex();
+  else libRenderBuiltin();
+}
+
+async function libChargerIndex() {
+  try {
+    const r = await fetch('/assets/icons-articles/index.json');
+    _libData = await r.json();
+    // Remplir select catégorie
+    const sel = document.getElementById('lib-cat-filter');
+    if (sel) {
+      sel.innerHTML = '<option value="all">Toutes catégories</option>' +
+        _libData.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+    }
+    libRenderBuiltin();
+  } catch(e) {
+    document.getElementById('lib-grid').innerHTML = '<div style="padding:30px;text-align:center;color:var(--danger)">Impossible de charger la bibliothèque.<br><small>' + e.message + '</small></div>';
+  }
+}
+
+function libSwitchTab(tab) {
+  _libTab = tab;
+  const isBlt = tab === 'builtin';
+  document.getElementById('lib-tab-builtin').classList.toggle('active', isBlt);
+  document.getElementById('lib-tab-custom').classList.toggle('active', !isBlt);
+  document.getElementById('lib-panel-builtin').style.display = isBlt ? '' : 'none';
+  document.getElementById('lib-panel-custom').style.display  = isBlt ? 'none' : '';
+  document.getElementById('lib-cat-filter').style.display    = isBlt ? '' : 'none';
+  document.getElementById('lib-search').style.display        = isBlt ? '' : 'none';
+  if (!isBlt) libRenderCustom();
+  else if (_libData) libRenderBuiltin();
+}
+
+function libFilterChanged() { libRenderBuiltin(); }
+
+function libRenderBuiltin() {
+  if (!_libData) return;
+  const catFilter = document.getElementById('lib-cat-filter')?.value || 'all';
+  const q = (document.getElementById('lib-search')?.value || '').toLowerCase();
+  const grid = document.getElementById('lib-grid');
+  let html = '';
+  _libData.categories.forEach(cat => {
+    if (catFilter !== 'all' && cat.id !== catFilter) return;
+    const icons = cat.icons.filter(ic => !q || ic.label.toLowerCase().includes(q) || ic.id.includes(q));
+    if (!icons.length) return;
+    html += `<div class="lib-section-title">${cat.label}</div>`;
+    icons.forEach(ic => {
+      const path = `/assets/icons-articles/${cat.id}/${ic.file}`;
+      const isSel = _libSelection?.type === 'builtin' && _libSelection?.value === path;
+      html += `<div class="lib-item${isSel?' selected':''}" onclick="libSelectBuiltin('${path}','${ic.label}','${cat.id}','${ic.file}')" title="${ic.label}">
+        <div class="lib-icon-wrap"><img src="${path}" alt="${ic.label}" loading="lazy" onerror="this.parentNode.innerHTML='📦'"></div>
+        <div class="lib-label">${ic.label}</div>
+      </div>`;
+    });
+  });
+  grid.innerHTML = html || '<div style="padding:30px;text-align:center;color:var(--text-muted);grid-column:1/-1">Aucune icône trouvée</div>';
+}
+
+function libSelectBuiltin(path, label, catId, file) {
+  _libSelection = { type: 'builtin', value: path, label, catId, file };
+  document.getElementById('lib-selected-label').textContent = `Sélection : ${label}`;
+  libRenderBuiltin(); // re-render pour mettre à jour .selected
+}
+
+async function libRenderCustom() {
+  const grid = document.getElementById('lib-custom-grid');
+  grid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Chargement…</div>';
+  try {
+    const listRef = firebase.storage().ref('product-images/');
+    const res = await listRef.listAll();
+    _customImages = await Promise.all(res.items.map(async item => ({
+      path: item.fullPath,
+      name: item.name,
+      url: await item.getDownloadURL()
+    })));
+    if (!_customImages.length) {
+      grid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);grid-column:1/-1;font-size:12px">Aucune image uploadée. Utilisez le bouton ci-dessus.</div>';
+      return;
+    }
+    grid.innerHTML = _customImages.map(img => {
+      const isSel = _libSelection?.type === 'url' && _libSelection?.value === img.url;
+      return `<div class="lib-custom-item${isSel?' selected':''}" onclick="libSelectCustom('${img.url}','${img.name}')">
+        <img src="${img.url}" alt="${img.name}" loading="lazy">
+        <button class="lib-custom-del" title="Supprimer" onclick="event.stopPropagation();libSupprimerCustom('${img.path}')">×</button>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = `<div style="padding:20px;text-align:center;color:var(--danger);grid-column:1/-1">Erreur Storage: ${e.message}</div>`;
+  }
+}
+
+function libSelectCustom(url, name) {
+  _libSelection = { type: 'url', value: url, label: name };
+  document.getElementById('lib-selected-label').textContent = `Sélection : ${name}`;
+  libRenderCustom();
+}
+
+async function libSupprimerCustom(path) {
+  if (!confirm('Supprimer cette image ?')) return;
+  try {
+    await firebase.storage().ref(path).delete();
+    showToast('Image supprimée', 'warning');
+    libRenderCustom();
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
+async function libUploadImage(input) {
+  const file = input.files?.[0]; if (!file) return;
+  if (file.size > 2 * 1024 * 1024) return showToast('Fichier trop grand (max 2 Mo)', 'error');
+  const blob = await libRedimensionner(file, 600);
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const name = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+  const ref  = firebase.storage().ref(`product-images/${name}`);
+  try {
+    await ref.put(blob, { contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}` });
+    showToast('Image uploadée ✓', 'success');
+    libRenderCustom();
+    input.value = '';
+  } catch(e) { showToast('Erreur upload: ' + e.message, 'error'); }
+}
+
+function libRedimensionner(file, maxPx) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      if (w > maxPx || h > maxPx) {
+        if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else        { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas vide')), 'image/png');
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function libConfirmerSelection() {
+  if (!_libSelection) return showToast('Aucune image sélectionnée', 'error');
+  _prodImageData = { ..._libSelection };
+  majAperçuImageProduit();
+  closeModal('modal-image-library');
 }
 
 // ===== AJUSTEMENT STOCK =====

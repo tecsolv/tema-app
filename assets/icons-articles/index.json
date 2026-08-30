@@ -1,0 +1,825 @@
+{
+  "categories": [
+    {
+      "id": "epicerie",
+      "label": "Épicerie & Superette",
+      "icons": [
+        {
+          "id": "ananas",
+          "file": "Ananas.png",
+          "label": "Ananas"
+        },
+        {
+          "id": "arricot_vert",
+          "file": "Arricot vert.png",
+          "label": "Haricot vert"
+        },
+        {
+          "id": "avocat",
+          "file": "Avocat.png",
+          "label": "Avocat"
+        },
+        {
+          "id": "banane",
+          "file": "Banane.png",
+          "label": "Banane"
+        },
+        {
+          "id": "beure",
+          "file": "Beure.png",
+          "label": "Beurre"
+        },
+        {
+          "id": "carrot",
+          "file": "Carrot.png",
+          "label": "Carotte"
+        },
+        {
+          "id": "champigon",
+          "file": "Champigon.png",
+          "label": "Champignon"
+        },
+        {
+          "id": "chou",
+          "file": "Chou.png",
+          "label": "Chou"
+        },
+        {
+          "id": "citron",
+          "file": "Citron.png",
+          "label": "Citron"
+        },
+        {
+          "id": "citron_vert",
+          "file": "Citron Vert.png",
+          "label": "Citron vert"
+        },
+        {
+          "id": "cumcumbre",
+          "file": "Cumcumbre.png",
+          "label": "Concombre"
+        },
+        {
+          "id": "gingimbre",
+          "file": "Gingimbre.png",
+          "label": "Gingembre"
+        },
+        {
+          "id": "ketchop",
+          "file": "Ketchop.png",
+          "label": "Ketchup"
+        },
+        {
+          "id": "kiwi",
+          "file": "Kiwi.png",
+          "label": "Kiwi"
+        },
+        {
+          "id": "maïs",
+          "file": "Maïs.png",
+          "label": "Maïs"
+        },
+        {
+          "id": "oignon",
+          "file": "Oignon.png",
+          "label": "Oignon"
+        },
+        {
+          "id": "oignon_rouge",
+          "file": "Oignon rouge.png",
+          "label": "Oignon rouge"
+        },
+        {
+          "id": "orange",
+          "file": "Orange.png",
+          "label": "Orange"
+        },
+        {
+          "id": "pasteque",
+          "file": "Pasteque.png",
+          "label": "Pastèque"
+        },
+        {
+          "id": "patate_douce",
+          "file": "Patate douce.png",
+          "label": "Patate douce"
+        },
+        {
+          "id": "pomme_de_terre",
+          "file": "Pomme de terre.png",
+          "label": "Pomme de terre"
+        },
+        {
+          "id": "pomme_verte",
+          "file": "Pomme verte.png",
+          "label": "Pomme verte"
+        },
+        {
+          "id": "poivre_rouge",
+          "file": "Poivre rouge.png",
+          "label": "Poivre rouge"
+        },
+        {
+          "id": "raisin",
+          "file": "Raisin.png",
+          "label": "Raisin"
+        },
+        {
+          "id": "salade",
+          "file": "Salade.png",
+          "label": "Salade"
+        },
+        {
+          "id": "tomate",
+          "file": "Tomate.png",
+          "label": "Tomate"
+        }
+      ]
+    },
+    {
+      "id": "boissons",
+      "label": "Boissons",
+      "icons": [
+        {
+          "id": "bièrre",
+          "file": "Bièrre.png",
+          "label": "Bière"
+        },
+        {
+          "id": "coka-cola_boutaille",
+          "file": "Coka-Cola Boutaille.png",
+          "label": "Coca-Cola bouteille"
+        },
+        {
+          "id": "coka-cola_canne",
+          "file": "Coka-Cola Canne.png",
+          "label": "Coca-Cola cannette"
+        },
+        {
+          "id": "fanta_en_cane",
+          "file": "Fanta en Cane.png",
+          "label": "Fanta cannette"
+        },
+        {
+          "id": "jack_daniel",
+          "file": "Jack Daniel.png",
+          "label": "Jack Daniel's"
+        },
+        {
+          "id": "leau_330ml",
+          "file": "L'eau 330ml.png",
+          "label": "Eau minérale 330ml"
+        },
+        {
+          "id": "leau_celeste_330ml",
+          "file": "L'eau Celeste 330ml.png",
+          "label": "Eau Celeste 330ml"
+        },
+        {
+          "id": "liqueur",
+          "file": "Liqueur.png",
+          "label": "Liqueur"
+        },
+        {
+          "id": "lottus",
+          "file": "Lottus.png",
+          "label": "Lottus"
+        },
+        {
+          "id": "sprite_en_canne",
+          "file": "Sprite en Canne.png",
+          "label": "Sprite cannette"
+        },
+        {
+          "id": "sprite_en_bouteille",
+          "file": "Sprite en bouteille.png",
+          "label": "Sprite bouteille"
+        },
+        {
+          "id": "vin_blanc",
+          "file": "Vin blanc.png",
+          "label": "Vin blanc"
+        },
+        {
+          "id": "vin_mousseux",
+          "file": "Vin mousseux.png",
+          "label": "Vin mousseux"
+        },
+        {
+          "id": "voldka",
+          "file": "Voldka.png",
+          "label": "Vodka"
+        },
+        {
+          "id": "whisky",
+          "file": "Whisky.png",
+          "label": "Whisky"
+        }
+      ]
+    },
+    {
+      "id": "viandes-poisson",
+      "label": "Viandes & Poisson",
+      "icons": [
+        {
+          "id": "corqette_de_beef",
+          "file": "Corqette de beef.png",
+          "label": "Croquette de bœuf"
+        },
+        {
+          "id": "cuisse_de_mouton",
+          "file": "Cuisse de mouton.png",
+          "label": "Cuisse de mouton"
+        },
+        {
+          "id": "plateau_doeufs",
+          "file": "Plateau d'oeufs.png",
+          "label": "Plateau d'œufs"
+        },
+        {
+          "id": "poisson",
+          "file": "Poisson.png",
+          "label": "Poisson"
+        },
+        {
+          "id": "viande_de_beef",
+          "file": "Viande de Beef.png",
+          "label": "Viande de bœuf"
+        },
+        {
+          "id": "viande_de_porc",
+          "file": "Viande de porc.png",
+          "label": "Viande de porc"
+        }
+      ]
+    },
+    {
+      "id": "patisserie",
+      "label": "Pâtisserie & Boulangerie",
+      "icons": [
+        {
+          "id": "bagette_de_pain",
+          "file": "Bagette de pain.png",
+          "label": "Baguette"
+        },
+        {
+          "id": "croissant",
+          "file": "Croissant.png",
+          "label": "Croissant"
+        },
+        {
+          "id": "donut",
+          "file": "Donut.png",
+          "label": "Donut"
+        },
+        {
+          "id": "gateaux_sur_commande",
+          "file": "Gateaux sur Commande.png",
+          "label": "Gâteau commande"
+        },
+        {
+          "id": "pain_fourré",
+          "file": "Pain fourré.png",
+          "label": "Pain fourré"
+        },
+        {
+          "id": "plaquette_de_chocolat",
+          "file": "Plaquette de Chocolat.png",
+          "label": "Chocolat"
+        },
+        {
+          "id": "potion_de_gâteau",
+          "file": "Potion de gâteau.png",
+          "label": "Portion gâteau"
+        }
+      ]
+    },
+    {
+      "id": "fournitures",
+      "label": "Fournitures scolaires",
+      "icons": [
+        {
+          "id": "agraffeuse",
+          "file": "Agraffeuse.png",
+          "label": "Agrafeuse"
+        },
+        {
+          "id": "cahier_300-pages",
+          "file": "Cahier 300-pages.png",
+          "label": "Cahier 300 p."
+        },
+        {
+          "id": "classeur",
+          "file": "Classeur.png",
+          "label": "Classeur"
+        },
+        {
+          "id": "classeur_bleu",
+          "file": "Classeur Bleu.png",
+          "label": "Classeur bleu"
+        },
+        {
+          "id": "classeur_rouge",
+          "file": "Classeur rouge.png",
+          "label": "Classeur rouge"
+        },
+        {
+          "id": "classeur_02",
+          "file": "Classeur_02.png",
+          "label": "Classeur grand"
+        },
+        {
+          "id": "cslculatrice",
+          "file": "Cslculatrice.png",
+          "label": "Calculatrice"
+        },
+        {
+          "id": "gomme",
+          "file": "Gomme.png",
+          "label": "Gomme"
+        },
+        {
+          "id": "marker",
+          "file": "Marker.png",
+          "label": "Marqueur"
+        },
+        {
+          "id": "perforateur",
+          "file": "Perforateur.png",
+          "label": "Perforateur"
+        },
+        {
+          "id": "règle",
+          "file": "Règle.png",
+          "label": "Règle"
+        },
+        {
+          "id": "sciceaux",
+          "file": "Sciceaux.png",
+          "label": "Ciseaux"
+        },
+        {
+          "id": "scotch",
+          "file": "Scotch.png",
+          "label": "Scotch"
+        },
+        {
+          "id": "taille_crayon",
+          "file": "Taille crayon.png",
+          "label": "Taille-crayon"
+        },
+        {
+          "id": "trombonne",
+          "file": "Trombonne.png",
+          "label": "Trombone"
+        }
+      ]
+    },
+    {
+      "id": "informatique",
+      "label": "Informatique & Électronique",
+      "icons": [
+        {
+          "id": "casque",
+          "file": "Casque.png",
+          "label": "Casque audio"
+        },
+        {
+          "id": "chargeur_dandroid",
+          "file": "Chargeur d'Android.png",
+          "label": "Chargeur Android"
+        },
+        {
+          "id": "ecouteur_sans_fil",
+          "file": "Ecouteur sans fil.png",
+          "label": "Écouteur BT"
+        },
+        {
+          "id": "ordinateur_portable",
+          "file": "Ordinateur Portable.png",
+          "label": "PC portable"
+        },
+        {
+          "id": "slit_3c",
+          "file": "Slit 3c.png",
+          "label": "Clim split 3cv"
+        },
+        {
+          "id": "split_1.5c",
+          "file": "Split 1.5c.png",
+          "label": "Clim split 1.5cv"
+        },
+        {
+          "id": "split_2c",
+          "file": "Split 2c.png",
+          "label": "Clim split 2cv"
+        },
+        {
+          "id": "tv_32",
+          "file": "TV 32\".png",
+          "label": "Télévision 32\""
+        },
+        {
+          "id": "tv_42",
+          "file": "TV 42\".png",
+          "label": "Télévision 42\""
+        },
+        {
+          "id": "tv_50",
+          "file": "TV 50\".png",
+          "label": "Télévision 50\""
+        },
+        {
+          "id": "tv_65",
+          "file": "TV 65\".png",
+          "label": "Télévision 65\""
+        },
+        {
+          "id": "tv_100",
+          "file": "TV 100\".png",
+          "label": "Télévision 100\""
+        }
+      ]
+    },
+    {
+      "id": "electromenager",
+      "label": "Électroménager",
+      "icons": [
+        {
+          "id": "ampoule",
+          "file": "Ampoule.png",
+          "label": "Ampoule"
+        },
+        {
+          "id": "fer_à_repasser",
+          "file": "Fer à repasser.png",
+          "label": "Fer à repasser"
+        },
+        {
+          "id": "frigo_2-batants",
+          "file": "Frigo 2-Batants.png",
+          "label": "Réfrigérateur"
+        },
+        {
+          "id": "machine_à_laver",
+          "file": "Machine à laver.png",
+          "label": "Machine à laver"
+        },
+        {
+          "id": "micro-ondre",
+          "file": "Micro-Ondre.png",
+          "label": "Micro-ondes"
+        },
+        {
+          "id": "rice_cooker",
+          "file": "Rice cooker.png",
+          "label": "Rice cooker"
+        },
+        {
+          "id": "ventilateur",
+          "file": "Ventilateur.png",
+          "label": "Ventilateur"
+        }
+      ]
+    },
+    {
+      "id": "hygiene-beaute",
+      "label": "Hygiène & Beauté",
+      "icons": [
+        {
+          "id": "bougie_senteur",
+          "file": "Bougie senteur.png",
+          "label": "Bougie parfumée"
+        },
+        {
+          "id": "brosse_à_dents",
+          "file": "Brosse à dents.png",
+          "label": "Brosse à dents"
+        },
+        {
+          "id": "papier_toillette",
+          "file": "Papier toillette.png",
+          "label": "Papier toilette"
+        },
+        {
+          "id": "parfum",
+          "file": "Parfum.png",
+          "label": "Parfum"
+        },
+        {
+          "id": "produit_de_beauté",
+          "file": "Produit de beauté.png",
+          "label": "Prod. beauté"
+        },
+        {
+          "id": "savon",
+          "file": "Savon.png",
+          "label": "Savon"
+        },
+        {
+          "id": "senteur_",
+          "file": "Senteur .png",
+          "label": "Senteur"
+        }
+      ]
+    },
+    {
+      "id": "vetements",
+      "label": "Vêtements & Jouets",
+      "icons": [
+        {
+          "id": "veste_dame",
+          "file": "Veste dame.png",
+          "label": "Veste dame"
+        },
+        {
+          "id": "jouet",
+          "file": "Jouet.png",
+          "label": "Jouet enfant"
+        }
+      ]
+    },
+    {
+      "id": "services",
+      "label": "Services",
+      "icons": [
+        {
+          "id": "appel",
+          "file": "Appel.png",
+          "label": "Crédit téléph."
+        },
+        {
+          "id": "connection_inernet_data",
+          "file": "Connection inernet (data).png",
+          "label": "Internet / Data"
+        },
+        {
+          "id": "enveloppe",
+          "file": "Enveloppe.png",
+          "label": "Courrier"
+        },
+        {
+          "id": "envoi_de_document",
+          "file": "Envoi de document.png",
+          "label": "Envoi document"
+        },
+        {
+          "id": "mobile_money_",
+          "file": "Mobile Money .png",
+          "label": "Mobile Money"
+        },
+        {
+          "id": "navigation",
+          "file": "Navigation.png",
+          "label": "Navigation GPS"
+        },
+        {
+          "id": "saisie_de_cv",
+          "file": "Saisie de CV.png",
+          "label": "Saisie CV"
+        }
+      ]
+    },
+    {
+      "id": "divers",
+      "label": "Divers",
+      "icons": [
+        {
+          "id": "cigarette",
+          "file": "Cigarette.png",
+          "label": "Cigarette"
+        },
+        {
+          "id": "key",
+          "file": "key.png",
+          "label": "Clé"
+        },
+        {
+          "id": "key_1",
+          "file": "key (1).png",
+          "label": "Icône 1"
+        },
+        {
+          "id": "key_2",
+          "file": "key (2).png",
+          "label": "Icône 2"
+        },
+        {
+          "id": "key_3",
+          "file": "key (3).png",
+          "label": "Icône 3"
+        },
+        {
+          "id": "key_4",
+          "file": "key (4).png",
+          "label": "Icône 4"
+        },
+        {
+          "id": "key_5",
+          "file": "key (5).png",
+          "label": "Icône 5"
+        },
+        {
+          "id": "key_6",
+          "file": "key (6).png",
+          "label": "Icône 6"
+        },
+        {
+          "id": "key_7",
+          "file": "key (7).png",
+          "label": "Icône 7"
+        },
+        {
+          "id": "key_8",
+          "file": "key (8).png",
+          "label": "Icône 8"
+        },
+        {
+          "id": "key_9",
+          "file": "key (9).png",
+          "label": "Icône 9"
+        },
+        {
+          "id": "key_10",
+          "file": "key (10).png",
+          "label": "Icône 10"
+        },
+        {
+          "id": "key_11",
+          "file": "key (11).png",
+          "label": "Icône 11"
+        },
+        {
+          "id": "key_12",
+          "file": "key (12).png",
+          "label": "Icône 12"
+        },
+        {
+          "id": "key_13",
+          "file": "key (13).png",
+          "label": "Icône 13"
+        },
+        {
+          "id": "key_14",
+          "file": "key (14).png",
+          "label": "Icône 14"
+        },
+        {
+          "id": "key_15",
+          "file": "key (15).png",
+          "label": "Icône 15"
+        },
+        {
+          "id": "key_16",
+          "file": "key (16).png",
+          "label": "Icône 16"
+        },
+        {
+          "id": "key_17",
+          "file": "key (17).png",
+          "label": "Icône 17"
+        },
+        {
+          "id": "key_18",
+          "file": "key (18).png",
+          "label": "Icône 18"
+        },
+        {
+          "id": "key_19",
+          "file": "key (19).png",
+          "label": "Icône 19"
+        },
+        {
+          "id": "key_20",
+          "file": "key (20).png",
+          "label": "Icône 20"
+        },
+        {
+          "id": "key_21",
+          "file": "key (21).png",
+          "label": "Icône 21"
+        },
+        {
+          "id": "key_22",
+          "file": "key (22).png",
+          "label": "Icône 22"
+        },
+        {
+          "id": "key_23",
+          "file": "key (23).png",
+          "label": "Icône 23"
+        },
+        {
+          "id": "key_24",
+          "file": "key (24).png",
+          "label": "Icône 24"
+        },
+        {
+          "id": "key_25",
+          "file": "key (25).png",
+          "label": "Icône 25"
+        },
+        {
+          "id": "key_26",
+          "file": "key (26).png",
+          "label": "Icône 26"
+        },
+        {
+          "id": "key_27",
+          "file": "key (27).png",
+          "label": "Icône 27"
+        },
+        {
+          "id": "key_28",
+          "file": "key (28).png",
+          "label": "Icône 28"
+        },
+        {
+          "id": "key_29",
+          "file": "key (29).png",
+          "label": "Icône 29"
+        },
+        {
+          "id": "key_30",
+          "file": "key (30).png",
+          "label": "Icône 30"
+        },
+        {
+          "id": "key_31",
+          "file": "key (31).png",
+          "label": "Icône 31"
+        },
+        {
+          "id": "key_32",
+          "file": "key (32).png",
+          "label": "Icône 32"
+        },
+        {
+          "id": "key_33",
+          "file": "key (33).png",
+          "label": "Icône 33"
+        },
+        {
+          "id": "key_34",
+          "file": "key (34).png",
+          "label": "Icône 34"
+        },
+        {
+          "id": "key_35",
+          "file": "key (35).png",
+          "label": "Icône 35"
+        },
+        {
+          "id": "key_36",
+          "file": "key (36).png",
+          "label": "Icône 36"
+        },
+        {
+          "id": "key_37",
+          "file": "key (37).png",
+          "label": "Icône 37"
+        },
+        {
+          "id": "key_38",
+          "file": "key (38).png",
+          "label": "Icône 38"
+        },
+        {
+          "id": "key_39",
+          "file": "key (39).png",
+          "label": "Icône 39"
+        },
+        {
+          "id": "key_40",
+          "file": "key (40).png",
+          "label": "Icône 40"
+        },
+        {
+          "id": "key_41",
+          "file": "key (41).png",
+          "label": "Icône 41"
+        },
+        {
+          "id": "key_42",
+          "file": "key (42).png",
+          "label": "Icône 42"
+        },
+        {
+          "id": "key_43",
+          "file": "key (43).png",
+          "label": "Icône 43"
+        },
+        {
+          "id": "key_44",
+          "file": "key (44).png",
+          "label": "Icône 44"
+        },
+        {
+          "id": "key_45",
+          "file": "key (45).png",
+          "label": "Icône 45"
+        }
+      ]
+    }
+  ]
+}
