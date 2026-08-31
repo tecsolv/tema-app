@@ -818,6 +818,61 @@
           "id": "key_45",
           "file": "key (45).png",
           "label": "Icône 45"
+        },
+        {
+          "id": "bièrre",
+          "file": "Bièrre.png",
+          "label": "Bièrre"
+        },
+        {
+          "id": "brosse_à_dents",
+          "file": "Brosse à dents.png",
+          "label": "Brosse à dents"
+        },
+        {
+          "id": "fer_à_repasser",
+          "file": "Fer à repasser.png",
+          "label": "Fer à repasser"
+        },
+        {
+          "id": "machine_à_laver",
+          "file": "Machine à laver.png",
+          "label": "Machine à laver"
+        },
+        {
+          "id": "maïs",
+          "file": "Maïs.png",
+          "label": "Maïs"
+        },
+        {
+          "id": "pain_fourré",
+          "file": "Pain fourré.png",
+          "label": "Pain fourré"
+        },
+        {
+          "id": "potion_de_gâteau",
+          "file": "Potion de gâteau.png",
+          "label": "Potion de gâteau"
+        },
+        {
+          "id": "produit_de_beauté",
+          "file": "Produit de beauté.png",
+          "label": "Produit de beauté"
+        },
+        {
+          "id": "règle",
+          "file": "Règle.png",
+          "label": "Règle"
+        },
+        {
+          "id": ".ds_store",
+          "file": ".DS_Store.png",
+          "label": ".DS Store"
+        },
+        {
+          "id": "boîte_de_sardine",
+          "file": "Boîte de Sardine.png",
+          "label": "Boîte de Sardine"
         }
       ]
     }
