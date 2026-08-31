@@ -8425,7 +8425,7 @@ function renderPOSStats() {
   const body=document.getElementById('stats-body'); if(!body) return;
   const periode=document.getElementById('stats-periode')?.value||'mois';
   const mois=today().slice(0,7); const dateJ=today();
-  let ventes=ventesCaisse.filter(v=>v.source==='pos'||v.source==='service_pos'||v.source==='pos_service'||!v.source||v.source==='caisse');
+  let ventes=ventesCaisse.filter(v=>v.source==='pos'||v.source==='service_pos'||v.source==='pos_service'||!v.source||v.source==='caisse'||v.source==='kiosk_selfservice');
   if (periode==='jour') ventes=ventes.filter(v=>v.date===dateJ);
   else if (periode==='mois') ventes=ventes.filter(v=>(v.date||'').startsWith(mois));
   const totalCA=ventes.reduce((s,v)=>s+(v.montant||0),0);
@@ -8765,6 +8765,21 @@ function renderTableauBordCaisses() {
       </div>
     </div>`;
   }).join('') || '<p style="color:var(--text-muted)">Aucune caisse configurée.</p>';
+
+  // Carte Kiosk Self-Service
+  const kioskCls   = _kioskPendingCount > 0 ? 'accent' : 'success';
+  const kioskIcon  = _kioskPendingCount > 0 ? '🛒' : '🖥️';
+  const kioskLabel = _kioskPendingCount > 0
+    ? `${_kioskPendingCount} commande${_kioskPendingCount > 1 ? 's' : ''} en attente`
+    : 'Aucune commande en attente';
+  grid.innerHTML += `<div class="kpi-card ${kioskCls}" style="cursor:pointer" onclick="ouvrirKioskPending()">
+    <div class="kpi-icon">${kioskIcon}</div>
+    <div class="kpi-info">
+      <h3>Kiosk Self-Service</h3>
+      <p>${kioskLabel}</p>
+      <div class="trend up">Mode client tablette — Mobile Money</div>
+    </div>
+  </div>`;
 }
 
 function presencesChangerPeriode() {
@@ -8860,10 +8875,16 @@ function renderSuiviPresencesTable() {
 function renderAuditCaissesTable() {
   const body = document.getElementById('audit-caisses-body');
   if (!body) return;
+  const AUDIT_TYPE_LABEL = {
+    fermeture_forcee: '🔒 Fermeture forcée',
+    transfert:        '🔁 Transfert',
+    kiosk_confirm:    '✅ Confirm. Kiosk',
+    kiosk_cancel:     '❌ Annul. Kiosk',
+  };
   body.innerHTML = [...auditCaisses].sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0)).map(a => `
     <tr>
       <td>${a.date||'—'}</td><td>${a.heure||'—'}</td>
-      <td>${a.type||'—'}</td><td>${a.caisseNom||'—'}</td>
+      <td>${AUDIT_TYPE_LABEL[a.type] || a.type||'—'}</td><td>${a.caisseNom||'—'}</td>
       <td>${a.utilisateurConcerneNom||'—'}</td><td>${a.responsableNom||'—'}</td>
       <td>${a.type==='transfert' ? `${a.ancienUtilisateurNom||'—'} → ${a.nouvelUtilisateurNom||'—'}` : '—'}</td>
       <td>${a.motif||'—'}</td>
@@ -13517,6 +13538,7 @@ let _kioskInactivity   = null;  // setTimeout handle
 let _kioskConfig       = {};    // config QR codes (depuis Firestore parametres/kiosk)
 let _kioskPendingUnsub = null;  // listener agent (sessions pending)
 let _kioskAttenteTimer = null;  // timer d'attente affiché sur écran 4
+let _kioskPendingCount = 0;     // nb sessions pending (pour tableau de bord caisses)
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 function initKioskMode() {
@@ -13800,6 +13822,9 @@ function initKioskAgentListener() {
       const cnt   = snap.docs.length;
       if (badge) badge.textContent = cnt;
       if (bell)  bell.style.display = cnt > 0 ? '' : 'none';
+      _kioskPendingCount = cnt;
+      // Mettre à jour tableau de bord caisses si visible
+      renderTableauBordCaisses();
       // Mettre à jour liste si modal ouverte
       if (document.getElementById('modal-kiosk-pending')?.classList.contains('open')) {
         renderKioskPendingList(snap.docs);
@@ -13883,6 +13908,20 @@ async function confirmerKioskSession(sessionId, btn) {
       montant: d.total, modePaiement: d.operateurLabel || d.operateur,
       article: `Kiosk Self-Service (${(d.items||[]).length} art.)`, zone: 'kiosk'
     });
+    // 4. Journal d'audit caisses
+    const _now = new Date();
+    db.collection('audit_caisses').add({
+      type: 'kiosk_confirm',
+      caisseId: 'kiosk', caisseNom: 'Kiosk Self-Service',
+      utilisateurConcerneId: null, utilisateurConcerneNom: 'Client Self-Service',
+      responsableId: currentUser?.id || null, responsableNom: currentUser?.label || '—',
+      sessionId: sessionId,
+      motif: `Paiement ${op.label || d.operateur} — ${FCFA(d.total)}`,
+      date: _now.toLocaleDateString('fr-FR'),
+      heure: _now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+      createdAtMs: _now.getTime(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
     showToast(`✅ Paiement ${op.label||''} confirmé — ${FCFA(d.total)}`, 'success');
     ouvrirKioskPending(); // rafraîchir la liste
   } catch(e) {
@@ -13895,11 +13934,26 @@ async function annulerKioskSession(sessionId, btn) {
   if (!confirm('Annuler cette commande kiosk ?')) return;
   if (btn) { btn.disabled = true; }
   try {
+    const _snapAnn = await db.collection('kiosk_sessions').doc(sessionId).get();
+    const _dAnn = _snapAnn.data() || {};
     await db.collection('kiosk_sessions').doc(sessionId).update({
       status: 'cancelled',
       cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
       cancelledBy: currentUser?.label || '—'
     });
+    const _nowAnn = new Date();
+    db.collection('audit_caisses').add({
+      type: 'kiosk_cancel',
+      caisseId: 'kiosk', caisseNom: 'Kiosk Self-Service',
+      utilisateurConcerneId: null, utilisateurConcerneNom: 'Client Self-Service',
+      responsableId: currentUser?.id || null, responsableNom: currentUser?.label || '—',
+      sessionId: sessionId,
+      motif: `Commande annulée — ${FCFA(_dAnn.total || 0)} (${_dAnn.operateurLabel || _dAnn.operateur || '?'})`,
+      date: _nowAnn.toLocaleDateString('fr-FR'),
+      heure: _nowAnn.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+      createdAtMs: _nowAnn.getTime(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
     showToast('Commande kiosk annulée', 'warning');
     ouvrirKioskPending();
   } catch(e) {
