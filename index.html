@@ -941,6 +941,84 @@
   .numpad-btn.del:hover { background: var(--danger); color: #fff; }
   #receipt-print-area { display: none; }
 
+  /* ── Brief U : Mode Kiosk Self-Service ── */
+  body.kiosk-mode .sidebar,
+  body.kiosk-mode .main,
+  body.kiosk-mode .sidebar-overlay { display:none!important }
+  #kiosk-mode { display:none;position:fixed;inset:0;z-index:9000;background:#f0f4f8;flex-direction:column;font-family:inherit }
+  body.kiosk-mode #kiosk-mode { display:flex }
+  /* Header kiosk */
+  .kiosk-header { background:var(--primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0 }
+  .kiosk-header-logo { font-size:22px;font-weight:800;letter-spacing:.5px }
+  .kiosk-header-sub { font-size:12px;opacity:.75 }
+  .kiosk-header-total { font-size:18px;font-weight:700;background:rgba(255,255,255,.18);padding:6px 16px;border-radius:20px }
+  /* Screens */
+  .kiosk-screen { display:none;flex:1;overflow-y:auto }
+  .kiosk-screen.active { display:flex;flex-direction:column }
+  /* Accueil */
+  .kiosk-accueil-wrap { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px 20px;text-align:center }
+  .kiosk-welcome-title { font-size:36px;font-weight:800;color:var(--primary) }
+  .kiosk-welcome-sub { font-size:16px;color:var(--text-muted) }
+  .kiosk-start-btn { font-size:20px;font-weight:700;padding:20px 48px;border-radius:16px;background:var(--primary);color:#fff;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(26,94,58,.3);transition:.2s }
+  .kiosk-start-btn:active { transform:scale(.97) }
+  .kiosk-rules { display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px }
+  .kiosk-rule-chip { background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--text-muted) }
+  /* Shop */
+  .kiosk-shop-body { display:flex;flex:1;overflow:hidden;gap:0 }
+  .kiosk-catalogue { flex:1;overflow-y:auto;padding:16px }
+  .kiosk-search-bar { display:flex;gap:8px;margin-bottom:14px }
+  .kiosk-search-input { flex:1;padding:12px 16px;font-size:16px;border:2px solid var(--border);border-radius:12px;outline:none;background:#fff }
+  .kiosk-search-input:focus { border-color:var(--primary) }
+  .kiosk-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px }
+  .kiosk-card { background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:.15s;user-select:none }
+  .kiosk-card:hover { border-color:var(--primary);box-shadow:0 4px 12px rgba(26,94,58,.15) }
+  .kiosk-card:active { transform:scale(.96) }
+  .kiosk-card.out { opacity:.45;cursor:not-allowed }
+  .kiosk-card-img { width:56px;height:56px;object-fit:contain;margin-bottom:8px }
+  .kiosk-card-emoji { font-size:40px;margin-bottom:8px }
+  .kiosk-card-nom { font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.2 }
+  .kiosk-card-prix { font-size:14px;font-weight:700;color:var(--primary) }
+  .kiosk-card-stock { font-size:11px;color:var(--text-muted) }
+  /* Panier latéral */
+  .kiosk-cart { width:280px;flex-shrink:0;background:#fff;border-left:1px solid var(--border);display:flex;flex-direction:column }
+  .kiosk-cart-header { padding:14px 16px;font-weight:700;font-size:15px;border-bottom:1px solid var(--border);color:var(--primary) }
+  .kiosk-cart-items { flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px }
+  .kiosk-cart-empty { flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;text-align:center;padding:20px }
+  .kiosk-cart-item { background:var(--bg-secondary,#f8fafc);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px }
+  .kiosk-cart-item-info { flex:1;min-width:0 }
+  .kiosk-cart-item-nom { font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+  .kiosk-cart-item-prix { font-size:12px;color:var(--text-muted) }
+  .kiosk-qty-btn { width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0 }
+  .kiosk-qty-btn:hover { background:var(--primary);color:#fff;border-color:var(--primary) }
+  .kiosk-qty-val { font-size:14px;font-weight:700;min-width:18px;text-align:center;flex-shrink:0 }
+  .kiosk-cart-footer { padding:14px 16px;border-top:1px solid var(--border) }
+  .kiosk-cart-total { font-size:20px;font-weight:800;color:var(--primary);text-align:center;margin-bottom:10px }
+  .kiosk-cart-total span { font-size:13px;font-weight:500;color:var(--text-muted) }
+  .kiosk-btn-pay { width:100%;padding:14px;font-size:16px;font-weight:700;background:var(--success,#15803d);color:#fff;border:none;border-radius:12px;cursor:pointer }
+  .kiosk-btn-pay:disabled { opacity:.4;cursor:not-allowed }
+  .kiosk-btn-clear { width:100%;padding:8px;font-size:13px;background:transparent;color:var(--danger);border:none;cursor:pointer;margin-top:6px }
+  /* Paiement */
+  .kiosk-pay-wrap { flex:1;display:flex;flex-direction:column;align-items:center;padding:30px 20px;gap:20px }
+  .kiosk-pay-total { font-size:48px;font-weight:900;color:var(--primary) }
+  .kiosk-pay-total span { font-size:16px;font-weight:500;color:var(--text-muted) }
+  .kiosk-op-tabs { display:flex;gap:10px;flex-wrap:wrap;justify-content:center }
+  .kiosk-op-tab { padding:10px 20px;border-radius:12px;border:2.5px solid var(--border);background:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px }
+  .kiosk-op-tab.active { border-color:var(--primary);background:rgba(26,94,58,.08);color:var(--primary) }
+  .kiosk-qr-zone { background:#fff;border:2px solid var(--border);border-radius:16px;padding:20px;text-align:center;min-width:240px;max-width:320px }
+  .kiosk-qr-img { width:180px;height:180px;object-fit:contain;border-radius:8px }
+  .kiosk-qr-num { font-size:14px;color:var(--text-muted);margin-top:8px }
+  .kiosk-qr-instruction { font-size:12px;color:var(--text-muted);margin-top:4px }
+  .kiosk-btn-paid { font-size:18px;font-weight:700;padding:18px 48px;background:var(--success,#15803d);color:#fff;border:none;border-radius:16px;cursor:pointer;box-shadow:0 6px 20px rgba(21,128,61,.3);margin-top:10px }
+  .kiosk-btn-back { font-size:13px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline }
+  /* Attente */
+  .kiosk-wait-wrap { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px }
+  .kiosk-spinner-big { width:64px;height:64px;border:5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite }
+  /* Confirmé */
+  .kiosk-ok-wrap { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;text-align:center }
+  .kiosk-ok-icon { font-size:80px;animation:bounceIn .5s ease }
+  @keyframes bounceIn { 0%{transform:scale(0)} 80%{transform:scale(1.1)} 100%{transform:scale(1)} }
+  /* Badge agent */
+  .kiosk-badge { display:inline-flex;align-items:center;justify-content:center;background:#f97316;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;margin-left:4px;vertical-align:middle }
   /* ── Brief T : Bibliothèque d'images produits ── */
   .lib-modal-inner { display:flex;flex-direction:column;gap:0;height:70vh;min-height:400px }
   .lib-toolbar { display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 20px 10px;border-bottom:1px solid var(--border);flex-shrink:0 }
@@ -975,6 +1053,122 @@
 </style>
 </head>
 <body>
+
+<!-- ===== KIOSK SELF-SERVICE (Brief U Phase 1) ===== -->
+<div id="kiosk-mode">
+  <!-- Header fixe -->
+  <div class="kiosk-header">
+    <div>
+      <div class="kiosk-header-logo">🏪 TeMa Boutique</div>
+      <div class="kiosk-header-sub">Self-Service Client</div>
+    </div>
+    <div id="kiosk-header-total" class="kiosk-header-total" style="display:none">0 FCFA</div>
+  </div>
+
+  <!-- ÉCRAN 1 : Accueil -->
+  <div class="kiosk-screen active" id="kiosk-screen-accueil">
+    <div class="kiosk-accueil-wrap">
+      <div style="font-size:80px">👋</div>
+      <div class="kiosk-welcome-title">Bienvenue !</div>
+      <div class="kiosk-welcome-sub">Scannez ou recherchez vos articles,<br>puis payez en Mobile Money.</div>
+      <button class="kiosk-start-btn" onclick="kioskScreen('shop')">🛒 Commencer mes achats</button>
+      <div class="kiosk-rules">
+        <div class="kiosk-rule-chip">💳 Mobile Money uniquement</div>
+        <div class="kiosk-rule-chip">🏷 Plafond : 10 000 FCFA</div>
+        <div class="kiosk-rule-chip">📦 Max 10 articles</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 2 : Catalogue + Panier -->
+  <div class="kiosk-screen" id="kiosk-screen-shop">
+    <div class="kiosk-shop-body">
+      <!-- Catalogue -->
+      <div class="kiosk-catalogue">
+        <div class="kiosk-search-bar">
+          <input class="kiosk-search-input" id="kiosk-search" placeholder="🔍 Rechercher un article…" oninput="kioskRenderCatalogue()">
+          <button class="btn btn-outline" onclick="kioskScreen('accueil')" style="font-size:13px;white-space:nowrap">← Accueil</button>
+        </div>
+        <div class="kiosk-grid" id="kiosk-grid"></div>
+      </div>
+      <!-- Panier -->
+      <div class="kiosk-cart">
+        <div class="kiosk-cart-header">🛒 Mon panier</div>
+        <div id="kiosk-cart-items" class="kiosk-cart-items">
+          <div class="kiosk-cart-empty">Votre panier est vide.<br>Ajoutez des articles.</div>
+        </div>
+        <div class="kiosk-cart-footer">
+          <div class="kiosk-cart-total"><span>Total</span><br><span id="kiosk-total-display">0 FCFA</span></div>
+          <button class="kiosk-btn-pay" id="kiosk-btn-pay" onclick="kioskScreen('paiement')" disabled>💳 Payer</button>
+          <button class="kiosk-btn-clear" onclick="kioskViderPanier()">✕ Vider le panier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 3 : Paiement -->
+  <div class="kiosk-screen" id="kiosk-screen-paiement">
+    <div class="kiosk-pay-wrap">
+      <div style="text-align:center">
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px">Total à payer</div>
+        <div class="kiosk-pay-total" id="kiosk-pay-montant">0 <span>FCFA</span></div>
+      </div>
+      <div>
+        <div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:12px">Choisissez votre opérateur :</div>
+        <div class="kiosk-op-tabs">
+          <button class="kiosk-op-tab" id="kiosk-op-wave"   onclick="kioskSelectionnerOp('wave')">   🔵 Wave</button>
+          <button class="kiosk-op-tab" id="kiosk-op-orange" onclick="kioskSelectionnerOp('orange')"> 🟠 Orange Money</button>
+          <button class="kiosk-op-tab" id="kiosk-op-momo"   onclick="kioskSelectionnerOp('momo')">   🟡 MTN MoMo</button>
+          <button class="kiosk-op-tab" id="kiosk-op-moov"   onclick="kioskSelectionnerOp('moov')">   🔷 Moov Money</button>
+        </div>
+      </div>
+      <div class="kiosk-qr-zone" id="kiosk-qr-zone" style="display:none">
+        <div id="kiosk-qr-inner"></div>
+      </div>
+      <button class="kiosk-btn-paid" id="kiosk-btn-paid" onclick="kioskClientAPaye()" style="display:none">✅ J'ai payé</button>
+      <button class="kiosk-btn-back" onclick="kioskScreen('shop')">← Modifier mon panier</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 4 : En attente de validation -->
+  <div class="kiosk-screen" id="kiosk-screen-attente">
+    <div class="kiosk-wait-wrap">
+      <div class="kiosk-spinner-big"></div>
+      <div style="font-size:22px;font-weight:700;color:var(--primary)">En attente de validation…</div>
+      <div style="font-size:15px;color:var(--text-muted);text-align:center">Notre équipe vérifie votre paiement.<br>Merci de patienter quelques instants.</div>
+      <div id="kiosk-attente-timer" style="font-size:28px;font-weight:800;color:var(--accent,#c8981a)"></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 5 : Confirmé -->
+  <div class="kiosk-screen" id="kiosk-screen-confirme">
+    <div class="kiosk-ok-wrap">
+      <div class="kiosk-ok-icon">✅</div>
+      <div style="font-size:28px;font-weight:800;color:#15803d">Paiement confirmé !</div>
+      <div style="font-size:16px;color:var(--text-muted)">Merci pour votre achat. Repassez vite !</div>
+      <div id="kiosk-confirme-recap" style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:16px 24px;text-align:left;min-width:260px;max-width:420px;font-size:13px"></div>
+      <div style="font-size:13px;color:var(--text-muted)">Retour automatique dans <span id="kiosk-confirme-countdown">5</span>s…</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGENT : Commandes kiosk en attente -->
+<div class="modal-overlay" id="modal-kiosk-pending">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3>🛒 Commandes Self-Service</h3>
+      <button class="modal-close" onclick="closeModal('modal-kiosk-pending')">×</button>
+    </div>
+    <div style="padding:16px 20px">
+      <div id="kiosk-pending-list">
+        <div style="text-align:center;color:var(--text-muted);padding:30px">Aucune commande en attente</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-kiosk-pending')">Fermer</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== ZONE IMPRESSION (invisible à l'écran) ===== -->
 <div id="receipt-print-area"></div>
@@ -1750,6 +1944,12 @@
       </div>
     </div>
   </div>
+  <!-- Bouton Kiosk Self-Service -->
+  <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.08)">
+    <button onclick="ouvrirKiosk()" style="width:100%;background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.25);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center" title="Ouvrir le mode Self-Service client">
+      🖥️ Mode Kiosk
+    </button>
+  </div>
   <div class="sidebar-footer">
     <span class="realtime-dot"></span> Synchronisation temps réel<br>
     <span style="cursor:pointer;color:rgba(255,150,150,0.8);font-size:10px;text-decoration:underline" onclick="seDeconnecter()">↩ Changer d'utilisateur</span>
@@ -1772,6 +1972,9 @@
       <button class="btn btn-outline btn-sm" onclick="ouvrirMediaCenterLecture()" title="Diffusion en cours" style="white-space:nowrap">🎵<span class="qa-label"> Diffusion</span></button>
       <button class="btn btn-outline btn-sm" onclick="ouvrirSupportModal()" title="Contacter l'Administrateur" style="white-space:nowrap">💬<span class="qa-label"> Support</span></button>
       <span style="font-size:12px;color:var(--text-muted)" id="sync-status"></span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer" onclick="ouvrirKioskPending()" id="kiosk-agent-bell" title="Commandes Self-Service en attente" style="display:none">
+        🛒<span class="kiosk-badge" id="kiosk-badge">0</span>
+      </span>
       <span style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer" onclick="navigate('alertes')">
         🔔 <span class="badge" id="alert-badge">0</span>
       </span>
@@ -6405,6 +6608,12 @@ function afficherApp() {
     checkEtInitialiserDonnees();
     renderDashboard();
     if (peutLireRH()) demarrerListenersRH();
+    // Kiosk : démarrer listener agent pour badge de commandes en attente
+    initKioskAgentListener();
+  }
+  // Kiosk mode : déclenché par ?kiosk=1 dans l'URL
+  if (new URLSearchParams(window.location.search).get('kiosk') === '1') {
+    initKioskMode();
   }
 }
 
@@ -13273,6 +13482,411 @@ function imprimerTicketRetour(v, qte, montantRetour, cas, cas3Prod, motif) {
   document.getElementById('receipt-print-area').innerHTML = html;
   window.print();
   _ps.textContent = '@page{size:A5 portrait;margin:7mm}';
+}
+
+// ── Brief U Phase 1 : Mode Kiosk Self-Service ─────────────────────────────
+const KIOSK_PLAFOND   = 10000;   // FCFA
+const KIOSK_MAX_QTE   = 10;      // articles total
+const KIOSK_INACTIVITY = 120000; // 2 min sans action → retour accueil
+const KIOSK_OPERATEURS = {
+  wave:   { label: 'Wave',        emoji: '🔵', color: '#1A56DB' },
+  orange: { label: 'Orange Money',emoji: '🟠', color: '#EA580C' },
+  momo:   { label: 'MTN MoMo',   emoji: '🟡', color: '#CA8A04' },
+  moov:   { label: 'Moov Money', emoji: '🔷', color: '#0284C7' },
+};
+
+let _kioskPanier       = [];    // [{productId, nom, qty, prixUnitaire, montant, imageData}]
+let _kioskOp           = null;  // opérateur sélectionné
+let _kioskSessionRef   = null;  // référence du doc Firestore kiosk_sessions
+let _kioskListener     = null;  // unsubscribe Firestore listener
+let _kioskInactivity   = null;  // setTimeout handle
+let _kioskConfig       = {};    // config QR codes (depuis Firestore parametres/kiosk)
+let _kioskPendingUnsub = null;  // listener agent (sessions pending)
+let _kioskAttenteTimer = null;  // timer d'attente affiché sur écran 4
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+function initKioskMode() {
+  document.body.classList.add('kiosk-mode');
+  // Charger config QR
+  db.collection('parametres').doc('kiosk').get().then(snap => {
+    if (snap.exists) _kioskConfig = snap.data();
+  }).catch(() => {});
+  kioskScreen('accueil');
+  kioskStartInactivity();
+}
+
+function ouvrirKiosk() {
+  // Ouvre dans un nouvel onglet sur le même appareil en mode kiosk
+  window.open(window.location.pathname + '?kiosk=1', '_blank');
+}
+
+// ─── Navigation entre écrans ───────────────────────────────────────────────
+function kioskScreen(name) {
+  ['accueil','shop','paiement','attente','confirme'].forEach(s => {
+    const el = document.getElementById('kiosk-screen-' + s);
+    if (el) el.classList.toggle('active', s === name);
+  });
+  const totalEl = document.getElementById('kiosk-header-total');
+  if (totalEl) totalEl.style.display = name === 'shop' ? '' : 'none';
+  if (name === 'shop') { kioskRenderCatalogue(); kioskRenderPanier(); }
+  if (name === 'paiement') kioskPreparePayScreen();
+  if (name === 'accueil') { kioskViderPanier(true); }
+  kioskResetInactivity();
+}
+
+// ─── Inactivité ─────────────────────────────────────────────────────────────
+function kioskStartInactivity() {
+  clearTimeout(_kioskInactivity);
+  _kioskInactivity = setTimeout(() => { kioskScreen('accueil'); }, KIOSK_INACTIVITY);
+}
+function kioskResetInactivity() {
+  clearTimeout(_kioskInactivity);
+  if (!document.getElementById('kiosk-screen-accueil')?.classList.contains('active')) {
+    _kioskInactivity = setTimeout(() => { kioskScreen('accueil'); }, KIOSK_INACTIVITY);
+  }
+}
+
+// ─── Catalogue ──────────────────────────────────────────────────────────────
+function kioskRenderCatalogue() {
+  const q = (document.getElementById('kiosk-search')?.value || '').toLowerCase();
+  const grid = document.getElementById('kiosk-grid'); if (!grid) return;
+  const liste = produits.filter(p =>
+    p.pvente > 0 &&
+    (!q || (p.nom||'').toLowerCase().includes(q) || (p.ref||'').toLowerCase().includes(q))
+  );
+  if (!liste.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px">Aucun article trouvé</div>';
+    return;
+  }
+  grid.innerHTML = liste.map(p => {
+    const outOfStock = (p.stock||0) <= 0;
+    const imgHtml = p.imageData?.value
+      ? `<img class="kiosk-card-img" src="${p.imageData.value}" alt="${p.nom}" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="kiosk-card-emoji">${CAT_EMOJI?.[p.cat]||'📦'}</div>`;
+    return `<div class="kiosk-card${outOfStock?' out':''}" onclick="${outOfStock?`kioskShowToast('🚫 Rupture de stock')`:`kioskAjouter('${p.id}')`}">
+      ${imgHtml}
+      <div class="kiosk-card-nom">${p.nom}</div>
+      <div class="kiosk-card-prix">${FCFA(p.pvente)}</div>
+      ${outOfStock ? '<div class="kiosk-card-stock">Rupture</div>' : `<div class="kiosk-card-stock">Stock : ${p.stock}</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ─── Panier ─────────────────────────────────────────────────────────────────
+function kioskAjouter(productId) {
+  kioskResetInactivity();
+  const p = produits.find(x => x.id === productId); if (!p) return;
+  const qteTotale = _kioskPanier.reduce((s, l) => s + l.qty, 0);
+  const total = kioskGetTotal();
+  if (qteTotale >= KIOSK_MAX_QTE) return kioskShowToast(`Maximum ${KIOSK_MAX_QTE} articles`);
+  if (total + (p.pvente||0) > KIOSK_PLAFOND) return kioskShowToast(`Plafond ${FCFA(KIOSK_PLAFOND)} atteint`);
+  // Vérif stock par rapport au panier
+  const ligne = _kioskPanier.find(l => l.productId === productId);
+  const qteEnPanier = ligne ? ligne.qty : 0;
+  if (qteEnPanier >= (p.stock||0)) return kioskShowToast('Stock insuffisant');
+  if (ligne) {
+    ligne.qty++;
+    ligne.montant = ligne.qty * ligne.prixUnitaire;
+  } else {
+    _kioskPanier.push({ productId, nom: p.nom, qty: 1, prixUnitaire: p.pvente||0, montant: p.pvente||0, imageData: p.imageData||null });
+  }
+  kioskRenderPanier();
+}
+
+function kioskRetirer(productId) {
+  kioskResetInactivity();
+  const idx = _kioskPanier.findIndex(l => l.productId === productId);
+  if (idx < 0) return;
+  _kioskPanier[idx].qty--;
+  _kioskPanier[idx].montant = _kioskPanier[idx].qty * _kioskPanier[idx].prixUnitaire;
+  if (_kioskPanier[idx].qty <= 0) _kioskPanier.splice(idx, 1);
+  kioskRenderPanier();
+}
+
+function kioskViderPanier(silent = false) {
+  _kioskPanier = []; _kioskOp = null;
+  if (!silent) kioskRenderPanier();
+}
+
+function kioskGetTotal() {
+  return _kioskPanier.reduce((s, l) => s + l.montant, 0);
+}
+
+function kioskRenderPanier() {
+  const container = document.getElementById('kiosk-cart-items');
+  const totalEl   = document.getElementById('kiosk-total-display');
+  const hdrTotal  = document.getElementById('kiosk-header-total');
+  const payBtn    = document.getElementById('kiosk-btn-pay');
+  const total     = kioskGetTotal();
+  if (totalEl) totalEl.textContent = FCFA(total);
+  if (hdrTotal) hdrTotal.textContent = FCFA(total);
+  if (payBtn)   payBtn.disabled = _kioskPanier.length === 0;
+  if (!container) return;
+  if (!_kioskPanier.length) {
+    container.innerHTML = '<div class="kiosk-cart-empty">Votre panier est vide.<br>Ajoutez des articles.</div>';
+    return;
+  }
+  container.innerHTML = _kioskPanier.map(l => {
+    const img = l.imageData?.value
+      ? `<img src="${l.imageData.value}" style="width:36px;height:36px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`
+      : `<span style="font-size:24px">${CAT_EMOJI?.[''] ||'📦'}</span>`;
+    return `<div class="kiosk-cart-item">
+      ${img}
+      <div class="kiosk-cart-item-info">
+        <div class="kiosk-cart-item-nom">${l.nom}</div>
+        <div class="kiosk-cart-item-prix">${FCFA(l.prixUnitaire)} × ${l.qty} = ${FCFA(l.montant)}</div>
+      </div>
+      <button class="kiosk-qty-btn" onclick="kioskRetirer('${l.productId}')">−</button>
+      <span class="kiosk-qty-val">${l.qty}</span>
+      <button class="kiosk-qty-btn" onclick="kioskAjouter('${l.productId}')">+</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── Écran Paiement ─────────────────────────────────────────────────────────
+function kioskPreparePayScreen() {
+  const total = kioskGetTotal();
+  const el = document.getElementById('kiosk-pay-montant');
+  if (el) el.innerHTML = `${total.toLocaleString('fr-FR')} <span>FCFA</span>`;
+  // Réinitialiser sélection opérateur
+  _kioskOp = null;
+  Object.keys(KIOSK_OPERATEURS).forEach(op => {
+    const btn = document.getElementById('kiosk-op-' + op);
+    if (btn) btn.classList.remove('active');
+  });
+  const qrZone = document.getElementById('kiosk-qr-zone');
+  const paidBtn = document.getElementById('kiosk-btn-paid');
+  if (qrZone) qrZone.style.display = 'none';
+  if (paidBtn) paidBtn.style.display = 'none';
+}
+
+function kioskSelectionnerOp(op) {
+  kioskResetInactivity();
+  _kioskOp = op;
+  Object.keys(KIOSK_OPERATEURS).forEach(o => {
+    const btn = document.getElementById('kiosk-op-' + o);
+    if (btn) btn.classList.toggle('active', o === op);
+  });
+  const total = kioskGetTotal();
+  const cfg = _kioskConfig[op] || {};
+  const opInfo = KIOSK_OPERATEURS[op];
+  const qrZone = document.getElementById('kiosk-qr-zone');
+  const inner  = document.getElementById('kiosk-qr-inner');
+  let html = `<div style="font-size:18px;font-weight:700;color:${opInfo.color};margin-bottom:12px">${opInfo.emoji} ${opInfo.label}</div>`;
+  if (cfg.qr_url) {
+    html += `<img class="kiosk-qr-img" src="${cfg.qr_url}" alt="QR ${opInfo.label}"><br>`;
+    html += `<div class="kiosk-qr-instruction">Scannez ce QR code avec votre app ${opInfo.label}</div>`;
+  } else if (cfg.numero) {
+    html += `<div style="font-size:32px;font-weight:900;letter-spacing:2px;margin:8px 0">${cfg.numero}</div>`;
+    html += `<div class="kiosk-qr-instruction">Ouvrez votre app ${opInfo.label} → Envoyer de l'argent</div>`;
+  } else {
+    html += `<div style="font-size:13px;color:var(--text-muted)">Numéro non configuré.<br>Demandez à l'agent.</div>`;
+  }
+  html += `<div style="margin-top:12px;font-size:22px;font-weight:800;color:var(--primary)">${total.toLocaleString('fr-FR')} FCFA</div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">Montant exact à envoyer</div>`;
+  if (inner) inner.innerHTML = html;
+  if (qrZone) qrZone.style.display = '';
+  const paidBtn = document.getElementById('kiosk-btn-paid');
+  if (paidBtn) paidBtn.style.display = '';
+}
+
+// ─── Client appuie sur "J'ai payé" ──────────────────────────────────────────
+async function kioskClientAPaye() {
+  kioskResetInactivity();
+  if (!_kioskOp) return kioskShowToast('Veuillez choisir un opérateur');
+  const total = kioskGetTotal();
+  const btn = document.getElementById('kiosk-btn-paid');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Envoi…'; }
+  try {
+    const doc = {
+      status: 'pending',
+      items: _kioskPanier.map(l => ({ productId: l.productId, nom: l.nom, qty: l.qty, prixUnitaire: l.prixUnitaire, montant: l.montant })),
+      total,
+      operateur: _kioskOp,
+      operateurLabel: KIOSK_OPERATEURS[_kioskOp].label,
+      date: today(),
+      caisseId: typeof caisseId !== 'undefined' ? caisseId : null,
+      sessionId: typeof currentSession !== 'undefined' ? (currentSession?.id || null) : null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      confirmedAt: null, confirmedBy: null, cancelledAt: null
+    };
+    _kioskSessionRef = await db.collection('kiosk_sessions').add(doc);
+    kioskScreen('attente');
+    kioskEcouterConfirmation();
+  } catch(e) {
+    kioskShowToast('Erreur réseau : ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '✅ J\'ai payé'; }
+  }
+}
+
+// ─── Listener confirmation depuis Firestore ──────────────────────────────────
+function kioskEcouterConfirmation() {
+  if (_kioskListener) _kioskListener();
+  let elapsed = 0;
+  clearInterval(_kioskAttenteTimer);
+  _kioskAttenteTimer = setInterval(() => {
+    elapsed++;
+    const el = document.getElementById('kiosk-attente-timer');
+    if (el) el.textContent = `${Math.floor(elapsed/60).toString().padStart(2,'0')}:${(elapsed%60).toString().padStart(2,'0')}`;
+  }, 1000);
+  _kioskListener = _kioskSessionRef.onSnapshot(snap => {
+    const data = snap.data();
+    if (!data) return;
+    if (data.status === 'confirmed') {
+      clearInterval(_kioskAttenteTimer);
+      kioskAfficherConfirmation(data);
+    } else if (data.status === 'cancelled') {
+      clearInterval(_kioskAttenteTimer);
+      kioskShowToast('Paiement annulé par l\'agent. Recommencez.');
+      kioskScreen('paiement');
+    }
+  });
+}
+
+function kioskAfficherConfirmation(data) {
+  const recap = document.getElementById('kiosk-confirme-recap');
+  if (recap) {
+    recap.innerHTML = data.items.map(i => `<div>• ${i.nom} × ${i.qty} — ${FCFA(i.montant)}</div>`).join('')
+      + `<div style="margin-top:8px;font-weight:700;font-size:15px;color:#15803d">Total payé : ${FCFA(data.total)} via ${data.operateurLabel}</div>`;
+  }
+  kioskScreen('confirme');
+  let cpt = 5;
+  const cntEl = document.getElementById('kiosk-confirme-countdown');
+  const cd = setInterval(() => {
+    cpt--;
+    if (cntEl) cntEl.textContent = cpt;
+    if (cpt <= 0) { clearInterval(cd); kioskScreen('accueil'); }
+  }, 1000);
+  _kioskPanier = []; _kioskOp = null; _kioskSessionRef = null;
+}
+
+function kioskShowToast(msg) {
+  // Affichage simple visible sur écran kiosk
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1e2e;color:#fff;padding:12px 24px;border-radius:12px;font-size:15px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── AGENT : listener sessions pending ───────────────────────────────────────
+function initKioskAgentListener() {
+  if (_kioskPendingUnsub) return;
+  _kioskPendingUnsub = db.collection('kiosk_sessions')
+    .where('status', '==', 'pending')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(snap => {
+      const badge = document.getElementById('kiosk-badge');
+      const bell  = document.getElementById('kiosk-agent-bell');
+      const cnt   = snap.docs.length;
+      if (badge) badge.textContent = cnt;
+      if (bell)  bell.style.display = cnt > 0 ? '' : 'none';
+      // Mettre à jour liste si modal ouverte
+      if (document.getElementById('modal-kiosk-pending')?.classList.contains('open')) {
+        renderKioskPendingList(snap.docs);
+      }
+    }, () => {});
+}
+
+function ouvrirKioskPending() {
+  openModal('modal-kiosk-pending');
+  db.collection('kiosk_sessions').where('status','==','pending').orderBy('createdAt','desc').get()
+    .then(snap => renderKioskPendingList(snap.docs))
+    .catch(() => {});
+}
+
+function renderKioskPendingList(docs) {
+  const container = document.getElementById('kiosk-pending-list');
+  if (!container) return;
+  if (!docs.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px">Aucune commande en attente</div>';
+    return;
+  }
+  container.innerHTML = docs.map(doc => {
+    const d = doc.data();
+    const ts = d.createdAt?.toDate ? d.createdAt.toDate() : new Date();
+    const heure = ts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const op = KIOSK_OPERATEURS[d.operateur] || { emoji: '💳', label: d.operateurLabel||d.operateur };
+    return `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:700;font-size:15px">${op.emoji} ${op.label} — <span style="color:var(--primary)">${FCFA(d.total)}</span></span>
+        <span style="font-size:11px;color:var(--text-muted)">${heure}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+        ${(d.items||[]).map(i => `${i.nom} × ${i.qty}`).join(' · ')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="background:#15803d;color:#fff;flex:1" onclick="confirmerKioskSession('${doc.id}',this)">✅ Confirmer le paiement</button>
+        <button class="btn btn-sm btn-danger" onclick="annulerKioskSession('${doc.id}',this)">❌ Annuler</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function confirmerKioskSession(sessionId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳…'; }
+  try {
+    const snap = await db.collection('kiosk_sessions').doc(sessionId).get();
+    const d = snap.data();
+    // 1. Enregistrer chaque ligne comme vente dans ventesCaisse
+    const batch = db.batch();
+    const op = KIOSK_OPERATEURS[d.operateur] || {};
+    for (const item of (d.items||[])) {
+      const vRef = db.collection('ventesCaisse').doc();
+      batch.set(vRef, {
+        date: d.date || today(), zone: 'kiosk',
+        article: item.nom, productId: item.productId || null,
+        quantite: item.qty, prixUnitaire: item.prixUnitaire,
+        montant: item.montant,
+        modePaiement: d.operateurLabel || d.operateur,
+        source: 'kiosk_selfservice',
+        sessionId: d.sessionId || null,
+        caisseId:  d.caisseId  || null,
+        confirmedBy: currentUser?.label || '—',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // Décrémenter stock
+      if (item.productId) {
+        batch.update(db.collection('produits').doc(item.productId), {
+          stock: firebase.firestore.FieldValue.increment(-item.qty)
+        });
+      }
+    }
+    // 2. Marquer session comme confirmée
+    batch.update(db.collection('kiosk_sessions').doc(sessionId), {
+      status: 'confirmed',
+      confirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      confirmedBy: currentUser?.label || '—'
+    });
+    await batch.commit();
+    // 3. Écriture OHADA globale (une écriture pour toute la transaction)
+    genererEcritureVente({
+      montant: d.total, modePaiement: d.operateurLabel || d.operateur,
+      article: `Kiosk Self-Service (${(d.items||[]).length} art.)`, zone: 'kiosk'
+    });
+    showToast(`✅ Paiement ${op.label||''} confirmé — ${FCFA(d.total)}`, 'success');
+    ouvrirKioskPending(); // rafraîchir la liste
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Confirmer'; }
+  }
+}
+
+async function annulerKioskSession(sessionId, btn) {
+  if (!confirm('Annuler cette commande kiosk ?')) return;
+  if (btn) { btn.disabled = true; }
+  try {
+    await db.collection('kiosk_sessions').doc(sessionId).update({
+      status: 'cancelled',
+      cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+      cancelledBy: currentUser?.label || '—'
+    });
+    showToast('Commande kiosk annulée', 'warning');
+    ouvrirKioskPending();
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function renderVersementsBanque() {
