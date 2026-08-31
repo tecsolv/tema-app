@@ -13529,6 +13529,10 @@ const KIOSK_OPERATEURS = {
   momo:   { label: 'MTN MoMo',   emoji: '🟡', color: '#CA8A04' },
   moov:   { label: 'Moov Money', emoji: '🔷', color: '#0284C7' },
 };
+// QR codes locaux (fallback si Firestore ne contient pas de qr_url)
+const LOCAL_QR_ASSETS = {
+  wave:   'assets/QR-Codes/Wave-Money.png',
+};
 
 let _kioskPanier       = [];    // [{productId, nom, qty, prixUnitaire, montant, imageData}]
 let _kioskOp           = null;  // opérateur sélectionné
@@ -13714,8 +13718,9 @@ function kioskSelectionnerOp(op) {
   const qrZone = document.getElementById('kiosk-qr-zone');
   const inner  = document.getElementById('kiosk-qr-inner');
   let html = `<div style="font-size:18px;font-weight:700;color:${opInfo.color};margin-bottom:12px">${opInfo.emoji} ${opInfo.label}</div>`;
-  if (cfg.qr_url) {
-    html += `<img class="kiosk-qr-img" src="${cfg.qr_url}" alt="QR ${opInfo.label}"><br>`;
+  const qrSrc = cfg.qr_url || LOCAL_QR_ASSETS[op] || null;
+  if (qrSrc) {
+    html += `<img class="kiosk-qr-img" src="${qrSrc}" alt="QR ${opInfo.label}" style="width:200px;height:200px;object-fit:contain;border-radius:10px"><br>`;
     html += `<div class="kiosk-qr-instruction">Scannez ce QR code avec votre app ${opInfo.label}</div>`;
   } else if (cfg.numero) {
     html += `<div style="font-size:32px;font-weight:900;letter-spacing:2px;margin:8px 0">${cfg.numero}</div>`;
@@ -13923,6 +13928,8 @@ async function confirmerKioskSession(sessionId, btn) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(() => {});
     showToast(`✅ Paiement ${op.label||''} confirmé — ${FCFA(d.total)}`, 'success');
+    // Impression automatique du ticket kiosk (côté agent)
+    imprimerTicketKiosk({ ...d, confirmedBy: currentUser?.label || '—' });
     ouvrirKioskPending(); // rafraîchir la liste
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
@@ -13960,6 +13967,80 @@ async function annulerKioskSession(sessionId, btn) {
     showToast('Erreur: ' + e.message, 'error');
     if (btn) btn.disabled = false;
   }
+}
+
+// ─── Impression ticket kiosk (80mm, côté agent, avec tampon PAYÉE) ───────────
+function imprimerTicketKiosk(d) {
+  const now    = new Date();
+  const df     = now.toLocaleDateString('fr-FR');
+  const heure  = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const ticketNum = 'K-' + now.getTime().toString().slice(-6);
+  const opInfo = KIOSK_OPERATEURS[d.operateur] || { label: d.operateurLabel || d.operateur, emoji: '💳' };
+  const lignes = (d.items || []).map(i => {
+    const nom   = (i.nom || '?').substring(0, 24).padEnd(24);
+    const qty   = String(i.qty).padStart(3);
+    const pu    = i.prixUnitaire.toLocaleString('fr-FR').padStart(7);
+    const tot   = i.montant.toLocaleString('fr-FR').padStart(7);
+    return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:1px 0">
+              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.nom}</span>
+              <span style="white-space:nowrap;margin-left:6px">${i.qty}×${i.prixUnitaire.toLocaleString('fr-FR')}=${i.montant.toLocaleString('fr-FR')}</span>
+            </div>`;
+  }).join('');
+
+  const html = `<style id="_tema_page_sz">@page{size:80mm auto;margin:4mm 5mm}</style>
+<div style="font-family:'Courier New',monospace;font-size:12px;width:80mm;max-width:80mm;margin:auto;padding:0;color:#000;background:#fff;line-height:1.6">
+
+  <!-- En-tête boutique -->
+  <div style="text-align:center;padding-bottom:8px;border-bottom:1px dashed #ccc">
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0">
+      <img src="assets/logo_tema_sidebar_v2.png" alt="TeMa" style="height:44px;width:auto;filter:grayscale(1)">
+      <div style="font-weight:700;font-size:13px;text-align:left;line-height:1.3">Multiservices</div>
+    </div>
+    <div style="font-size:10px;line-height:1.7">Quartier Ebenezer fin goudron, Yamoussoukro<br>Tél : +225 27 30 655 526 / +225 07 69 859 206</div>
+  </div>
+
+  <!-- Tampon PAYÉE -->
+  <div style="text-align:center;margin:8px 0;padding:6px;border:2.5px solid #15803d;border-radius:6px;background:#f0fdf4">
+    <div style="font-size:22px;font-weight:900;color:#15803d;letter-spacing:3px">✅ PAYÉE</div>
+    <div style="font-size:10px;color:#166534">${opInfo.emoji} ${opInfo.label} — ${df} à ${heure}</div>
+  </div>
+
+  <!-- Infos ticket -->
+  <div style="border-bottom:1px dashed #ccc;font-size:11px;padding:4px 0;margin-bottom:4px">
+    <div>Ticket N° : <strong>${ticketNum}</strong></div>
+    <div>Canal : <strong>Kiosk Self-Service</strong></div>
+    <div>Confirmé par : ${d.confirmedBy || '—'}</div>
+  </div>
+
+  <!-- Articles -->
+  <div style="padding:4px 0;border-bottom:1px dashed #ccc;margin-bottom:4px">${lignes}</div>
+
+  <!-- Total -->
+  <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;padding:4px 0;border-top:2px solid #000;margin-top:2px">
+    <span>TOTAL</span>
+    <span>${(d.total || 0).toLocaleString('fr-FR')} FCFA</span>
+  </div>
+  <div style="font-size:11px;margin-top:2px">Mode de règlement : <strong>${d.operateurLabel || d.operateur}</strong></div>
+
+  <!-- Zone sécurité -->
+  <div style="margin-top:10px;padding:6px;border:2px dashed #1d4ed8;border-radius:6px;text-align:center;background:#eff6ff">
+    <div style="font-size:12px;font-weight:700;color:#1e3a8a">🔒 À PRÉSENTER À LA SORTIE</div>
+    <div style="font-size:10px;color:#1d4ed8;margin-top:2px">Agent de sécurité : vérifier ce reçu<br>avant la sortie du client</div>
+  </div>
+
+  <div style="text-align:center;margin-top:10px;font-family:Georgia,serif;font-style:italic;font-size:13px">Merci pour votre confiance !</div>
+</div>`;
+
+  let _ps = document.getElementById('_tema_page_sz');
+  if (!_ps) { _ps = document.createElement('style'); _ps.id = '_tema_page_sz'; document.head.appendChild(_ps); }
+  _ps.textContent = '@page{size:80mm auto;margin:4mm 5mm}';
+  document.getElementById('receipt-print-area').innerHTML = html;
+  window.print();
+  // Restaurer A5 après impression
+  setTimeout(() => {
+    _ps.textContent = '@page{size:A5 portrait;margin:7mm}';
+    document.getElementById('receipt-print-area').innerHTML = '';
+  }, 1000);
 }
 
 async function renderVersementsBanque() {
