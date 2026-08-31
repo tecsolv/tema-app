@@ -4284,6 +4284,20 @@
     <h2 style="color:#fff;margin-bottom:6px">Sélectionnez votre caisse</h2>
     <p style="color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center;max-width:480px">Votre session démarrera automatiquement dès que vous choisissez une caisse disponible.</p>
     <div id="select-caisse-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;max-width:780px;width:100%"></div>
+
+    <!-- Kiosk Self-Service -->
+    <div style="margin-top:40px;border-top:1px solid rgba(255,255,255,.1);padding-top:28px;width:100%;max-width:780px;text-align:center">
+      <p style="color:rgba(255,255,255,.4);font-size:12px;margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase">Ou lancer le mode client</p>
+      <button onclick="lancerKioskDepuisSelectCaisse()"
+        style="background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);color:#fff;border-radius:16px;padding:18px 36px;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:12px;transition:.2s"
+        onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
+        <span style="font-size:28px">🖥️</span>
+        <div style="text-align:left">
+          <div>Mode Kiosk Self-Service</div>
+          <div style="font-size:11px;font-weight:400;opacity:.65;margin-top:2px">Écran client — paiement Mobile Money</div>
+        </div>
+      </button>
+    </div>
   </div>
   <div style="display:flex;justify-content:flex-end;padding:0 30px 30px">
     <button class="btn-fermer-caisse" onclick="seDeconnecter()" title="Fermer votre caisse">
@@ -13518,6 +13532,11 @@ function initKioskMode() {
 function ouvrirKiosk() {
   // Ouvre dans un nouvel onglet sur le même appareil en mode kiosk
   window.open(window.location.pathname + '?kiosk=1', '_blank');
+}
+
+function lancerKioskDepuisSelectCaisse() {
+  // Lancé depuis l'écran "Sélectionnez votre caisse" → remplace le contenu de l'onglet actuel
+  window.location.href = window.location.pathname + '?kiosk=1';
 }
 
 // ─── Navigation entre écrans ───────────────────────────────────────────────
