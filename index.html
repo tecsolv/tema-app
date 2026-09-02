@@ -970,6 +970,12 @@
   .kiosk-search-input { flex:1;padding:12px 16px;font-size:16px;border:2px solid var(--border);border-radius:12px;outline:none;background:#fff }
   .kiosk-search-input:focus { border-color:var(--primary) }
   .kiosk-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px }
+  .kiosk-cat-tabs { display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch }
+  .kiosk-cat-tabs::-webkit-scrollbar { display:none }
+  .kiosk-cat-tab { flex-shrink:0;padding:9px 18px;border-radius:22px;border:2px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;white-space:nowrap }
+  .kiosk-cat-tab.active { border-color:var(--primary);background:rgba(26,94,58,.1);color:var(--primary) }
+  .kiosk-cat-tab:hover:not(.active) { border-color:var(--primary);background:rgba(26,94,58,.05) }
+  .kiosk-cat-tab:active { transform:scale(.96) }
   .kiosk-card { background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:.15s;user-select:none }
   .kiosk-card:hover { border-color:var(--primary);box-shadow:0 4px 12px rgba(26,94,58,.15) }
   .kiosk-card:active { transform:scale(.96) }
@@ -1088,6 +1094,13 @@
         <div class="kiosk-search-bar">
           <input class="kiosk-search-input" id="kiosk-search" placeholder="🔍 Rechercher un article…" oninput="kioskRenderCatalogue()">
           <button class="btn btn-outline" onclick="kioskScreen('accueil')" style="font-size:13px;white-space:nowrap">← Accueil</button>
+        </div>
+        <!-- Onglets catégories kiosk -->
+        <div class="kiosk-cat-tabs" id="kiosk-cat-tabs">
+          <button class="kiosk-cat-tab active" data-kcat="" onclick="kioskSetCat(null)">🏪 Tous</button>
+          <button class="kiosk-cat-tab" data-kcat="Épicerie" onclick="kioskSetCat('Épicerie')">🛒 Épicerie</button>
+          <button class="kiosk-cat-tab" data-kcat="Pâtisserie" onclick="kioskSetCat('Pâtisserie')">🧁 Pâtisserie</button>
+          <button class="kiosk-cat-tab" data-kcat="Boissons Rafraîchissantes" onclick="kioskSetCat('Boissons Rafraîchissantes')">🧃 Rafraîchissements</button>
         </div>
         <div class="kiosk-grid" id="kiosk-grid"></div>
       </div>
@@ -13552,6 +13565,8 @@ function imprimerTicketRetour(v, qte, montantRetour, cas, cas3Prod, motif) {
 // ── Brief U Phase 1 : Mode Kiosk Self-Service ─────────────────────────────
 const KIOSK_PLAFOND   = 10000;   // FCFA
 const KIOSK_MAX_QTE   = 10;      // articles total
+// Catégories autorisées en kiosk (Zone C & D — petits achats rapides)
+const KIOSK_CATEGORIES = ['Épicerie', 'Pâtisserie', 'Boissons Rafraîchissantes'];
 const KIOSK_INACTIVITY = 120000; // 2 min sans action → retour accueil
 const KIOSK_OPERATEURS = {
   wave:   { label: 'Wave',        emoji: '🔵', color: '#1A56DB' },
@@ -13566,6 +13581,7 @@ const LOCAL_QR_ASSETS = {
 
 let _kioskPanier       = [];    // [{productId, nom, qty, prixUnitaire, montant, imageData}]
 let _kioskOp           = null;  // opérateur sélectionné
+let _kioskCatActive    = null;  // catégorie filtrée (null = Tous)
 let _kioskSessionRef   = null;  // référence du doc Firestore kiosk_sessions
 let _kioskListener     = null;  // unsubscribe Firestore listener
 let _kioskInactivity   = null;  // setTimeout handle
@@ -13603,7 +13619,7 @@ function kioskScreen(name) {
   });
   const totalEl = document.getElementById('kiosk-header-total');
   if (totalEl) totalEl.style.display = name === 'shop' ? '' : 'none';
-  if (name === 'shop') { kioskRenderCatalogue(); kioskRenderPanier(); }
+  if (name === 'shop') { _kioskCatActive = null; kioskSetCat(null); kioskRenderPanier(); }
   if (name === 'paiement') kioskPreparePayScreen();
   if (name === 'accueil') { kioskViderPanier(true); }
   kioskResetInactivity();
@@ -13621,12 +13637,25 @@ function kioskResetInactivity() {
   }
 }
 
+// ─── Catégorie active ────────────────────────────────────────────────────────
+function kioskSetCat(cat) {
+  _kioskCatActive = cat;
+  document.querySelectorAll('#kiosk-cat-tabs .kiosk-cat-tab').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.kcat || null) === cat);
+  });
+  if (document.getElementById('kiosk-search')) document.getElementById('kiosk-search').value = '';
+  kioskRenderCatalogue();
+  kioskResetInactivity();
+}
+
 // ─── Catalogue ──────────────────────────────────────────────────────────────
 function kioskRenderCatalogue() {
   const q = (document.getElementById('kiosk-search')?.value || '').toLowerCase();
   const grid = document.getElementById('kiosk-grid'); if (!grid) return;
   const liste = produits.filter(p =>
     p.pvente > 0 &&
+    KIOSK_CATEGORIES.includes(p.cat) &&
+    (!_kioskCatActive || p.cat === _kioskCatActive) &&
     (!q || (p.nom||'').toLowerCase().includes(q) || (p.ref||'').toLowerCase().includes(q))
   );
   if (!liste.length) {
