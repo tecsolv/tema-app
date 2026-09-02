@@ -3822,7 +3822,10 @@
       </div>
       <div class="form-group" id="cpt-pass-group">
         <label>Mot de passe initial * <span style="text-transform:none;font-weight:400">(8 caractères min., l'employé ne pourra pas le changer lui-même)</span></label>
-        <input class="form-control" id="cpt-pass" type="text" placeholder="Définissez un mot de passe">
+        <div style="position:relative">
+          <input class="form-control" id="cpt-pass" type="password" placeholder="Définissez un mot de passe" autocomplete="new-password" style="padding-right:42px">
+          <button type="button" onclick="togglePassVisibility('cpt-pass',this)" title="Afficher / masquer le mot de passe" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;font-size:17px;color:var(--text-muted);line-height:1">👁</button>
+        </div>
       </div>
       <div class="form-group">
         <label>🔐 Accès système <span style="text-transform:none;font-weight:400">(modules visibles pour cet employé, en plus des règles liées à son rôle)</span></label>
@@ -3879,7 +3882,10 @@
     <div id="resetpass-nom" style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--primary)"></div>
     <div class="form-group">
       <label>Nouveau mot de passe (8 caractères min.)</label>
-      <input class="form-control" id="resetpass-val" type="text" placeholder="Nouveau mot de passe">
+      <div style="position:relative">
+        <input class="form-control" id="resetpass-val" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" style="padding-right:42px">
+        <button type="button" onclick="togglePassVisibility('resetpass-val',this)" title="Afficher / masquer le mot de passe" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;font-size:17px;color:var(--text-muted);line-height:1">👁</button>
+      </div>
     </div>
     <input type="hidden" id="resetpass-id" value="">
     <div class="modal-footer">
@@ -5572,6 +5578,12 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 
 // ===== AUTHENTIFICATION PAR COMPTE (identifiant + mot de passe) =====
 const ADMIN_BOOTSTRAP = { username: 'Sam_admin', nom: 'Sam', role: 'Propriétaire' };
+
+function togglePassVisibility(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
 
 async function hashPassword(pw) {
   const enc = new TextEncoder().encode(pw);
