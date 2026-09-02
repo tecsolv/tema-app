@@ -3192,6 +3192,25 @@
           </div>
         </div>
         <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h2>🔑 Configuration ElevenLabs</h2></div>
+          <div class="card-body">
+            <div class="alert alert-warning" style="font-size:12px;margin-bottom:14px">La clé API est utilisée par le service TeMa Media (sur l'appareil de diffusion). Elle est stockée dans Firebase — jamais dans le code source. En cas d'erreur 401, entrez ici une clé valide et redémarrez le service.</div>
+            <div class="form-row" style="align-items:flex-end;gap:12px">
+              <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Clé API ElevenLabs</label>
+                <div style="position:relative">
+                  <input class="form-control" id="mc-elevenlabs-key" type="password" placeholder="sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" style="padding-right:42px;font-family:monospace;font-size:12px">
+                  <button type="button" onclick="togglePassVisibility('mc-elevenlabs-key',this)" title="Afficher / masquer" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;font-size:17px;color:var(--text-muted);line-height:1">👁</button>
+                </div>
+              </div>
+              <div style="margin-bottom:0">
+                <button class="btn btn-primary" style="white-space:nowrap" onclick="sauvegarderCleElevenLabs()">💾 Enregistrer</button>
+              </div>
+            </div>
+            <div id="mc-elevenlabs-statut" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
           <div class="card-header"><h2>🪄 Générer une annonce par IA (texte → voix)</h2></div>
           <div class="card-body">
             <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">Tapez le texte de l'annonce, l'IA (ElevenLabs) la transforme en voix et l'ajoute automatiquement à la liste ci-dessous. Génération en 10-20 secondes — pas besoin d'enregistrer un micro.</div>
@@ -10879,6 +10898,7 @@ function mcNavigate(tab) {
   document.getElementById('mc-tab-' + tab).classList.add('active');
   document.getElementById('mc-tab-btn-' + tab).classList.add('active');
   renderMediaCenterAdmin();
+  if (tab === 'annonces') chargerCleElevenLabs();
 }
 
 // Console Audio repliable, fusionnée directement dans le tableau de bord (façon
@@ -10918,6 +10938,44 @@ async function envoyerCommandeMC(command, params) {
 }
 
 function envoyerVolumeMC(valeur) { envoyerCommandeMC('SET_VOLUME', { volume: Number(valeur) }); }
+
+async function chargerCleElevenLabs() {
+  try {
+    const snap = await db.collection('parametres').doc('media').get();
+    const inp = document.getElementById('mc-elevenlabs-key');
+    const statut = document.getElementById('mc-elevenlabs-statut');
+    if (!inp || !statut) return;
+    if (snap.exists && snap.data().elevenLabsApiKey) {
+      inp.value = snap.data().elevenLabsApiKey;
+      const d = snap.data().updatedAt ? snap.data().updatedAt.toDate().toLocaleDateString('fr-FR') : '';
+      statut.textContent = '✓ Clé configurée' + (d ? ' — mise à jour le ' + d : '');
+      statut.style.color = 'var(--success, #28a745)';
+    } else {
+      statut.textContent = '⚠️ Aucune clé enregistrée — la génération IA est désactivée.';
+      statut.style.color = 'var(--warning-text, #856404)';
+    }
+  } catch(e) {}
+}
+
+async function sauvegarderCleElevenLabs() {
+  const cle = (document.getElementById('mc-elevenlabs-key').value || '').trim();
+  const statut = document.getElementById('mc-elevenlabs-statut');
+  if (!cle) { showToast('Entrez une clé API ElevenLabs', 'error'); return; }
+  statut.textContent = '⏳ Enregistrement…';
+  try {
+    await db.collection('parametres').doc('media').set({
+      elevenLabsApiKey: cle,
+      updatedBy: currentUser.label,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    statut.textContent = '✓ Clé enregistrée dans Firebase. Redémarrez le service TeMa Media pour appliquer.';
+    statut.style.color = 'var(--success, #28a745)';
+    showToast('✅ Clé ElevenLabs enregistrée', 'success');
+  } catch(e) {
+    statut.textContent = '❌ ' + e.message;
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
 
 // ── Lecture continue (Feature 3) : shuffle/repeat/ordre sont exécutés par la Queue
 // du service (queue.js), jamais par le navigateur — ici on ne fait qu'envoyer le réglage. ──
@@ -11606,7 +11664,12 @@ function renderMediaCenterAdmin() {
   const ttsStatutEl = document.getElementById('mc-tts-statut');
   if (ttsStatutEl && !modeTous) {
     if (mcState.ttsStatut === 'en_cours') ttsStatutEl.textContent = '⏳ Génération en cours…';
-    else if (mcState.ttsStatut === 'erreur') ttsStatutEl.textContent = '✗ Erreur : ' + (mcState.ttsErreur || 'inconnue');
+    else if (mcState.ttsStatut === 'erreur') {
+      const errMsg = mcState.ttsErreur || 'inconnue';
+      const hint = errMsg.includes('401') ? ' — Clé API invalide ou expirée. Mettez à jour la clé dans l\'onglet Annonces › Configuration ElevenLabs.' : '';
+      ttsStatutEl.textContent = '✗ Erreur : ' + errMsg + hint;
+      ttsStatutEl.style.color = 'var(--danger, #dc3545)';
+    }
     else if (mcState.ttsStatut === 'succes') ttsStatutEl.textContent = '✓ Annonce générée';
     else ttsStatutEl.textContent = '';
   }
