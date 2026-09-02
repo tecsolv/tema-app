@@ -5971,7 +5971,7 @@ async function enregistrerTransactionDigital() {
   const montant = parseFloat(document.getElementById('mm-montant')?.value);
   const numero = document.getElementById('mm-numero')?.value || '';
   const client = document.getElementById('mm-client')?.value || '';
-  if (!montant || montant <= 0) { alert('Montant invalide'); return; }
+  if (!montant || montant <= 0) { showToast('Montant invalide', 'error'); return; }
   const rates = MM_RATES[digMMReseau] || {depot:0.01,retrait:0.02,transfert:0.005};
   const commission = montant * (rates[type] || 0.01);
   const uid = currentUser.uid || currentUser.id || currentUser.label;
@@ -6000,8 +6000,8 @@ async function enregistrerTransactionDigital() {
     document.getElementById('mm-client').value = '';
     document.getElementById('mm-comm-preview').textContent = '—';
     auditDigital('Transaction MM', `${digMMReseau} · ${type} · ${posF(montant)} · Comm: ${posF(commission)}`);
-    alert(`✅ Transaction enregistrée\nCommission: ${posF(commission)}`);
-  } catch(e) { console.error(e); alert('Erreur: ' + e.message); }
+    showToast(`✅ Transaction enregistrée — Commission : ${posF(commission)}`, 'success');
+  } catch(e) { console.error(e); showToast('❌ Erreur : ' + e.message, 'error'); }
 }
 
 // ── Services Numériques ─────────────────────────────────────────────────
@@ -6067,13 +6067,13 @@ function selectionnerServiceDigital(nom, prix) {
 
 async function enregistrerServiceDigital() {
   const selVal = document.getElementById('svc-type')?.value || '';
-  if (!selVal) { alert('Choisissez un service'); return; }
+  if (!selVal) { showToast('Choisissez un service', 'error'); return; }
   const nomService = selVal.split('|')[0];
   const prix = parseFloat(document.getElementById('svc-prix')?.value) || 0;
   const qte = parseInt(document.getElementById('svc-qte')?.value) || 1;
   const client = document.getElementById('svc-client')?.value || '';
   const total = prix * qte;
-  if (total <= 0) { alert('Montant invalide'); return; }
+  if (total <= 0) { showToast('Montant invalide', 'error'); return; }
   const uid = currentUser.uid || currentUser.id || currentUser.label;
   try {
     const batch = db.batch();
@@ -6102,8 +6102,8 @@ async function enregistrerServiceDigital() {
     document.getElementById('svc-client').value = '';
     document.getElementById('svc-total-preview').textContent = '—';
     auditDigital('Service', `${nomService} × ${qte} = ${posF(total)}`);
-    alert(`✅ Service enregistré: ${nomService}\nTotal: ${posF(total)}`);
-  } catch(e) { console.error(e); alert('Erreur: ' + e.message); }
+    showToast(`✅ Service enregistré : ${nomService} — ${posF(total)}`, 'success');
+  } catch(e) { console.error(e); showToast('❌ Erreur : ' + e.message, 'error'); }
 }
 
 // ── Rapports Digital ────────────────────────────────────────────────────
@@ -6220,13 +6220,13 @@ async function sauvegarderClientDigital(e) {
     document.getElementById('dc-tel').value = '';
     document.getElementById('dc-email').value = '';
     auditDigital('Nouveau client', nom);
-  } catch(err) { alert('Erreur: ' + err.message); }
+  } catch(err) { showToast('❌ Erreur : ' + err.message, 'error'); }
 }
 
 function voirClientDigital(id) {
   const c = posClients.find(x => x.id === id);
   if (!c) return;
-  alert(`👤 ${c.nom}\n📞 ${c.telephone||'—'}\n✉️ ${c.email||'—'}\n💰 Total achats: ${posF(c.totalAchats||0)}`);
+  showToast(`👤 ${escapeHTML(c.nom)} · 📞 ${c.telephone||'—'} · 💰 ${posF(c.totalAchats||0)}`, 'info', 5000);
 }
 
 // ── Stock Zone A/B ──────────────────────────────────────────────────────
@@ -17303,7 +17303,7 @@ function calculerBulletinPaie(employe, mois) {
   const tauxHoraire = heuresContractuelles > 0 ? salaireBase / heuresContractuelles : 0;
   const heuresSupMontant = Math.round(heuresSupHeures * tauxHoraire * (rhParametresPaie.tauxHeureSup || 1.25));
   const joursAbsence = rhJoursAbsenceNonPayeeMois(employe.id, mois);
-  const joursOuvrablesMois = 26;
+  const joursOuvrablesMois = rhParametresPaie.joursOuvrablesMois || 26;
   const deductionAbsences = Math.round((salaireBase / joursOuvrablesMois) * joursAbsence);
   return { salaireBase, primeTransport, primeLogement, primeRendement, heuresSupHeures, heuresSupMontant, joursAbsence, deductionAbsences };
 }
@@ -17321,6 +17321,10 @@ async function genererBrouillonsDuMois() {
   if (!peutPreparerPaie()) { showToast('Accès non autorisé', 'error'); return; }
   const mois = document.getElementById('rh-paie-mois').value;
   if (!mois) { showToast('Sélectionnez un mois', 'error'); return; }
+  if (!rhParametresPaie || !rhParametresPaie.tauxCnpsSalarie) {
+    showToast("⚠️ Paramètres de paie non chargés — ouvrez l'onglet Paramètres et enregistrez d'abord", 'error', 6000);
+    return;
+  }
   const employesActifs = rhEmployes.filter(e => e.statut === 'actif');
   let created = 0;
   for (const emp of employesActifs) {
