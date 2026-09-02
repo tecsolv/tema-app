@@ -1118,6 +1118,8 @@
           <button class="kiosk-cat-tab" data-kcat="Épicerie" onclick="kioskSetCat('Épicerie')">🛒 Épicerie</button>
           <button class="kiosk-cat-tab" data-kcat="Pâtisserie" onclick="kioskSetCat('Pâtisserie')">🧁 Pâtisserie</button>
           <button class="kiosk-cat-tab" data-kcat="Boissons Rafraîchissantes" onclick="kioskSetCat('Boissons Rafraîchissantes')">🧃 Rafraîchissements</button>
+          <button class="kiosk-cat-tab" data-kcat="Fournitures Scolaires" onclick="kioskSetCat('Fournitures Scolaires')">📚 Fournitures</button>
+          <button class="kiosk-cat-tab" data-kcat="Beauté & Bien-Être" onclick="kioskSetCat('Beauté & Bien-Être')">💄 Beauté</button>
         </div>
         <div class="kiosk-grid" id="kiosk-grid"></div>
       </div>
@@ -13636,8 +13638,8 @@ function imprimerTicketRetour(v, qte, montantRetour, cas, cas3Prod, motif) {
 // ── Brief U Phase 1 : Mode Kiosk Self-Service ─────────────────────────────
 const KIOSK_PLAFOND   = 10000;   // FCFA
 const KIOSK_MAX_QTE   = 10;      // articles total
-// Catégories autorisées en kiosk (Zone C & D — petits achats rapides)
-const KIOSK_CATEGORIES = ['Épicerie', 'Pâtisserie', 'Boissons Rafraîchissantes'];
+// Catégories autorisées en kiosk (Zone B, C & D — petits achats rapides, prix ≤ plafond)
+const KIOSK_CATEGORIES = ['Épicerie', 'Pâtisserie', 'Boissons Rafraîchissantes', 'Fournitures Scolaires', 'Beauté & Bien-Être'];
 const KIOSK_INACTIVITY = 120000; // 2 min sans action → retour accueil
 const KIOSK_OPERATEURS = {
   wave:   { label: 'Wave',        emoji: '🔵', color: '#1A56DB' },
