@@ -5566,7 +5566,7 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 });
 
 // ===== AUTHENTIFICATION PAR COMPTE (identifiant + mot de passe) =====
-const ADMIN_BOOTSTRAP = { username: 'Sam_admin', password: 'Charnell8', nom: 'Sam', role: 'Propriétaire' };
+const ADMIN_BOOTSTRAP = { username: 'Sam_admin', nom: 'Sam', role: 'Propriétaire' };
 
 async function hashPassword(pw) {
   const enc = new TextEncoder().encode(pw);
@@ -5643,17 +5643,7 @@ function resetLoginBtn() {
 async function assurerCompteAdmin() {
   const snap = await db.collection('users').limit(1).get();
   if (!snap.empty) return;
-  const hash = await hashPassword(ADMIN_BOOTSTRAP.password);
-  await db.collection('users').add({
-    username: ADMIN_BOOTSTRAP.username,
-    nom: ADMIN_BOOTSTRAP.nom,
-    role: ADMIN_BOOTSTRAP.role,
-    passwordHash: hash,
-    isAdmin: true,
-    status: 'active',
-    createdBy: 'système',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  console.warn('[Auth] Collection users vide — créer le premier compte via la console Firebase Firestore.');
 }
 
 // Crée le registre des caisses physiques une seule fois si la collection caisses est vide
@@ -6478,9 +6468,10 @@ function demarrerListeners() {
   }, err => console.error('member_prices:', err));
 
   // Listener config boutique (config/store) — infos reçu + paramètres généraux
-  db.collection('config').doc('store').onSnapshot(snap => {
+  const uStoreConfig = db.collection('config').doc('store').onSnapshot(snap => {
     if (snap.exists) storeConfig = {...storeConfig, ...snap.data()};
   }, err => console.error('config/store:', err));
+  unsubscribers.push(uStoreConfig);
 
   unsubscribers = [u1, u2, u3, u7, u8, u9, u10, u11, u12, u13, u14, u15, uLoyalty, uMemberPrices];
 
@@ -6569,9 +6560,10 @@ function demarrerListeners() {
   }
 
   // Statut connexion
-  db.collection('_ping').doc('status').onSnapshot(() => {
+  const uPing = db.collection('_ping').doc('status').onSnapshot(() => {
     setConnStatus('online');
   });
+  unsubscribers.push(uPing);
 
   // Catégories personnalisées (ne bloque pas le chargement)
   loadCategories();
@@ -6585,61 +6577,64 @@ function demarrerListenersRH() {
   if (rhListenersDemarres) return;
   rhListenersDemarres = true;
 
-  db.collection('rh_employes').orderBy('nom').onSnapshot(snap => {
+  const uRhEmployes = db.collection('rh_employes').orderBy('nom').onSnapshot(snap => {
     rhEmployes = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
     remplirDatalistEmployes();
   }, err => console.error('rh_employes:', err));
 
-  db.collection('rh_contrats').orderBy('dateDebut','desc').onSnapshot(snap => {
+  const uRhContrats = db.collection('rh_contrats').orderBy('dateDebut','desc').onSnapshot(snap => {
     rhContrats = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_contrats:', err));
 
   // Phase RH-B
-  db.collection('rh_pointages').orderBy('date','desc').onSnapshot(snap => {
+  const uRhPointages = db.collection('rh_pointages').orderBy('date','desc').onSnapshot(snap => {
     rhPointages = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_pointages:', err));
 
-  db.collection('rh_absences').orderBy('dateDebut','desc').onSnapshot(snap => {
+  const uRhAbsences = db.collection('rh_absences').orderBy('dateDebut','desc').onSnapshot(snap => {
     rhAbsences = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_absences:', err));
 
-  db.collection('rh_planning').orderBy('date','desc').onSnapshot(snap => {
+  const uRhPlanning = db.collection('rh_planning').orderBy('date','desc').onSnapshot(snap => {
     rhPlanning = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_planning:', err));
 
   // Phase RH-C — Paramètres de Paie (document unique 'global')
-  db.collection('rh_parametres_paie').doc('global').onSnapshot(snap => {
+  const uRhParamsPaie = db.collection('rh_parametres_paie').doc('global').onSnapshot(snap => {
     if (snap.exists) rhParametresPaie = { ...rhParametresPaie, ...snap.data() };
     rafraichirPageActive();
   }, err => console.error('rh_parametres_paie:', err));
 
   // Phase RH-C — Avances & Prêts
-  db.collection('rh_avances').orderBy('dateCreation','desc').onSnapshot(snap => {
+  const uRhAvances = db.collection('rh_avances').orderBy('dateCreation','desc').onSnapshot(snap => {
     rhAvances = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_avances:', err));
 
-  db.collection('rh_prets').orderBy('dateCreation','desc').onSnapshot(snap => {
+  const uRhPrets = db.collection('rh_prets').orderBy('dateCreation','desc').onSnapshot(snap => {
     rhPrets = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_prets:', err));
 
   // Phase RH-C — Bulletins de paie
-  db.collection('rh_paie').orderBy('mois','desc').onSnapshot(snap => {
+  const uRhPaie = db.collection('rh_paie').orderBy('mois','desc').onSnapshot(snap => {
     rhPaie = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_paie:', err));
 
   // Phase RH-C — Formations
-  db.collection('rh_formations').orderBy('dateDebut','desc').onSnapshot(snap => {
+  const uRhFormations = db.collection('rh_formations').orderBy('dateDebut','desc').onSnapshot(snap => {
     rhFormations = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('rh_formations:', err));
+
+  unsubscribers.push(uRhEmployes, uRhContrats, uRhPointages, uRhAbsences, uRhPlanning,
+    uRhParamsPaie, uRhAvances, uRhPrets, uRhPaie, uRhFormations);
 }
 
 function setConnStatus(status) {
@@ -7619,6 +7614,17 @@ function calculerMonnaie() {
   else { changeEl.className='payment-change'; document.getElementById('change-label').textContent='Monnaie à rendre'; btnPay.disabled=false; }
 }
 
+async function decrementStockAtomic(productId, qte, nom) {
+  return await db.runTransaction(async (t) => {
+    const ref = db.collection('produits').doc(productId);
+    const doc = await t.get(ref);
+    if (!doc.exists) throw new Error(`Produit introuvable : ${nom}`);
+    const stock = doc.data().stock || 0;
+    if (stock < qte) throw new Error(`Stock insuffisant pour "${nom}" : disponible ${stock}, demandé ${qte}`);
+    t.update(ref, { stock: stock - qte, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+}
+
 async function confirmerVente() {
   if (!posPanier.length) return;
   const {sous,remiseFCFA,total}=calculerTotaux();
@@ -7631,6 +7637,10 @@ async function confirmerVente() {
   const btn=document.getElementById('btn-confirm-pay');
   btn.disabled=true; btn.textContent='⏳ Enregistrement...';
   try {
+    // Décrémentation atomique du stock avant l'enregistrement de la vente
+    for (const item of posPanier) {
+      if (!item.serviceType) await decrementStockAtomic(item.id, item.qte, item.nom);
+    }
     const batch=db.batch();
     for (const item of posPanier) {
       const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
@@ -7647,7 +7657,6 @@ async function confirmerVente() {
         createdBy:currentUser?.label||'Caissier',
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
       });
-      if (!item.serviceType) batch.update(db.collection('produits').doc(item.id),{stock:firebase.firestore.FieldValue.increment(-item.qte)});
       if (item.serviceType) {
         batch.set(db.collection('ventes_services').doc(),{
           date:dateDuJour, heure, service:item.nom, quantite:item.qte,
@@ -7684,10 +7693,11 @@ async function confirmerVente() {
     closeLoyaltySession(ticketNum, sous - remiseFCFA, total);
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
     const numPiecesVente = genererNumPieces(posPanier.length);
-    posPanier.forEach((item, idx) => {
-      const zone=item.serviceType?'A':(CAT_ZONE[item.cat]||'D');
-      genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
-    });
+    for (let idx = 0; idx < posPanier.length; idx++) {
+      const item = posPanier[idx];
+      const zone = item.serviceType ? 'A' : (CAT_ZONE[item.cat] || 'D');
+      await genererEcritureVente({date:dateDuJour, modePaiement:posModePayActuel, zone, article:item.nom, montant:item.total}, numPiecesVente[idx]);
+    }
     closePosModal('modal-payment');
     afficherTicketPOS({ticketNum, barcodeValue, items:[...posPanier], sous, remiseFCFA, total, monnaie, montantRemis, modePaiement:posModePayActuel, client:posClientActuel, heure, date:dateDuJour, loyalty:loyaltyReceipt});
     showToast('✅ Vente enregistrée — ' + posF(total));
@@ -10396,7 +10406,7 @@ async function changerStatutCmd(id, statut) {
           });
         }
         // Liaison automatique Comptabilité OHADA : Débit 601 Achats / Crédit 401 Fournisseurs
-        genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom, numPiecesAchat[i]);
+        await genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom, numPiecesAchat[i]);
       }
       consigner('Commande reçue', `${c.num||id} — stock mis à jour`);
       showToast('Commande reçue — stock mis à jour ✓');
@@ -14042,7 +14052,7 @@ async function confirmerKioskSession(sessionId, btn) {
     });
     await batch.commit();
     // 3. Écriture OHADA globale (une écriture pour toute la transaction)
-    genererEcritureVente({
+    await genererEcritureVente({
       montant: d.total, modePaiement: d.operateurLabel || d.operateur,
       article: `Kiosk Self-Service (${(d.items||[]).length} art.)`, zone: 'kiosk'
     });
@@ -15245,7 +15255,7 @@ async function ajouterVenteCaisse(event) {
   };
   try {
     await db.collection('ventesCaisse').add(data);
-    genererEcritureVente(data); // Liaison automatique Comptabilité OHADA : Débit Trésorerie / Crédit Produits
+    await genererEcritureVente(data); // Liaison automatique Comptabilité OHADA : Débit Trésorerie / Crédit Produits
     consigner('Vente enregistrée (caisse)', `${ZONES_CAISSE[data.zone]?.label} — ${article} — ${FCFA(data.montant)}`);
     showToast(`✓ Vente enregistrée — ${FCFA(data.montant)}`);
     ['cs-article','cs-prix','cs-client','cs-note'].forEach(id => document.getElementById(id).value = '');
