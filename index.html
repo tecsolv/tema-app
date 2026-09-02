@@ -5305,6 +5305,11 @@
 //  Toute évolution future nécessite une validation manuelle externe.
 // ============================================================
 const FEATURE_FREEZE = true;
+
+// CONVENTION DE NOMMAGE (BUG-022) :
+// Fonctions métier → français  (ex: confirmerVente, genererEcritureVente)
+// Fonctions utilitaires/techniques → anglais (ex: escapeHTML, generateBarcodeValue, posGenTicketNumAtomique)
+// Les fonctions existantes ne sont pas renommées — cette convention s'applique aux ajouts futurs.
 const FREEZE_DATE = "2026-06-13";
 const FREEZE_UNTIL = "2026-10-31";
 const FREEZE_REASON = "MVP stabilisé - production prête jusqu'au 31/10/2026";
@@ -6986,7 +6991,10 @@ function ouvrirEcranPOS() {
   });
   document.getElementById('screen-pos').classList.add('active');
   const tn = document.getElementById('ticket-num');
-  if (tn && tn.textContent === '—') tn.textContent = posGenTicketNum();
+  if (tn && tn.textContent === '—') {
+    tn.textContent = '…';
+    posGenTicketNumAtomique().then(num => { if (tn.textContent === '…') tn.textContent = num; }).catch(() => { tn.textContent = posGenTicketNum(); });
+  }
   const titreEl = document.getElementById('pos-titre-caisse');
   if (titreEl) {
     const num = posSessionActive?.caisseNom?.replace('Caisse ', '') || '';
@@ -7030,6 +7038,19 @@ function retourDepuisPOS() {
 function posGenTicketNum() {
   const d = new Date(); const md = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
   return 'T' + md + '-' + String(posTicketCounter++).padStart(4,'0');
+}
+
+async function posGenTicketNumAtomique() {
+  const d = new Date();
+  const dateStr = String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  const ref = db.collection('ohada_counters').doc('ticket_sequence');
+  let n;
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    n = (doc.exists ? (doc.data().counter || 0) : 0) + 1;
+    t.set(ref, { counter: n, date: dateStr }, { merge: true });
+  });
+  return `TK-${dateStr}-${String(n).padStart(5, '0')}`;
 }
 
 function closePosModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -8449,7 +8470,9 @@ function nouvelleVente() {
   posPanier=[]; posClientActuel=null;
   document.getElementById('cart-client-name').textContent='Aucun client';
   const ri=document.getElementById('remise-input'); if(ri) ri.value='';
-  document.getElementById('ticket-num').textContent=posGenTicketNum();
+  const _tn = document.getElementById('ticket-num');
+  _tn.textContent = '…';
+  posGenTicketNumAtomique().then(num => { _tn.textContent = num; }).catch(() => { _tn.textContent = posGenTicketNum(); });
   resetLoyaltySession();
   renderPanier(); closePosModal('modal-receipt');
 }
@@ -13692,11 +13715,11 @@ function imprimerTicketRetour(v, qte, montantRetour, cas, cas3Prod, motif) {
 }
 
 // ── Brief U Phase 1 : Mode Kiosk Self-Service ─────────────────────────────
-const KIOSK_PLAFOND   = 10000;   // FCFA
-const KIOSK_MAX_QTE   = 10;      // articles total
+let KIOSK_PLAFOND   = 10000;   // FCFA (modifiable via config/kiosk en Firestore)
+let KIOSK_MAX_QTE   = 10;      // articles total
 // Catégories autorisées en kiosk (Zone B, C & D — petits achats rapides, prix ≤ plafond)
-const KIOSK_CATEGORIES = ['Épicerie', 'Pâtisserie', 'Boissons Rafraîchissantes', 'Fournitures Scolaires', 'Beauté & Bien-Être'];
-const KIOSK_INACTIVITY = 120000; // 2 min sans action → retour accueil
+let KIOSK_CATEGORIES = ['Épicerie', 'Pâtisserie', 'Boissons Rafraîchissantes', 'Fournitures Scolaires', 'Beauté & Bien-Être'];
+let KIOSK_INACTIVITY = 120000; // 2 min sans action → retour accueil
 const KIOSK_OPERATEURS = {
   wave:   { label: 'Wave',        emoji: '🔵', color: '#1A56DB' },
   orange: { label: 'Orange Money',emoji: '🟠', color: '#EA580C' },
@@ -13725,7 +13748,15 @@ function initKioskMode() {
   document.body.classList.add('kiosk-mode');
   // Charger config QR
   db.collection('parametres').doc('kiosk').get().then(snap => {
-    if (snap.exists) { _kioskConfig = snap.data(); _kioskCaisseId = snap.data().caisseId || null; }
+    if (snap.exists) {
+      const cfg = snap.data();
+      _kioskConfig  = cfg;
+      _kioskCaisseId = cfg.caisseId || null;
+      if (cfg.plafond)    KIOSK_PLAFOND    = cfg.plafond;
+      if (cfg.maxQte)     KIOSK_MAX_QTE    = cfg.maxQte;
+      if (cfg.inactivity) KIOSK_INACTIVITY = cfg.inactivity;
+      if (cfg.categories && Array.isArray(cfg.categories)) KIOSK_CATEGORIES = cfg.categories;
+    }
   }).catch(() => {});
   kioskScreen('accueil');
   kioskStartInactivity();
