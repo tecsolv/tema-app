@@ -5574,6 +5574,11 @@ async function hashPassword(pw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 function showLoginError(msg) {
   const el = document.getElementById('login-error');
   el.textContent = msg; el.style.display = 'flex';
@@ -6386,21 +6391,21 @@ function demarrerListeners() {
   }, err => { console.error('commandes:', err); checkLoaded(); });
 
   // Listener journal de caisse (ventes au comptoir, temps réel pour tous)
-  const u7 = db.collection('ventesCaisse').orderBy('date', 'desc').onSnapshot(snap => {
+  const u7 = db.collection('ventesCaisse').orderBy('date', 'desc').limit(500).onSnapshot(snap => {
     ventesCaisse = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
     checkLoaded();
   }, err => { console.error('ventesCaisse:', err); checkLoaded(); });
 
   // Listener écritures comptables (Comptabilité OHADA, temps réel)
-  const u8 = db.collection('ecritures_comptables').orderBy('date', 'desc').onSnapshot(snap => {
+  const u8 = db.collection('ecritures_comptables').orderBy('date', 'desc').limit(500).onSnapshot(snap => {
     ecritures = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
     checkLoaded();
   }, err => { console.error('ecritures_comptables:', err); checkLoaded(); });
 
   // Listener relevés de trésorerie (Rapprochement, temps réel)
-  const u9 = db.collection('releves_tresorerie').orderBy('date', 'desc').onSnapshot(snap => {
+  const u9 = db.collection('releves_tresorerie').orderBy('date', 'desc').limit(200).onSnapshot(snap => {
     releves = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
     checkLoaded();
@@ -6413,13 +6418,13 @@ function demarrerListeners() {
   }, err => console.error('rapprochements:', err));
 
   // Listener transactions Mobile Money
-  const u11 = db.collection('transactions_mobile_money').orderBy('date','desc').onSnapshot(snap => {
+  const u11 = db.collection('transactions_mobile_money').orderBy('date','desc').limit(200).onSnapshot(snap => {
     transactionsMM = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('transactions_mobile_money:', err));
 
   // Listener ventes de services numériques
-  const u12 = db.collection('ventes_services').orderBy('date','desc').onSnapshot(snap => {
+  const u12 = db.collection('ventes_services').orderBy('date','desc').limit(200).onSnapshot(snap => {
     ventesServices = snap.docs.map(d => ({id: d.id, ...d.data()}));
     rafraichirPageActive();
   }, err => console.error('ventes_services:', err));
@@ -6481,7 +6486,7 @@ function demarrerListeners() {
       sessionsCaisseAll = snap.docs.map(d => ({id: d.id, ...d.data()}));
       if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
     }, err => console.error('sessions_caisse(all):', err));
-    const u17 = db.collection('audit_caisses').onSnapshot(snap => {
+    const u17 = db.collection('audit_caisses').orderBy('createdAt', 'desc').limit(200).onSnapshot(snap => {
       auditCaisses = snap.docs.map(d => ({id: d.id, ...d.data()}));
       if (document.getElementById('page-presences')?.classList.contains('active')) rafraichirPage('presences');
     }, err => console.error('audit_caisses:', err));
@@ -6544,7 +6549,7 @@ function demarrerListeners() {
     }, err => console.error('paiements:', err));
     unsubscribers.push(u6);
 
-    const u6b = db.collection('support_messages').orderBy('date', 'desc').onSnapshot(snap => {
+    const u6b = db.collection('support_messages').orderBy('date', 'desc').limit(100).onSnapshot(snap => {
       supportMessages = snap.docs.map(d => ({id: d.id, ...d.data()}));
       majBadgeSupport();
       rafraichirPageActive();
@@ -7690,9 +7695,10 @@ async function confirmerVente() {
       const newStars = (lc.stars || 0) + starsEarned;
       loyaltyReceipt = { customer: {...lc}, starsEarned, newStars, amountNet: total, tierKey: getTier(newStars, (lc.totalVisits || 0) + 1) };
     }
-    closeLoyaltySession(ticketNum, sous - remiseFCFA, total);
+    try { await closeLoyaltySession(ticketNum, sous - remiseFCFA, total); }
+    catch(e) { console.error('[Fidélité]', e); showToast('⚠️ Points de fidélité non crédités — vente enregistrée', 'warning'); }
     // Liaison automatique Comptabilité OHADA : une écriture par ligne du panier (Débit Trésorerie / Crédit Produits)
-    const numPiecesVente = genererNumPieces(posPanier.length);
+    const numPiecesVente = await genererNumPiecesAtomique(posPanier.length);
     for (let idx = 0; idx < posPanier.length; idx++) {
       const item = posPanier[idx];
       const zone = item.serviceType ? 'A' : (CAT_ZONE[item.cat] || 'D');
@@ -7701,7 +7707,7 @@ async function confirmerVente() {
     closePosModal('modal-payment');
     afficherTicketPOS({ticketNum, barcodeValue, items:[...posPanier], sous, remiseFCFA, total, monnaie, montantRemis, modePaiement:posModePayActuel, client:posClientActuel, heure, date:dateDuJour, loyalty:loyaltyReceipt});
     showToast('✅ Vente enregistrée — ' + posF(total));
-  } catch(err) { showToast('Erreur : '+err.message,'error'); btn.disabled=false; btn.textContent='✅ Valider la vente'; }
+  } catch(err) { showToast('❌ Vente non enregistrée : '+err.message,'error',6000); btn.disabled=false; btn.textContent='💳 RÉGLER'; }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -9147,6 +9153,16 @@ async function ouvrirSessionCaisse() {
 async function fermerSessionCaisse() {
   if (!requireCashier()) return;
   if (!posSessionActive) return;
+  // Vérifier qu'aucune session kiosk n'est en attente de confirmation
+  try {
+    const pending = await db.collection('kiosk_sessions')
+      .where('status', 'in', ['pending', 'pending_confirmation'])
+      .limit(1).get();
+    if (!pending.empty) {
+      showToast('⚠️ Impossible de clôturer : une commande kiosk est en attente de confirmation. Traitez-la d\'abord.', 'error', 6000);
+      return;
+    }
+  } catch(e) { console.error('[FermetureCaisse]', e); }
   if (!confirm('Clôturer la session et générer le rapport Z ?')) return;
   const fin = posDateHeure(), finTS = Date.now();
   const session = posSessionActive;
@@ -9778,9 +9794,9 @@ function renderInventaire() {
         <div style="display:flex;align-items:center;gap:8px">
           ${prodThumbHtml(p)}
           <div>
-            <strong>${p.nom}</strong>
+            <strong>${escapeHTML(p.nom)}</strong>
             ${p.kiosk === true ? `<span class="kiosk-inv-badge">🖥️ Kiosk</span>` : ''}
-            ${p.desc?`<br><span style="font-size:11px;color:var(--text-muted)">${p.desc}</span>`:''}
+            ${p.desc?`<br><span style="font-size:11px;color:var(--text-muted)">${escapeHTML(p.desc)}</span>`:''}
           </div>
         </div>
       </td>
@@ -10278,7 +10294,7 @@ function renderFournisseurs() {
     const creditTxt = credit > 0 ? `<span style="font-weight:600">${FCFA(credit)}</span>${f.creditDateLimite?`<br><span style="font-size:10px;color:var(--text-muted)">Échéance: ${f.creditDateLimite}</span>`:''}` : '<span style="color:var(--text-muted)">—</span>';
     return `<tr>
       <td style="font-size:11px;color:var(--text-muted)">F-${f.id?.slice(-4)||'?'}</td>
-      <td><strong>${f.nom}</strong>${f.adresse?`<br><span style="font-size:11px;color:var(--text-muted)">${f.adresse}</span>`:''}</td>
+      <td><strong>${escapeHTML(f.nom)}</strong>${f.adresse?`<br><span style="font-size:11px;color:var(--text-muted)">${escapeHTML(f.adresse)}</span>`:''}</td>
       <td>${f.contact||'—'}</td><td>${f.tel||'—'}</td>
       <td>${catTag(f.cat==='Toutes catégories'?'Épicerie':f.cat)}</td>
       <td style="font-size:12px">${f.email||'—'}</td>
@@ -10395,15 +10411,18 @@ async function changerStatutCmd(id, statut) {
     });
     if (statut === 'received' && c.lignes) {
       const fournNom = (fournisseurs.find(f => f.id === c.fournId) || {}).nom || 'Fournisseur';
-      const numPiecesAchat = genererNumPieces(c.lignes.length);
+      const numPiecesAchat = await genererNumPiecesAtomique(c.lignes.length);
       for (let i = 0; i < c.lignes.length; i++) {
         const l = c.lignes[i];
-        const p = produits.find(x => x.nom === l.nom);
+        const p = l.productId ? produits.find(x => x.id === l.productId) : produits.find(x => x.nom === l.nom);
         if (p) {
           await db.collection('produits').doc(p.id).update({
             stock: firebase.firestore.FieldValue.increment(l.qte),
             updatedBy: currentUser.label, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
+        } else {
+          console.warn(`[Réception] Produit introuvable: "${l.nom}" — stock non incrémenté`);
+          showToast(`⚠️ "${l.nom}" introuvable en inventaire — stock à corriger manuellement`, 'warning', 5000);
         }
         // Liaison automatique Comptabilité OHADA : Débit 601 Achats / Crédit 401 Fournisseurs
         await genererEcritureAchat(l.nom, l.total || ((l.qte||1)*(l.pu||0)), fournNom, numPiecesAchat[i]);
@@ -10495,7 +10514,8 @@ function updateLigne(i,field,val) {
   if (field==='nom') {
     cmdLignes[i].nom = val;
     const p = produits.find(x=>x.nom===val);
-    if (p) { cmdLignes[i].pu = p.pachat; renderLignesCommande(); return; }
+    if (p) { cmdLignes[i].pu = p.pachat; cmdLignes[i].productId = p.id; renderLignesCommande(); return; }
+    cmdLignes[i].productId = null;
   } else if (field==='qte') cmdLignes[i].qte = parseInt(val)||1;
   else if (field==='pu') cmdLignes[i].pu = parseFloat(val)||0;
   updateCmdTotal();
@@ -10512,7 +10532,7 @@ async function saveCommande(e) {
   const date = document.getElementById('c-date').value;
   const notes = document.getElementById('c-notes').value.trim();
   if (!cmdLignes.length || !cmdLignes[0].nom) { showToast('Ajoutez au moins un article', 'error'); return; }
-  const lignes = cmdLignes.map(l=>({nom:l.nom,qte:l.qte||1,pu:l.pu||0,total:(l.qte||1)*(l.pu||0)}));
+  const lignes = cmdLignes.map(l=>({nom:l.nom,productId:l.productId||null,qte:l.qte||1,pu:l.pu||0,total:(l.qte||1)*(l.pu||0)}));
   const total = lignes.reduce((s,l)=>s+l.total,0);
   const num = `CMD-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
   try {
@@ -12421,14 +12441,40 @@ function lignesEcriture(e) {
 function totalDebitEcriture(e) { return e.totalDebit != null ? e.totalDebit : (e.montantDebit || 0); }
 function totalCreditEcriture(e) { return e.totalCredit != null ? e.totalCredit : (e.montantCredit || 0); }
 
-// Génère un numéro de pièce auto incrémental pour les écritures comptables
+// Génère un numéro de pièce ATOMIQUE via un compteur Firestore (évite les doublons en usage multi-caisse)
+async function genererNumPieceAtomique() {
+  const annee = new Date().getFullYear();
+  const ref = db.collection('ohada_counters').doc(`ecritures_${annee}`);
+  let n;
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    n = (doc.exists ? (doc.data().counter || 0) : 0) + 1;
+    t.set(ref, { counter: n, annee }, { merge: true });
+  });
+  return `EC-${annee}-${String(n).padStart(4, '0')}`;
+}
+
+// Réserve atomiquement N numéros séquentiels en une seule transaction
+async function genererNumPiecesAtomique(count) {
+  const annee = new Date().getFullYear();
+  const ref = db.collection('ohada_counters').doc(`ecritures_${annee}`);
+  let debut;
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    debut = (doc.exists ? (doc.data().counter || 0) : 0) + 1;
+    t.set(ref, { counter: debut + count - 1, annee }, { merge: true });
+  });
+  const result = [];
+  for (let i = 0; i < count; i++) result.push(`EC-${annee}-${String(debut + i).padStart(4, '0')}`);
+  return result;
+}
+
+// Fallback synchrone (usage interne uniquement — préférer genererNumPieceAtomique)
 function genererNumPiece() {
   const annee = new Date().getFullYear();
   const n = ecritures.filter(e => (e.numPiece || '').includes(`EC-${annee}-`)).length + 1;
   return `EC-${annee}-${String(n).padStart(4, '0')}`;
 }
-
-// Génère N numéros de pièce séquentiels, pour éviter les doublons quand plusieurs écritures sont créées dans la même boucle (avant que le listener ne mette à jour `ecritures`)
 function genererNumPieces(count) {
   const annee = new Date().getFullYear();
   const debut = ecritures.filter(e => (e.numPiece || '').includes(`EC-${annee}-`)).length + 1;
@@ -12447,7 +12493,7 @@ async function genererEcritureVente(vente, numPieceOverride) {
       { compte: compteCredit, intitule: libelleCompte(compteCredit), debit: 0, credit: vente.montant }
     ];
     await db.collection('ecritures_comptables').add({
-      numPiece: numPieceOverride || genererNumPiece(),
+      numPiece: numPieceOverride || (await genererNumPieceAtomique()),
       date: vente.date, journal: 'VE',
       libelle: `Vente ${vente.article} — ${ZONES_CAISSE[vente.zone]?.label || vente.zone}`,
       lignes, totalDebit: vente.montant, totalCredit: vente.montant,
@@ -12467,7 +12513,7 @@ async function genererEcritureAchat(article, montant, fournisseurNom, numPieceOv
       { compte: '401', intitule: libelleCompte('401'), debit: 0, credit: montant }
     ];
     await db.collection('ecritures_comptables').add({
-      numPiece: numPieceOverride || genererNumPiece(),
+      numPiece: numPieceOverride || (await genererNumPieceAtomique()),
       date: today(), journal: 'AC',
       libelle: `Achat ${article} — ${fournisseurNom}`,
       lignes, totalDebit: montant, totalCredit: montant,
@@ -12521,7 +12567,7 @@ async function confirmerVersementBanque() {
       { compte: '571', intitule: libelleCompte('571'), debit: 0, credit: montant }
     ];
     await db.collection('ecritures_comptables').add({
-      numPiece: genererNumPiece(),
+      numPiece: await genererNumPieceAtomique(),
       date: today(), journal: 'BQ',
       libelle, lignes,
       totalDebit: montant, totalCredit: montant,
@@ -13138,7 +13184,7 @@ async function enregistrerEcriture(event) {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Enregistrement...';
   try {
     await db.collection('ecritures_comptables').add({
-      numPiece: genererNumPiece(), date, journal, libelle, lignes, totalDebit, totalCredit, reference,
+      numPiece: await genererNumPieceAtomique(), date, journal, libelle, lignes, totalDebit, totalCredit, reference,
       auto: false, source: 'manuel',
       createdBy: currentUser.label, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -13547,7 +13593,7 @@ async function confirmerRetour() {
     // 4. Écriture OHADA
     if (_retourCas === 'cas1') {
       await db.collection('ecritures_comptables').add({
-        numPiece: genererNumPiece(), date: today(), journal: 'RV',
+        numPiece: await genererNumPieceAtomique(), date: today(), journal: 'RV',
         libelle: `Retour ${v.article} — Remboursement (CAS 1)`,
         lignes: [
           { compte: '701', intitule: libelleCompte('701'), debit: montantRetour, credit: 0 },
@@ -13568,7 +13614,7 @@ async function confirmerRetour() {
           : [{ compte: '701', intitule: libelleCompte('701'), debit: montOhada, credit: 0 },
              { compte: '571', intitule: libelleCompte('571'), debit: 0, credit: montOhada }];
         await db.collection('ecritures_comptables').add({
-          numPiece: genererNumPiece(), date: today(), journal: 'RV',
+          numPiece: await genererNumPieceAtomique(), date: today(), journal: 'RV',
           libelle: `Échange ${v.article} → ${_retourCas3Prod.nom} — différentiel ${diff>0?'encaissé':'remboursé'}`,
           lignes, totalDebit: montOhada, totalCredit: montOhada,
           reference: v.ticketNum || '', auto: true, source: 'retour_article',
@@ -13669,6 +13715,7 @@ let _kioskSessionRef   = null;  // référence du doc Firestore kiosk_sessions
 let _kioskListener     = null;  // unsubscribe Firestore listener
 let _kioskInactivity   = null;  // setTimeout handle
 let _kioskConfig       = {};    // config QR codes (depuis Firestore parametres/kiosk)
+let _kioskCaisseId     = null;  // caisse associée à cette tablette (depuis parametres/kiosk)
 let _kioskPendingUnsub = null;  // listener agent (sessions pending)
 let _kioskAttenteTimer = null;  // timer d'attente affiché sur écran 4
 let _kioskPendingCount = 0;     // nb sessions pending (pour tableau de bord caisses)
@@ -13678,7 +13725,7 @@ function initKioskMode() {
   document.body.classList.add('kiosk-mode');
   // Charger config QR
   db.collection('parametres').doc('kiosk').get().then(snap => {
-    if (snap.exists) _kioskConfig = snap.data();
+    if (snap.exists) { _kioskConfig = snap.data(); _kioskCaisseId = snap.data().caisseId || null; }
   }).catch(() => {});
   kioskScreen('accueil');
   kioskStartInactivity();
@@ -13713,10 +13760,19 @@ function kioskStartInactivity() {
   clearTimeout(_kioskInactivity);
   _kioskInactivity = setTimeout(() => { kioskScreen('accueil'); }, KIOSK_INACTIVITY);
 }
+function kioskNettoyerSession() {
+  if (_kioskListener) { _kioskListener(); _kioskListener = null; }
+  clearInterval(_kioskAttenteTimer); _kioskAttenteTimer = null;
+  if (_kioskSessionRef) {
+    _kioskSessionRef.update({ status: 'expired', expiredAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+    _kioskSessionRef = null;
+  }
+}
+
 function kioskResetInactivity() {
   clearTimeout(_kioskInactivity);
   if (!document.getElementById('kiosk-screen-accueil')?.classList.contains('active')) {
-    _kioskInactivity = setTimeout(() => { kioskScreen('accueil'); }, KIOSK_INACTIVITY);
+    _kioskInactivity = setTimeout(() => { kioskNettoyerSession(); kioskScreen('accueil'); }, KIOSK_INACTIVITY);
   }
 }
 
@@ -13894,8 +13950,8 @@ async function kioskClientAPaye() {
       operateur: _kioskOp,
       operateurLabel: KIOSK_OPERATEURS[_kioskOp].label,
       date: today(),
-      caisseId: typeof caisseId !== 'undefined' ? caisseId : null,
-      sessionId: typeof currentSession !== 'undefined' ? (currentSession?.id || null) : null,
+      caisseId: _kioskCaisseId || 'kiosk',
+      sessionId: null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       confirmedAt: null, confirmedBy: null, cancelledAt: null
     };
@@ -13935,7 +13991,7 @@ function kioskEcouterConfirmation() {
 function kioskAfficherConfirmation(data) {
   const recap = document.getElementById('kiosk-confirme-recap');
   if (recap) {
-    recap.innerHTML = data.items.map(i => `<div>• ${i.nom} × ${i.qty} — ${FCFA(i.montant)}</div>`).join('')
+    recap.innerHTML = data.items.map(i => `<div>• ${escapeHTML(i.nom)} × ${i.qty} — ${FCFA(i.montant)}</div>`).join('')
       + `<div style="margin-top:8px;font-weight:700;font-size:15px;color:#15803d">Total payé : ${FCFA(data.total)} via ${data.operateurLabel}</div>`;
   }
   kioskScreen('confirme');
