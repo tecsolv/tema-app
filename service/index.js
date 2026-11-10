@@ -92,10 +92,15 @@ function demarrerHeartbeat() {
   const ms = config.heartbeatIntervalMs || 10000;
   setInterval(async () => {
     try {
-      await db.collection('media_state').doc(config.deviceId).set(
-        { derniereSynchro: admin.firestore.FieldValue.serverTimestamp(), etatService: 'en_marche' },
-        { merge: true }
-      );
+      const ts = admin.firestore.FieldValue.serverTimestamp();
+      await Promise.all([
+        db.collection('media_state').doc(config.deviceId).set(
+          { derniereSynchro: ts, etatService: 'en_marche' }, { merge: true }
+        ),
+        db.collection('media_devices').doc(config.deviceId).set(
+          { derniereSynchro: ts, statut: 'online' }, { merge: true }
+        )
+      ]);
     } catch (err) { console.error('Heartbeat:', err.message); }
   }, ms);
   console.log(`💓 Heartbeat actif (toutes les ${ms / 1000}s)`);
@@ -239,6 +244,7 @@ async function enregistrerAppareil() {
       deviceId: config.deviceId,
       nom: config.deviceName || config.deviceId,
       derniereSynchro: admin.firestore.FieldValue.serverTimestamp(),
+      statut: 'online',
       plateforme: 'windows',
       version: '1.0.0'
     }, { merge: true });
@@ -252,10 +258,11 @@ async function enregistrerAppareil() {
 async function arreter() {
   console.log('\n🛑 Arrêt TeMa Media Service…');
   try {
-    await db.collection('media_state').doc(config.deviceId).update({
-      etatService: 'hors_ligne',
-      derniereSynchro: admin.firestore.FieldValue.serverTimestamp()
-    });
+    const ts = admin.firestore.FieldValue.serverTimestamp();
+    await Promise.all([
+      db.collection('media_state').doc(config.deviceId).update({ etatService: 'hors_ligne', derniereSynchro: ts }),
+      db.collection('media_devices').doc(config.deviceId).update({ statut: 'offline', derniereSynchro: ts })
+    ]);
   } catch {}
   if (midiPort) midiPort.close();
   process.exit(0);
