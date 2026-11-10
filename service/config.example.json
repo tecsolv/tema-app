@@ -1,0 +1,18 @@
+{
+  "deviceId": "MEDIA-01",
+  "deviceName": "MEDIA-01 (Boutique TeMa)",
+  "midiPortName": "loopMIDI Port",
+  "nowPlayingFilePath": "C:\\Users\\Administrateur\\Documents\\VirtualDJ\\now_playing.txt",
+  "heartbeatIntervalMs": 10000,
+  "midiMapping": {
+    "PLAY":        { "type": "note", "channel": 1, "note": 60, "velocity": 127 },
+    "PAUSE":       { "type": "note", "channel": 1, "note": 61, "velocity": 127 },
+    "STOP":        { "type": "note", "channel": 1, "note": 62, "velocity": 127 },
+    "NEXT":        { "type": "note", "channel": 1, "note": 63, "velocity": 127 },
+    "PREVIOUS":    { "type": "note", "channel": 1, "note": 64, "velocity": 127 },
+    "SET_VOLUME":  { "type": "cc",   "channel": 1, "cc": 7 },
+    "FADE_OUT":    { "type": "note", "channel": 1, "note": 68, "velocity": 127 },
+    "FADE_IN":     { "type": "note", "channel": 1, "note": 69, "velocity": 127 },
+    "SET_SHUFFLE": { "type": "note", "channel": 1, "note": 70, "velocity": 127 }
+  }
+}

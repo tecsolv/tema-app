@@ -1,0 +1,20 @@
+{
+  "name": "tema-media-service",
+  "version": "1.0.0",
+  "description": "TeMa Media Service — pont Firestore ↔ VirtualDJ via MIDI virtuel",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "install-service": "node install-service.js",
+    "uninstall-service": "node install-service.js --uninstall"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "jzz": "^1.8.4",
+    "chokidar": "^3.6.0",
+    "node-windows": "^1.0.0-beta.8"
+  }
+}
