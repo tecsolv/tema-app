@@ -4525,7 +4525,7 @@
       Statut : <b id="co-statut">—</b>
     </div>
     <p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Veuillez sélectionner une autre caisse ou contacter un responsable.</p>
-    <div id="co-actions-gerant" style="display:none;margin-top:14px;display:flex;flex-direction:column;gap:8px">
+    <div id="co-actions-gerant" style="display:none;margin-top:14px;flex-direction:column;gap:8px">
       <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('fermeture_forcee')">🔒 Forcer la fermeture de cette session</button>
       <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('transfert')">🔁 Transférer cette caisse</button>
       <button class="btn btn-outline" onclick="ouvrirModaleAuditCaisse('reattribution')">♻️ Réattribuer (fermer + ouvrir pour moi)</button>
@@ -6360,7 +6360,11 @@ function auditDigital(action, detail) {
 })();
 
 function seDeconnecter() {
-  if (!confirm('Se déconnecter ?')) return;
+  if (posSessionActive && posSessionActive.caisseId) {
+    if (!confirm('⚠️ Votre session de caisse est encore ouverte.\n\nSe déconnecter maintenant laissera la caisse bloquée — un Gérant devra la libérer manuellement.\n\nUtilisez le bouton 🔴 "Fin de service" pour clôturer proprement avant de quitter.\n\nSe déconnecter quand même ?')) return;
+  } else {
+    if (!confirm('Se déconnecter ?')) return;
+  }
   if (currentUser) consigner('Déconnexion', `${currentUser.label} s'est déconnecté(e)`);
   unsubscribers.forEach(u => u());
   unsubscribers = [];
@@ -9132,11 +9136,15 @@ async function confirmerActionAudit() {
       const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
       const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
 
-      tx.update(sessionRef, {
-        statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
-        fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
-        dureeTravailMin, dureePauseMin, dureeEffectiveMin
-      });
+      // Si la session est déjà fermée (ex: caissier a clôturé mais caisse restée occupée),
+      // on ne ré-écrit pas la session — on se contente de libérer la caisse.
+      if (session.statutSession !== 'fermee') {
+        tx.update(sessionRef, {
+          statutSession: 'fermee', dateFermeture: fin, dateHeureFin: fin, dateHeureFinTS: finTS,
+          fermeePar: currentUser.label + ' (action ' + action.type + ')', pauses, pauseEnCours: null,
+          dureeTravailMin, dureePauseMin, dureeEffectiveMin
+        });
+      }
 
       if (action.type === 'transfert' || action.type === 'reattribution') {
         const now = posDateHeure(), nowTS = Date.now();
@@ -9230,14 +9238,45 @@ async function fermerSessionCaisse() {
   const dureeTravailMin = Math.max(0, Math.round((finTS - debutTS) / 60000));
   const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
+  const sessionRef = db.collection('sessions_caisse').doc(session.id);
+  const caisseRef = session.caisseId ? db.collection('caisses').doc(session.caisseId) : null;
   try {
-    await db.collection('sessions_caisse').doc(posSessionActive.id).update({
-      statutSession:'fermee', dateFermeture:fin, fermeePar:currentUser?.label||'—',
-      dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
-      dureeTravailMin, dureePauseMin, dureeEffectiveMin
-    });
-    showToast('Session clôturée ✓ — Rapport Z généré'); renderPOSJournal();
-  } catch(err) { showToast('Erreur : '+err.message,'error'); }
+    if (caisseRef) {
+      await db.runTransaction(async (tx) => {
+        const sessionSnap = await tx.get(sessionRef);
+        const caisseSnap = await tx.get(caisseRef);
+        const sData = sessionSnap.data() || {};
+        if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
+        tx.update(sessionRef, {
+          statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
+          dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+          dureeTravailMin, dureePauseMin, dureeEffectiveMin
+        });
+        const cData = caisseSnap.data() || {};
+        if (cData.sessionActiveId === session.id) {
+          tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+        }
+      });
+    } else {
+      await sessionRef.update({
+        statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
+        dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
+        dureeTravailMin, dureePauseMin, dureeEffectiveMin
+      });
+    }
+    posSessionActive = null;
+    showToast('Session clôturée ✓ — Rapport Z généré');
+    renderPOSJournal();
+    goScreen('screen-select-caisse');
+    renderSelectCaisseGrid();
+  } catch(err) {
+    if (err.message === 'SESSION_DEJA_FERMEE') {
+      posSessionActive = null;
+      showToast('Session déjà clôturée ✓', 'success');
+      goScreen('screen-select-caisse');
+      renderSelectCaisseGrid();
+    } else { showToast('Erreur : '+err.message,'error'); }
+  }
 }
 
 function renderPOSJournal() {
