@@ -11873,7 +11873,8 @@ function renderMediaCenterAdmin() {
   const cntDev = document.getElementById('mc-device-count'); if (cntDev) cntDev.textContent = `(${mcDevices.length})`;
   const tbodyDev = document.getElementById('tbody-mc-devices');
   const thAct = document.getElementById('mc-devices-th-actions');
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'gerant';
+  const _r = (currentUser?.role || '').toLowerCase();
+  const isAdmin = !!(currentUser?.isAdmin || _r.includes('gérant') || _r.includes('gerant') || _r.includes('propriétaire') || _r.includes('proprietaire'));
   if (thAct) thAct.textContent = isAdmin ? 'Actions' : '';
   if (tbodyDev) {
     tbodyDev.innerHTML = mcDevices.length ? mcDevices.map(d => `
