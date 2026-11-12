@@ -3260,7 +3260,7 @@
         <div class="card">
           <div class="card-header"><h2>🖥️ Appareils de diffusion <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="mc-device-count"></span></h2></div>
           <div class="card-body table-wrap">
-            <table><thead><tr><th></th><th>Appareil</th><th>Statut</th><th>Dernière synchro</th></tr></thead>
+            <table><thead><tr><th></th><th>Appareil</th><th>Statut</th><th>Dernière synchro</th><th id="mc-devices-th-actions"></th></tr></thead>
             <tbody id="tbody-mc-devices"></tbody></table>
           </div>
         </div>
@@ -11872,6 +11872,9 @@ function renderMediaCenterAdmin() {
   // Appareils
   const cntDev = document.getElementById('mc-device-count'); if (cntDev) cntDev.textContent = `(${mcDevices.length})`;
   const tbodyDev = document.getElementById('tbody-mc-devices');
+  const thAct = document.getElementById('mc-devices-th-actions');
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'gerant';
+  if (thAct) thAct.textContent = isAdmin ? 'Actions' : '';
   if (tbodyDev) {
     tbodyDev.innerHTML = mcDevices.length ? mcDevices.map(d => `
       <tr${d.id === mcDeviceActive ? ' style="background:var(--bg-soft,#eef2f6)"' : ''}>
@@ -11879,8 +11882,19 @@ function renderMediaCenterAdmin() {
         <td>${d.label || d.id}</td>
         <td style="font-size:12px">${d.statut === 'online' ? 'En ligne' : 'Hors ligne'}</td>
         <td style="font-size:12px">${formaterDateMC(d.derniereSynchro)}</td>
-      </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Aucun appareil — démarrez TeMa Media Service sur un poste pour qu\'il apparaisse ici</td></tr>';
+        <td>${isAdmin && d.statut !== 'online' ? `<button onclick="supprimerAppareilMedia('${d.id}')" style="padding:3px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">🗑 Supprimer</button>` : ''}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucun appareil — démarrez TeMa Media Service sur un poste pour qu\'il apparaisse ici</td></tr>';
   }
+}
+
+async function supprimerAppareilMedia(deviceId) {
+  const device = mcDevices.find(d => d.id === deviceId);
+  if (!device) return;
+  if (!confirm(`Supprimer l'appareil "${device.label || device.id}" ?\n\nIl disparaîtra de la liste. S'il redémarre, il se ré-enregistrera automatiquement.`)) return;
+  try {
+    await db.collection('media_devices').doc(deviceId).delete();
+    showToast('Appareil supprimé ✓');
+  } catch(err) { showToast('Erreur : ' + err.message, 'error'); }
 }
 
 // ===== SUPPORT — message interne employé → Administrateur (avec capture d'écran) =====
