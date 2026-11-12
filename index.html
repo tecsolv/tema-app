@@ -8806,7 +8806,7 @@ async function posReprendre() {
 }
 
 async function posFinService() {
-  if (!posSessionActive || !posSessionActive.caisseId) return;
+  if (!posSessionActive) return;
   if (!confirm('Terminer votre service ? Cette action clôture votre session sur cette caisse.')) return;
   const session = posSessionActive;
   const fin = posDateHeure(), finTS = Date.now();
@@ -8821,11 +8821,15 @@ async function posFinService() {
   const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
   const sessionRef = db.collection('sessions_caisse').doc(session.id);
-  const caisseRef = db.collection('caisses').doc(session.caisseId);
+  // Résolution de la caisse : par caisseId (cas normal) ou par sessionActiveId (fallback)
+  let caisseRef = session.caisseId ? db.collection('caisses').doc(session.caisseId) : null;
+  if (!caisseRef) {
+    const snap = await db.collection('caisses').where('sessionActiveId', '==', session.id).limit(1).get();
+    if (!snap.empty) caisseRef = snap.docs[0].ref;
+  }
   try {
     await db.runTransaction(async (tx) => {
       const sessionSnap = await tx.get(sessionRef);
-      const caisseSnap = await tx.get(caisseRef);
       const sData = sessionSnap.data() || {};
       if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
 
@@ -8835,9 +8839,12 @@ async function posFinService() {
         dureeTravailMin, dureePauseMin, dureeEffectiveMin
       });
 
-      const cData = caisseSnap.data() || {};
-      if (cData.sessionActiveId === session.id) {
-        tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+      if (caisseRef) {
+        const caisseSnap = await tx.get(caisseRef);
+        const cData = caisseSnap.data() || {};
+        if (cData.sessionActiveId === session.id) {
+          tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+        }
       }
     });
     consigner('Fin de service', `${currentUser.label} a terminé son service sur ${session.caisseNom||'—'} (travail: ${dureeTravailMin}min, pause: ${dureePauseMin}min, effectif: ${dureeEffectiveMin}min)`);
@@ -9239,31 +9246,30 @@ async function fermerSessionCaisse() {
   const dureePauseMin = pauses.reduce((s,p) => s + (p.dureeMin||0), 0);
   const dureeEffectiveMin = Math.max(0, dureeTravailMin - dureePauseMin);
   const sessionRef = db.collection('sessions_caisse').doc(session.id);
-  const caisseRef = session.caisseId ? db.collection('caisses').doc(session.caisseId) : null;
+  // Résolution de la caisse : par caisseId (cas normal) ou par sessionActiveId (fallback)
+  let caisseRef = session.caisseId ? db.collection('caisses').doc(session.caisseId) : null;
+  if (!caisseRef) {
+    const snap = await db.collection('caisses').where('sessionActiveId', '==', session.id).limit(1).get();
+    if (!snap.empty) caisseRef = snap.docs[0].ref;
+  }
   try {
-    if (caisseRef) {
-      await db.runTransaction(async (tx) => {
-        const sessionSnap = await tx.get(sessionRef);
-        const caisseSnap = await tx.get(caisseRef);
-        const sData = sessionSnap.data() || {};
-        if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
-        tx.update(sessionRef, {
-          statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
-          dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
-          dureeTravailMin, dureePauseMin, dureeEffectiveMin
-        });
-        const cData = caisseSnap.data() || {};
-        if (cData.sessionActiveId === session.id) {
-          tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
-        }
-      });
-    } else {
-      await sessionRef.update({
+    await db.runTransaction(async (tx) => {
+      const sessionSnap = await tx.get(sessionRef);
+      const sData = sessionSnap.data() || {};
+      if (sData.statutSession === 'fermee') throw new Error('SESSION_DEJA_FERMEE');
+      tx.update(sessionRef, {
         statutSession: 'fermee', dateFermeture: fin, fermeePar: currentUser?.label||'—',
         dateHeureFin: fin, dateHeureFinTS: finTS, pauses, pauseEnCours: null,
         dureeTravailMin, dureePauseMin, dureeEffectiveMin
       });
-    }
+      if (caisseRef) {
+        const caisseSnap = await tx.get(caisseRef);
+        const cData = caisseSnap.data() || {};
+        if (cData.sessionActiveId === session.id) {
+          tx.update(caisseRef, { statut: 'disponible', sessionActiveId: null, utilisateurActifId: null, utilisateurActifNom: null });
+        }
+      }
+    });
     posSessionActive = null;
     showToast('Session clôturée ✓ — Rapport Z généré');
     renderPOSJournal();
