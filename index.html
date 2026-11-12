@@ -11881,7 +11881,7 @@ function renderMediaCenterAdmin() {
         <td>${d.label || d.id}</td>
         <td style="font-size:12px">${d.statut === 'online' ? 'En ligne' : 'Hors ligne'}</td>
         <td style="font-size:12px">${formaterDateMC(d.derniereSynchro)}</td>
-        <td>${d.statut !== 'online' ? `<button onclick="supprimerAppareilMedia('${d.id}')" style="padding:3px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">🗑 Supprimer</button>` : ''}</td>
+        <td><button onclick="supprimerAppareilMedia('${d.id}')" style="padding:3px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">🗑 Supprimer</button></td>
       </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Aucun appareil — démarrez TeMa Media Service sur un poste pour qu\'il apparaisse ici</td></tr>';
   }
 }
