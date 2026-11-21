@@ -38,6 +38,7 @@
       overflow:hidden; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
     }
     #empty-state.visible { display:flex; }
+    #welcome-img { position:absolute; inset:0; width:100vw; height:100vh; object-fit:cover; z-index:20; display:none; }
     #es-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
     .es-halo {
       position:absolute; width:560px; height:560px; border-radius:50%;
@@ -128,6 +129,7 @@
 <div id="progress-bar"></div>
 <div id="offline-badge">⚠ Hors ligne — cache local actif</div>
 <div id="empty-state">
+  <img id="welcome-img" alt="" />
   <canvas id="es-canvas"></canvas>
   <div class="es-halo"></div>
   <div class="es-center">
@@ -411,6 +413,21 @@ setInterval(() => {
 }, 55000);
 
 fetchPlaylist();
+
+// ═══ ÉCRAN D'ACCUEIL — config/regie.welcomeScreenUrl ═══
+(function() {
+  var welcomeImg = document.getElementById('welcome-img');
+  db.collection('config').doc('regie').onSnapshot(function(doc) {
+    var data = doc.data();
+    var url = data && data.welcomeScreenUrl;
+    if (url) {
+      welcomeImg.src = url;
+      welcomeImg.style.display = 'block';
+    } else {
+      welcomeImg.style.display = 'none';
+    }
+  }, function() {});
+})();
 </script>
 
 <script>
