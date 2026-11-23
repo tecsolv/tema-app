@@ -11725,7 +11725,7 @@ function renderMediaCenterAdmin() {
   const elEtatService = document.getElementById('mc-etat-service');
   if (elEtatService && !modeTous) {
     const synchroMs = mcState.derniereSynchro?.toMillis ? mcState.derniereSynchro.toMillis() : (mcState.derniereSynchro ? new Date(mcState.derniereSynchro).getTime() : 0);
-    const horsLigne = !synchroMs || (Date.now() - synchroMs) > 15000;
+    const horsLigne = !synchroMs || (Date.now() - synchroMs) > 90000;
     const etatAffiche = horsLigne ? 'hors_ligne' : (mcState.etatService || 'inconnu');
     const labels = { connecte: '🟢 Connecté', demarrage: '🟡 Démarrage', synchronisation: '🟠 Synchronisation', hors_ligne: '🔴 Hors ligne', arrete: '⚫ Arrêté', erreur: '🔴 Erreur', inconnu: '⚫ Inconnu (jamais synchronisé)' };
     elEtatService.textContent = labels[etatAffiche] || etatAffiche;
@@ -15390,7 +15390,11 @@ function ouvrirScanProduit() {
 
 function fermerScanProduit() {
   if (scannerCodeBarres) {
-    scannerCodeBarres.stop().then(() => scannerCodeBarres.clear()).catch(() => {});
+    try {
+      scannerCodeBarres.stop()
+        .then(() => { try { scannerCodeBarres && scannerCodeBarres.clear(); } catch(e) {} })
+        .catch(() => {});
+    } catch(e) {}
     scannerCodeBarres = null;
   }
   closeModal('modal-scan');
