@@ -4876,6 +4876,19 @@
 </div>
 
 <!-- POS MODAL: Ouverture session -->
+<!-- MODAL : Confirmation fin de service -->
+<div class="pos-modal-overlay" id="modal-fin-service">
+  <div class="pos-modal-box" style="width:360px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🔴</div>
+    <h2 style="font-size:17px;margin-bottom:8px;color:var(--text)">Terminer votre service ?</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">Cette action clôture votre session sur cette caisse et génère le rapport Z.</p>
+    <div style="display:flex;gap:12px">
+      <button onclick="closePosModal('modal-fin-service')" style="flex:1;padding:12px;background:var(--surface-2);color:var(--text);border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
+      <button onclick="confirmerFinService()" style="flex:1;padding:12px;background:var(--danger);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">✅ Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <div class="pos-modal-overlay" id="modal-open-session">
   <div class="pos-modal-box" style="width:400px">
     <button class="pos-modal-close" onclick="closePosModal('modal-open-session')">×</button>
@@ -8805,9 +8818,14 @@ async function posReprendre() {
   } catch(err) { showToast('Erreur : '+err.message,'error'); }
 }
 
-async function posFinService() {
+function posFinService() {
   if (!posSessionActive) return;
-  if (!confirm('Terminer votre service ? Cette action clôture votre session sur cette caisse.')) return;
+  document.getElementById('modal-fin-service').classList.add('open');
+}
+
+async function confirmerFinService() {
+  closePosModal('modal-fin-service');
+  if (!posSessionActive) return;
   const session = posSessionActive;
   const fin = posDateHeure(), finTS = Date.now();
   let pauses = session.pauses || [];
