@@ -6691,6 +6691,13 @@ function demarrerListeners() {
 
   // Catégories personnalisées (ne bloque pas le chargement)
   loadCategories();
+
+  // Annuaire prestataires (visible par tous les rôles)
+  const uPrestataires = db.collection('prestataires').orderBy('nom').onSnapshot(snap => {
+    prestataires = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (document.getElementById('page-annuaire')?.classList.contains('active')) renderAnnuaire();
+  }, err => console.error('prestataires:', err));
+  unsubscribers.push(uPrestataires);
 }
 
 // ── Listeners RH (Phase RH-A) ─────────────────────────────────
@@ -8159,10 +8166,7 @@ function peutGererPrestataires() {
   return currentUser?.isAdmin || r.includes('gérant') || r.includes('gerant') || r.includes('propriétaire') || r.includes('proprietaire');
 }
 
-db.collection('prestataires').orderBy('nom').onSnapshot(snap => {
-  prestataires = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if (document.getElementById('page-annuaire')?.classList.contains('active')) renderAnnuaire();
-}, () => {});
+// Listener prestataires : démarré dans demarrerListeners() — voir ci-dessous
 
 function renderAnnuaire() {
   const peutGerer = peutGererPrestataires();
